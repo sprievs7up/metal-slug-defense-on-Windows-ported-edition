@@ -361,6 +361,16 @@ void draw_enemy_ap_frame(Context& c,float a,float d,float tx,float ty){
     draw_quad(c,m,a,d,tx+pass.offx+a*AP_TEXT0,ty,AP_TEXT0,AP_TEXT1-AP_TEXT0,tail);     // 不翻转的文字带
     pass.active=true;
 }
+// 诊断：头部 +0xb10 为 'SLOG' 时，把翻转片段（敌方弹头车）中的 drawImageS 调用记入宿主缓冲区（+0xb18 地址、+0xb1c 容量），
+// 计数在 +0xb14；每条 32 字节：Image*、u、v、w、h、tx、ty、是否翻转 | 片段裁剪 x<<8 | 宽<<24（同一 Image/u/v/片段只记一次）。不改变绘制。
+constexpr uint32_t SEG_LOG=H+0xb10u,SEG_LOG_MAGIC=0x474f4c53u;
+// 敌方弹头车按钮框：底栏图集中 73×71、源 v 103 的按钮框图块（u 343/417 等各状态），底部含 “MAX” 字样。
+// 整块翻转会显示为 “XAM”（第 34 版诊断 SLOG 实测：绘制 tx 808、ty 496）。
+bool is_slug_max_text(Context& c){
+    uint32_t sp=c.r[13];
+    return c.r[1]==pass.atlas && rd<uint32_t>(c,sp)==fbits(103.0f) &&
+           rd<uint32_t>(c,sp+4u)==fbits(73.0f) && rd<uint32_t>(c,sp+8u)==fbits(71.0f);
+}
 template<uint32_t ENTRY> struct DrawHook{static Block old;static void run(Context& c);};
 template<uint32_t ENTRY> Block DrawHook<ENTRY>::old;
 template<uint32_t ENTRY> void DrawHook<ENTRY>::run(Context& c){
@@ -383,11 +393,25 @@ template<uint32_t ENTRY> void DrawHook<ENTRY>::run(Context& c){
         // 敌方弹头车片段整体翻转（底部 “MAX” 字样除外）；敌方 AP 升级片段只翻转人物精灵（图集以外的图像）。
         bool flip=(pass.coin_overlay || pass.banner_overlay)?pass.mirror:
                   (pass.mirror && !(ty>=590.0f && c.r[3]!=0u)) || (pass.mirror_sprite && c.r[1]!=pass.atlas);
+        if(pass.mirror && !pass.coin_overlay && !pass.banner_overlay && rd<uint32_t>(c,SEG_LOG)==SEG_LOG_MAGIC){
+            uint32_t n=rd<uint32_t>(c,SEG_LOG+4u),buf=rd<uint32_t>(c,SEG_LOG+8u),cap=rd<uint32_t>(c,SEG_LOG+12u);
+            uint32_t row[8]={c.r[1],c.r[3],rd<uint32_t>(c,c.r[13]),rd<uint32_t>(c,c.r[13]+4u),rd<uint32_t>(c,c.r[13]+8u),fbits(tx),fbits(ty),(flip?1u:0u)|(uint32_t(pass.clip[0]&0xffff)<<8)|(uint32_t(pass.clip[2]&0xff)<<24)};
+            bool seen=false;
+            for(uint32_t i=0;i<n && !seen;++i)seen=rd<uint32_t>(c,buf+i*32u)==row[0] && rd<uint32_t>(c,buf+i*32u+4u)==row[1] && rd<uint32_t>(c,buf+i*32u+8u)==row[2] && rd<uint32_t>(c,buf+i*32u+28u)==row[7];
+            if(buf && n<cap && !seen){for(uint32_t k=0;k<8u;++k)wr<uint32_t>(c,buf+n*32u+k*4u,row[k]);wr<uint32_t>(c,SEG_LOG+4u,n+1u);}
+        }
         if(flip){
             float cx=(pass.coin_overlay || pass.banner_overlay)?pass.mirror_center:float(pass.clip[0])+float(pass.clip[2])*0.5f;
             wr<uint32_t>(c,dst,fbits(-bitsf(rd<uint32_t>(c,dst))));
             wr<uint32_t>(c,dst+4u,fbits(-bitsf(rd<uint32_t>(c,dst+4u))));
             wr<uint32_t>(c,dst+8u,fbits(2.0f*cx-bitsf(rd<uint32_t>(c,dst+8u))));
+            if(pass.mirror && !pass.coin_overlay && !pass.banner_overlay && is_slug_max_text(c)){
+                // 弹头车按钮框（含 “MAX” 字样，不受 ty≥590 例外覆盖）：保留翻转后的位置，
+                // 图像恢复正向（x 范围不变：tx' = tx + a'·w，a' < 0），避免显示为 “XAM”；按钮内的弹头车图像仍翻转。
+                float fa=bitsf(rd<uint32_t>(c,dst)),fb=bitsf(rd<uint32_t>(c,dst+4u)),w=bitsf(rd<uint32_t>(c,c.r[13]+4u));
+                wr<uint32_t>(c,dst,fbits(-fa));wr<uint32_t>(c,dst+4u,fbits(-fb));
+                wr<uint32_t>(c,dst+8u,fbits(bitsf(rd<uint32_t>(c,dst+8u))+fa*w));
+            }
         }
         if(pass.rotate){                                   // 中间分隔条：绕片段中心旋转 180°
             float px=float(pass.clip[0])+float(pass.clip[2])*0.5f,py=float(pass.clip[1])+float(pass.clip[3])*0.5f;
@@ -725,11 +749,13 @@ template<class F> void with_enemy(Context& c,uint32_t op,F action){
     if(panel_swapped)swap_panel(c,op);
 }
 void origin_observe(Context& c);                                // 第 13 版：单位来源记录（定义见 ai_invest 前）
+void front_observe(Context& c);                                 // 第 18 版：相持判定（定义见 ai_front_ratio 后）
 Block old_operator_update;
 void operator_update(Context& c){
     uint32_t op=c.r[0];
     if(enemy_sprite_ready(c))with_enemy(c,op,[&]{tick_enemy_sprite(c,op);});
     origin_observe(c);
+    front_observe(c);
     old_operator_update(c);
 }
 // BattleScene 逐帧调用 update_TargetAction；双方独立使用原生入场、45 tick 等待及退场状态机。
@@ -837,23 +863,17 @@ void ai_wait(Context& c){                                      // setAutoPlayWai
     }
     old_ai_wait(c);
 }
-bool ai_ap_full_and_idle(Context& c,uint32_t controller){       // AP 已满且没有可出单位（冷却、AP 或人数限制）
-    uint32_t level=rd<uint32_t>(c,controller+0x3fcu),max_ap=0;
+bool ai_ap_full(Context& c,uint32_t controller){                // AP 已满（≥98% 上限）。第 18 版起不再要求无可出单位：
+    uint32_t level=rd<uint32_t>(c,controller+0x3fcu),max_ap=0;      // AP 满档轮流出兵会使“无可出单位”几乎不成立
     guest_call(c,P_MAX_AP,controller,level,0,0,nullptr,0,&max_ap);
-    if(rd<float>(c,controller+0x404u)<float(int32_t(max_ap)))return false;
-    uint32_t slots=rd<uint32_t>(c,controller+0x390u);
-    for(uint32_t slot=0;slot<slots && slot<32u;++slot){
-        uint32_t ready=0;guest_call(c,P_IS_UNIT_CREATE,controller,slot,0,0,nullptr,0,&ready);
-        if(ready&0xffu)return false;
-    }
-    return true;
+    return rd<float>(c,controller+0x404u)>=float(int32_t(max_ap))*0.98f;
 }
 void ai_levelup_query(Context& c){                             // isKyotenLevelup(controller)
     uint32_t controller=c.r[0],lr=c.r[14]&~1u;
     if(lr>=NOUKIN_BEGIN && lr<NOUKIN_END)
         if(uint32_t tier=ai_tier(c,controller)){
             int32_t target=int32_t(rd<uint32_t>(c,tier+12u));
-            if(target>=0 && int32_t(rd<uint32_t>(c,controller+0x3fcu))>=target && !ai_ap_full_and_idle(c,controller)){
+            if(target>=0 && int32_t(rd<uint32_t>(c,controller+0x3fcu))>=target && !ai_ap_full(c,controller)){
                 c.r[0]=0u;c.pc=c.r[14];return;
             }
         }
@@ -933,11 +953,12 @@ const UnitValue& ai_unit_value(Context& c,uint32_t uid,uint32_t level){
     unit_values[unit_value_count++]=v;
     return unit_values[unit_value_count-1];
 }
-float ai_front_ratio(Context& c,uint32_t controller,bool& present){   // 对方最前单位距己方据点的场宽比例
+float ai_front_ratio_team(Context& c,uint32_t team,bool& present){   // 对方最前单位距 team 据点的场宽比例
     uint32_t manager=0,stage=0,base0=0,base1=0;
     guest_call(c,OBJECT_MANAGER_GET_INSTANCE,0,0,0,0,nullptr,0,&manager);
+    present=false;
+    if(!manager)return 1.0f;
     guest_call(c,P_STAGE_INSTANCE,0,0,0,0,nullptr,0,&stage);
-    uint32_t team=rd<uint32_t>(c,controller+0x38cu)&1u;
     uint32_t front=rd<uint32_t>(c,manager+(12u+(team^1u))*4u);
     present=front!=0u;
     if(!front)return 1.0f;
@@ -947,6 +968,32 @@ float ai_front_ratio(Context& c,uint32_t controller,bool& present){   // 对方�
     float d=rd<float>(c,front+0x8cu)-float(int32_t(base0));
     if(team==1u)d=width-d;
     return width>0.0f?d/width:1.0f;
+}
+float ai_front_ratio(Context& c,uint32_t controller,bool& present){
+    return ai_front_ratio_team(c,rd<uint32_t>(c,controller+0x38cu)&1u,present);
+}
+// ---------- 第 18 版：相持判定（建筑类单位的出击时机） ----------
+// 每帧记录每队所面对的对方前线位置（场宽比例）。对方有单位在场、且前线位置连续 STABLE_FRAMES 帧的波动
+// （最大值 − 最小值）不超过 STABLE_SPAN 时视为相持（用户确认：5 秒、6% 场宽）。出建筑类后该队计时重新开始。
+constexpr uint32_t STABLE_FRAMES=150u;constexpr float STABLE_SPAN=0.06f;
+struct FrontTrack{float lo,hi;uint32_t since;bool present;};
+FrontTrack front_track[2];uint32_t lab_frame;
+void front_observe(Context& c){                                 // operator_update 每帧调用
+    ++lab_frame;
+    if(!enabled(c,FLAG_AI_TIER))return;
+    for(uint32_t team=0;team<2u;++team){
+        bool present=false;
+        float v=ai_front_ratio_team(c,team,present);
+        FrontTrack& t=front_track[team];
+        if(!present){t=FrontTrack{v,v,lab_frame,false};continue;}
+        float lo=std::min(t.lo,v),hi=std::max(t.hi,v);
+        if(!t.present || hi-lo>STABLE_SPAN)t=FrontTrack{v,v,lab_frame,true};
+        else{t.lo=lo;t.hi=hi;}
+    }
+}
+bool front_stable(uint32_t team,uint32_t extra){               // extra：段位反应延迟（帧）
+    const FrontTrack& t=front_track[team&1u];
+    return t.present && lab_frame-t.since>=STABLE_FRAMES+extra;
 }
 float ai_field_power(Context& c,uint32_t team){
     // 队伍单位状态 +0xc8（AI 战力）之和，不含据点。原生的同类合计包含据点，据点战力随据点等级大幅变化，
@@ -980,6 +1027,7 @@ void ai_record_deploy(Context& c,uint32_t controller,uint32_t slot){
     ai_stat(c,side,6,rd<uint32_t>(c,info));
     if(ai_is_builder(c,uid)){
         ai_stat(c,side,7,1);
+        front_track[rd<uint32_t>(c,controller+0x38cu)&1u].since=lab_frame;   // 相持计时重新开始
         bool present=false;
         uint32_t ratio=uint32_t(std::max(ai_front_ratio(c,controller,present),0.0f)*1000.0f);
         uint32_t a=AI_STATS_BASE+0x40u+side*4u;
@@ -987,10 +1035,83 @@ void ai_record_deploy(Context& c,uint32_t controller,uint32_t slot){
         if(!present)wr<uint32_t>(c,a+8u,rd<uint32_t>(c,a+8u)+1u);
     }
 }
+// ---------- 第 18 版：AP 饱和时按 AP 从高到低轮流出兵（全部段位，含 SILVER） ----------
+// 用户要求：据点等级 9–10 时不再等待最高 AP 单位的冷却，以最高 AP 单位为主，其冷却中则出第二高、第三高……，
+// 使 AP 接近饱和时持续输出；任何等级 AP 已满（≥98% 上限）时同样如此，避免 AP 回复浪费。
+// 候选为已冷却、AP 足够、非建筑类的单位，按出兵 AP 从高到低（同 AP 按单位价值）。最高 AP 单位冷却中时，出次一级
+// 单位后余下的 AP 须仍够买最高 AP 单位，否则等待；AP 已满时直接出，且可升据点时优先升据点。
+// 返回槽位；−2 为等待；−1 为不适用（交由后续逻辑）。
+// 段位差异（用户要求：不同段位的反应时刻不同）：各规则的反应延迟从该段位的反应等待区间（块 +4/+8）随机抽取，
+// AP 已满须持续该延迟后才开始轮流出兵（低段位察觉更慢，AP 浪费更多）。
+constexpr uint32_t SAT_LEVEL=9u;
+uint32_t ai_react(Context& c,uint32_t tier){
+    uint32_t low=rd<uint32_t>(c,tier+4u),high=rd<uint32_t>(c,tier+8u);
+    if(high<low)high=low;
+    return low+ai_random()%(high-low+1u);
+}
+struct Saturation{uint32_t controller,full_since,full_react;};
+Saturation sat_state[2];
+constexpr uint32_t TACTIC_STATS=H+0x6f0u;                         // 每方 2 字：前置规则出兵（压前线、骚扰、相持建筑）、饱和出兵
+bool forced_deploy;
+int32_t ai_saturated_pick(Context& c,uint32_t controller,uint32_t tier){
+    uint32_t level=rd<uint32_t>(c,controller+0x3fcu),max_ap=0;
+    guest_call(c,P_MAX_AP,controller,level,0,0,nullptr,0,&max_ap);
+    float ap=rd<float>(c,controller+0x404u);
+    bool full=ap>=float(int32_t(max_ap))*0.98f;
+    Saturation& st=sat_state[controller==rd<uint32_t>(c,ENEMY_CONTROLLER)?1u:0u];
+    if(st.controller!=controller)st=Saturation{controller,0u,0u};
+    if(!full)st.full_since=0u;
+    else if(!st.full_since){st.full_since=lab_frame?lab_frame:1u;st.full_react=ai_react(c,tier);}
+    bool full_seen=full && lab_frame-st.full_since>=st.full_react;   // 察觉 AP 已满需要反应时间
+    if(level<SAT_LEVEL && !full_seen)return -1;
+    int32_t best=-1,best_cost=-1,top=-1,top_cost=-1;float best_value=-1.0f;
+    uint32_t slots=rd<uint32_t>(c,controller+0x390u);
+    for(uint32_t slot=0;slot<slots && slot<32u;++slot){
+        uint32_t info=controller+0xcu+slot*0x1cu;
+        int32_t cost=int32_t(rd<uint32_t>(c,info));
+        if(!rd<uint8_t>(c,info+0xcu) || cost<=0 || cost>int32_t(max_ap))continue;
+        const UnitValue& v=ai_unit_value(c,rd<uint32_t>(c,info+0x10u),rd<uint32_t>(c,info+0x14u));
+        if(v.builder)continue;
+        if(cost>top_cost){top_cost=cost;top=int32_t(slot);}
+        uint32_t ready=0;guest_call(c,P_IS_UNIT_CREATE,controller,slot,0,0,nullptr,0,&ready);
+        if((ready&0xffu) && (cost>best_cost || (cost==best_cost && v.value>best_value))){best=int32_t(slot);best_cost=cost;best_value=v.value;}
+    }
+    if(best<0)return -1;
+    if(full_seen){
+        uint32_t maxed=0,can=0;guest_call(c,KYOTEN_LEVEL_MAX,controller,0,0,0,nullptr,0,&maxed);
+        if(!(maxed&0xffu))guest_call(c,P_IS_LEVELUP,controller,0,0,0,nullptr,0,&can);
+        return (can&0xffu)?-1:best;                              // AP 已满且可升据点：交由据点升级（ai_levelup_query 放行）
+    }
+    if(best_cost>=top_cost)return best;                          // 最高 AP 单位可出
+    // 最高 AP 单位冷却中：只用超出其价格的 AP 出次一级单位，保留够买它的 AP（第 18 版测试：不保留时满级后
+    // 反复出最便宜单位，AP 攒不起来）；余量不足时等待 AP 回复。
+    return ap-float(best_cost)>=float(top_cost)?best:-2;
+}
+void tactic_stat(Context& c,uint32_t controller,uint32_t field){
+    uint32_t a=TACTIC_STATS+(controller==rd<uint32_t>(c,ENEMY_CONTROLLER)?8u:0u)+field*4u;wr<uint32_t>(c,a,rd<uint32_t>(c,a)+1u);
+}
 Block old_ai_choose;
 void ai_choose(Context& c){                                    // 0x1cc40e：r4 控制器，r5 原生选择的槽位
     uint32_t controller=c.r[4],tier=ai_tier(c,controller);
+    if(forced_deploy){                                           // auto_deploy 的前置规则已选定槽位
+        forced_deploy=false;
+        if(tier)ai_record_deploy(c,controller,c.r[5]);
+        old_ai_choose(c);return;
+    }
     uint32_t smart=tier?rd<uint32_t>(c,tier+20u):0u;
+    if(tier){
+        int32_t sat=ai_saturated_pick(c,controller,tier);
+        if(sat==-2){c.pc=DECISION_EXIT;return;}
+        if(sat>=0){
+            uint32_t side=controller==rd<uint32_t>(c,ENEMY_CONTROLLER)?1u:0u;
+            ai_saving[side]=0;
+            if(uint32_t(sat)!=c.r[5])ai_stat(c,side,3,1);
+            tactic_stat(c,controller,1);
+            ai_record_deploy(c,controller,uint32_t(sat));
+            c.r[5]=uint32_t(sat);
+            old_ai_choose(c);return;
+        }
+    }
     if(!smart){
         if(tier)ai_record_deploy(c,controller,c.r[5]);           // 原生选择（理解度 0）同样统计，供对照
         old_ai_choose(c);return;
@@ -1339,8 +1460,56 @@ void draw_conv(Context& c){
     }
     old_draw_conv(c);
 }
+// ---------- 第 18 版：出兵决策的前置规则（全部段位，含 SILVER；在开局据点目标与场上投资之前） ----------
+// 1 相持建筑：对方前线相持（front_stable）时，有已冷却且 AP 足够的建筑类单位即先出（按单位价值最高者）。
+// 2 压前线（据点等级 0–1）：己方场上单位（不含据点）少于 SCREEN_UNITS 时，随机出一个 CHEAP_AP 以内的单位，
+//   先在前线建立屏障，使 AP 能稳定积累（用户要求）。
+// 3 骚扰（据点等级 2–5）：每隔 HARASS_MIN–HARASS_MAX 帧随机出 1–2 个 CHEAP_AP 以内的单位（用户要求）。
+// 选定后跳转原生出兵调用点 0x1cc40e（与本入口同一栈帧，r4 控制器、r5 槽位），出兵后原生设定反应等待。
+constexpr int32_t CHEAP_AP=100;constexpr uint32_t SCREEN_UNITS=2u,HARASS_MIN=300u,HARASS_MAX=600u,P_DEPLOY_POINT=0x101cc40fu;
+struct Tactic{uint32_t controller,next_harass,burst,stable_seen,stable_react;};
+Tactic tactic_state[2];
+int32_t ai_pre_rules(Context& c,uint32_t controller){
+    uint32_t tier=ai_tier(c,controller);
+    if(!tier)return -1;
+    uint32_t side=controller==rd<uint32_t>(c,ENEMY_CONTROLLER)?1u:0u,team=rd<uint32_t>(c,controller+0x38cu)&1u;
+    Tactic& st=tactic_state[side];
+    if(st.controller!=controller)st=Tactic{controller,lab_frame+HARASS_MIN+ai_random()%(HARASS_MAX-HARASS_MIN+1u)+ai_react(c,tier),0u,0xffffffffu,0u};
+    if(front_track[team].since!=st.stable_seen){st.stable_seen=front_track[team].since;st.stable_react=ai_react(c,tier);}   // 每段相持重新抽取反应延迟
+    uint32_t level=rd<uint32_t>(c,controller+0x3fcu),slots=rd<uint32_t>(c,controller+0x390u);
+    int32_t builder=-1,cheap[32];uint32_t cheap_count=0;float builder_value=-1.0f;
+    for(uint32_t slot=0;slot<slots && slot<32u;++slot){
+        uint32_t info=controller+0xcu+slot*0x1cu;
+        int32_t cost=int32_t(rd<uint32_t>(c,info));
+        if(!rd<uint8_t>(c,info+0xcu) || cost<=0)continue;
+        uint32_t ready=0;guest_call(c,P_IS_UNIT_CREATE,controller,slot,0,0,nullptr,0,&ready);
+        if(!(ready&0xffu))continue;
+        const UnitValue& v=ai_unit_value(c,rd<uint32_t>(c,info+0x10u),rd<uint32_t>(c,info+0x14u));
+        if(v.builder){if(v.value>builder_value){builder_value=v.value;builder=int32_t(slot);}}
+        else if(cost<=CHEAP_AP)cheap[cheap_count++]=int32_t(slot);
+    }
+    if(builder>=0 && front_stable(team,st.stable_react))return builder;
+    if(!cheap_count)return -1;
+    int32_t pick=cheap[ai_random()%cheap_count];
+    if(level<=1u){
+        uint32_t units=0;
+        team_units(c,team,[&](uint32_t unit){if(int32_t(rd<uint32_t>(c,unit+776u))>0)++units;});
+        return units<SCREEN_UNITS?pick:-1;
+    }
+    if(level<=5u && (st.burst || lab_frame>=st.next_harass)){
+        if(!st.burst)st.burst=1u+(ai_random()&1u);
+        if(!--st.burst)st.next_harass=lab_frame+HARASS_MIN+ai_random()%(HARASS_MAX-HARASS_MIN+1u)+ai_react(c,tier);
+        return pick;
+    }
+    return -1;
+}
 void auto_deploy(Context& c){                                  // 0x1cc070：绝招检查结束，进入出兵决策
     if(enabled(c,FLAG_AUTO_SPLIT) && (auto_disabled(c,c.r[4])&1u)){c.pc=DECISION_EXIT;return;}
+    int32_t pre=ai_pre_rules(c,c.r[4]);
+    if(pre>=0){
+        tactic_stat(c,c.r[4],0);
+        forced_deploy=true;c.r[5]=uint32_t(pre);c.pc=P_DEPLOY_POINT;return;
+    }
     if(ai_opening(c,c.r[4])){c.pc=DECISION_EXIT;return;}
     if(ai_invest(c,c.r[4])){c.pc=DECISION_EXIT;return;}
     old_auto_deploy(c);
@@ -1585,7 +1754,7 @@ void install_se_hooks(){
     old_se_release=find_block(0x101c833du);register_block(0x101c833du,se_release);
 }
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 17u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 19u;}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;
