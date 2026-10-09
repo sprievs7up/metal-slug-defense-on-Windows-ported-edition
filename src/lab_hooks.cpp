@@ -1012,6 +1012,17 @@ float ai_field_power(Context& c,uint32_t team){
     }
     return sum;
 }
+// 第 20 版：统一压力判定（出兵选择、AP 饱和出兵、场上投资共用）。对方前线推进到距己方据点 ALERT_BASE+ALERT_SPAN·s
+// 场宽以内（段位越高越早察觉：SILVER 0.35、GOLD 约 0.39、PREDATOR 0.45；0.45+0.15s 的试验值使 PREDATOR 在敌方越过中线时即判定压力，投资据点受阻），或对方不含据点的场上战力高出 PRESSURE_DEFICIT。
+// 第 12–19 版为 front ≤ 0.4−0.2s、deficit > 400+1200s，高段位警戒距离反而更短（PREDATOR 0.2 场宽），敌方压到据点前仍在积累 AP。
+constexpr float ALERT_BASE=0.35f,ALERT_SPAN=0.10f,PRESSURE_DEFICIT=400.0f;
+bool ai_pressure(Context& c,uint32_t controller,float s){
+    bool present=false;
+    float front=ai_front_ratio(c,controller,present);
+    if(present && front<=ALERT_BASE+ALERT_SPAN*s)return true;
+    uint32_t team=rd<uint32_t>(c,controller+0x38cu)&1u;
+    return ai_field_power(c,team^1u)-ai_field_power(c,team)>PRESSURE_DEFICIT;
+}
 void ai_stat(Context& c,uint32_t side,uint32_t field,uint32_t value,bool add=true){
     uint32_t a=AI_STATS_BASE+side*0x20u+field*4u;wr<uint32_t>(c,a,add?rd<uint32_t>(c,a)+value:value);
 }
@@ -1085,6 +1096,8 @@ int32_t ai_saturated_pick(Context& c,uint32_t controller,uint32_t tier){
     if(best_cost>=top_cost)return best;                          // 最高 AP 单位可出
     // 最高 AP 单位冷却中：只用超出其价格的 AP 出次一级单位，保留够买它的 AP（第 18 版测试：不保留时满级后
     // 反复出最便宜单位，AP 攒不起来）；余量不足时等待 AP 回复。
+    // 压力下（第 20 版）不再保留 AP，直接出已就绪单位中 AP 最高者。
+    if(ai_pressure(c,controller,float(std::min(rd<uint32_t>(c,tier+20u),100u))/100.0f))return best;
     return ap-float(best_cost)>=float(top_cost)?best:-2;
 }
 void tactic_stat(Context& c,uint32_t controller,uint32_t field){
@@ -1125,8 +1138,7 @@ void ai_choose(Context& c){                                    // 0x1cc40e：r4 
     bool present=false;
     float front=ai_front_ratio(c,controller,present);
     uint32_t team=rd<uint32_t>(c,controller+0x38cu)&1u;
-    float deficit=ai_field_power(c,team^1u)-ai_field_power(c,team);
-    bool pressure=front<=0.4f-0.2f*s || deficit>400.0f+1200.0f*s;
+    bool pressure=ai_pressure(c,controller,s);
     bool builders_ok=present && front<=0.5f;
     int32_t target=-1,affordable=-1;float best_target=-1.0f,best_affordable=-1.0f;
     int32_t target_cost=0,affordable_cost=0;
@@ -1347,8 +1359,7 @@ bool ai_invest(Context& c,uint32_t controller){                // true：本帧�
     float s=float(std::min(rd<uint32_t>(c,tier+20u),100u))/100.0f;
     bool present=false;
     float front=ai_front_ratio(c,controller,present);
-    float deficit=ai_field_power(c,team^1u)-ai_field_power(c,team);
-    if(front<=0.4f-0.2f*s || deficit>400.0f+1200.0f*s){          // 压力：照常出兵，暂停计时不累计
+    if(ai_pressure(c,controller,s)){                              // 压力：照常出兵，暂停计时不累计
         st.hold_start=ai_frame;wr<uint32_t>(c,stats+24u,rd<uint32_t>(c,stats+24u)+1u);
         return false;
     }
@@ -1465,6 +1476,7 @@ void draw_conv(Context& c){
 // 2 压前线（据点等级 0–1）：己方场上单位（不含据点）少于 SCREEN_UNITS 时，随机出一个 CHEAP_AP 以内的单位，
 //   先在前线建立屏障，使 AP 能稳定积累（用户要求）。
 // 3 骚扰（据点等级 2–5）：每隔 HARASS_MIN–HARASS_MAX 帧随机出 1–2 个 CHEAP_AP 以内的单位（用户要求）。
+// 第 20 版在 1 与 2 之间加入受压出兵（见函数内说明）。
 // 选定后跳转原生出兵调用点 0x1cc40e（与本入口同一栈帧，r4 控制器、r5 槽位），出兵后原生设定反应等待。
 constexpr int32_t CHEAP_AP=100;constexpr uint32_t SCREEN_UNITS=2u,HARASS_MIN=300u,HARASS_MAX=600u,P_DEPLOY_POINT=0x101cc40fu;
 struct Tactic{uint32_t controller,next_harass,burst,stable_seen,stable_react;};
@@ -1477,7 +1489,7 @@ int32_t ai_pre_rules(Context& c,uint32_t controller){
     if(st.controller!=controller)st=Tactic{controller,lab_frame+HARASS_MIN+ai_random()%(HARASS_MAX-HARASS_MIN+1u)+ai_react(c,tier),0u,0xffffffffu,0u};
     if(front_track[team].since!=st.stable_seen){st.stable_seen=front_track[team].since;st.stable_react=ai_react(c,tier);}   // 每段相持重新抽取反应延迟
     uint32_t level=rd<uint32_t>(c,controller+0x3fcu),slots=rd<uint32_t>(c,controller+0x390u);
-    int32_t builder=-1,cheap[32];uint32_t cheap_count=0;float builder_value=-1.0f;
+    int32_t builder=-1,cheap[32],strongest=-1,strongest_cost=-1;uint32_t cheap_count=0;float builder_value=-1.0f;
     for(uint32_t slot=0;slot<slots && slot<32u;++slot){
         uint32_t info=controller+0xcu+slot*0x1cu;
         int32_t cost=int32_t(rd<uint32_t>(c,info));
@@ -1486,9 +1498,18 @@ int32_t ai_pre_rules(Context& c,uint32_t controller){
         if(!(ready&0xffu))continue;
         const UnitValue& v=ai_unit_value(c,rd<uint32_t>(c,info+0x10u),rd<uint32_t>(c,info+0x14u));
         if(v.builder){if(v.value>builder_value){builder_value=v.value;builder=int32_t(slot);}}
-        else if(cost<=CHEAP_AP)cheap[cheap_count++]=int32_t(slot);
+        else{
+            if(cost>strongest_cost){strongest_cost=cost;strongest=int32_t(slot);}
+            if(cost<=CHEAP_AP)cheap[cheap_count++]=int32_t(slot);
+        }
     }
     if(builder>=0 && front_stable(team,st.stable_react))return builder;
+    // 第 20 版受压出兵：压力下直接出已就绪单位中 AP 最高者，优先于积累 AP、开局据点目标与场上投资。
+    // 依据：原生“己方场上不足 4 个单位时不出远程单位”使受压时就绪的远程单位全部被跳过，AP 积累至数千而不出兵，
+    // 最终最高 AP 单位单独出场被围杀（第 20 版隔离测试：GOLD 受压 49 秒未出兵，期间 6–9 个槽位已就绪）。
+    if(strongest>=0 && ai_pressure(c,controller,float(std::min(rd<uint32_t>(c,tier+20u),100u))/100.0f)){
+        return strongest;
+    }
     if(!cheap_count)return -1;
     int32_t pick=cheap[ai_random()%cheap_count];
     if(level<=1u){
@@ -1754,7 +1775,7 @@ void install_se_hooks(){
     old_se_release=find_block(0x101c833du);register_block(0x101c833du,se_release);
 }
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 19u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 20u;}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;
