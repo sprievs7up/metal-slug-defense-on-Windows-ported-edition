@@ -1714,4 +1714,5 @@ old_kt21_flame_interrupt=find_block(0x101de017u);register_block(0x101de017u,kt21
 old_kt21_flame_ending_bullet=find_block(0x1017d7fdu);register_block(0x1017d7fdu,kt21_flame_ending_bullet);
 old_kt21_flame_knockback_limit=find_block(0x101e0b5du);register_block(0x101e0b5du,kt21_flame_knockback_limit);
 old_kt21_flame_battle_reset=find_block(0x101e019du);register_block(0x101e019du,kt21_flame_battle_reset);
+old_ground_special_update=find_block(0x10192571u);register_block(0x10192571u,ground_special_update);
 }

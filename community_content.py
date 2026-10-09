@@ -78,6 +78,8 @@ class CommunityContent:
             for group,attribute in u.get('attack_attributes',{}).items():
                 if group not in ('normal','special') or not isinstance(attribute,int) or isinstance(attribute,bool) or attribute not in range(5):raise ValueError('Invalid native attack attribute')
             if 'shot_action_reference_id' in u and (u['base_id']!=61 or u['shot_action_reference_id']!=157):raise ValueError('Unsupported mummy projectile action reference')
+            grounded=u.get('ground_special_attack',False)
+            if not isinstance(grounded,bool) or (grounded and u['base_id']!=3):raise ValueError('Unsupported grounded special attack')
             if not isinstance(u.get('normal_attack_range_from_projectile',False),bool):raise ValueError('Invalid projectile attack-range flag')
             for group,category in u.get('attack_range_categories',{}).items():
                 if group not in ('normal','special') or not isinstance(category,int) or isinstance(category,bool) or not 0<=category<=5:raise ValueError('Invalid native menu attack-range category')
@@ -202,6 +204,7 @@ class CommunityContent:
         if any(u.get('child_unit_key') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_display_status_version') or p.uc.lib.msd_community_display_status_version()!=1):raise RuntimeError('Native core lacks child display status references')
         if any('recovery_animation' in u for u in self.units) and (not hasattr(p.uc.lib,'msd_community_mummy_variant_version') or p.uc.lib.msd_community_mummy_variant_version()!=1):raise RuntimeError('Native core lacks mummy recovery and viewer adaptation')
         if any(u.get('flame_interrupt') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_flame_interrupt_version') or p.uc.lib.msd_community_flame_interrupt_version()!=1):raise RuntimeError('Native core lacks the flame interruption adapter')
+        if any(u.get('ground_special_attack') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_ground_special_version') or p.uc.lib.msd_community_ground_special_version()!=1):raise RuntimeError('Native core lacks grounded special attacks')
         p.uc.lib.msd_enable_community_content()
         self.ready=False
 
@@ -438,6 +441,9 @@ class CommunityContent:
             if f:flames+=struct.pack('<8I',1|(2 if f['knockback_limit_per_special'] else 0),f['flame_start_tick'],f['flame_ticks'],f['alternate_knockback_animation'],*f['ending_bullet_animations'])
             else:flames+=bytes(32)
         fields+=(self.alloc(flames),)
+        # 头部偏移 116：逐单位地面绝招标记，复用原生冲刺单位的地形移动流程。
+        grounded=struct.pack('<'+'I'*n,*(int(u.get('ground_special_attack',False)) for u in self.units))
+        fields+=(self.alloc(grounded),)
         p.write(HEADER,struct.pack('<%dI'%len(fields),*fields));self.ready=True
         self.map_initial_choices_applied=not (self.manifest.get('missions') or self.manifest.get('campaign_choices'))
         assert p.read(p.word(db+4),400*0x390)==original

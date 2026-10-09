@@ -291,5 +291,17 @@ HOOK(kt21_flame_knockback_limit,0x101e0b5du, flame_knockback_limit(c);)
 // BattleObjectManager::initialize：战斗开始时清除上述记录。
 HOOK(kt21_flame_battle_reset,0x101e019du, flame_mark_count=0u;flame_owner_count=0u;)
 extern "C" __declspec(dllexport) uint32_t msd_community_flame_interrupt_version(){return 1u;}
+// 地面绝招沿用 HeavyB 状态 50 的更新：动画与攻击等待后，每帧调用 actionMove(object,0)。
+// 该流程保留脚本水平速度，并按原生规则处理坡地高度、阶差阻挡与下落。
+HOOK(ground_special_update,0x10192571u,
+ if(active(c)&&c.r[2]==50u&&head(c,116u)){
+  uint32_t object=c.r[1];uint32_t uid=rd<uint32_t>(c,object+0x128u);
+  if(record(c,uid)&&rd<uint32_t>(c,object)==head(c,84u)&&
+     (rd<uint32_t>(c,head(c,116u)+(uid-U)*4u)&1u)){
+   c.pc=0x1017a0adu;return;
+  }
+ }
+)
+extern "C" __declspec(dllexport) uint32_t msd_community_ground_special_version(){return 1u;}
 // Generated block overrides and registration are emitted by the build script.
 #include "community_blocks.inc"

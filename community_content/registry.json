@@ -22097,6 +22097,7 @@
       "key": "s1xlv.kt21",
       "id": 1043,
       "base_id": 3,
+      "ground_special_attack": true,
       "faction": 1,
       "identity": "Rebel Army",
       "shop_price": 0,
