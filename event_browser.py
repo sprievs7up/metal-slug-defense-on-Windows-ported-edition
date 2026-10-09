@@ -24,6 +24,9 @@ ROW_X = (540 + 88.9) * 1.125
 ROW_RECTS = tuple((ROW_X, y * 1.125, TILE_W * SCALE, TILE_H * SCALE) for y in (180, 272, 364))
 HALF_RECTS = ((ROW_X, 364 * 1.125, HALF * SCALE, TILE_H * SCALE),
               (ROW_X + (HALF + GAP) * SCALE, 364 * 1.125, HALF * SCALE, TILE_H * SCALE))
+# 右侧三行按钮区及外缘：按下于此而未命中宿主按钮时，整次触点（含移动与抬起）不送入原生，
+# 避免原生第三行“對戰”面板于抬起时受理（两段间隙、按钮外缘、闸门期间）。
+GUARD_RECT = (ROW_X - 40, ROW_RECTS[0][1] - 30, TILE_W * SCALE + 80, ROW_RECTS[2][1] + ROW_RECTS[2][3] - ROW_RECTS[0][1] + 70)
 ROW_TASKS = (0x337c, 0x3380, 0x3384)                               # 主菜单右侧三个按钮任务
 BACK_TASK, BACK_RECT = 0x36d8, (45, 598, 132, 110)
 SAND_TASK = 0x3370
@@ -195,10 +198,12 @@ class EventBrowser:
                 p.put(header, 0)
             self.header_written = False
             return
-        entries = [(MONITOR_CONV, 0, self.event_image(self.events[self.index]), 0, (0, 0, 360, 240, 0, 0, 0, 0)),
-                   (TILE_NORMAL_CONV, 0, self.row3_image(self.pressed if self.pressed in (0, 1) and not self.cancelled else None), ROW3_Y_BITS,
-                    (0, 0, TILE_W, TILE_H, 0, 0, 0, 0)),
-                   (TILE_PRESSED_CONV, 0, 0, ROW3_Y_BITS, (0,) * 8)]
+        entries = [(MONITOR_CONV, 0, self.event_image(self.events[self.index]), 0, (0, 0, 360, 240, 0, 0, 0, 0))]
+        if self.main_page():
+            # 第三行分段框仅用于主菜单主页；OPTION 等子页面的同高度按钮保持原生整框。
+            entries += [(TILE_NORMAL_CONV, 0, self.row3_image(self.pressed if self.pressed in (0, 1) and not self.cancelled else None),
+                         ROW3_Y_BITS, (0, 0, TILE_W, TILE_H, 0, 0, 0, 0)),
+                        (TILE_PRESSED_CONV, 0, 0, ROW3_Y_BITS, (0,) * 8)]
         for i, (conv, want, image, ybits, rect) in enumerate(entries):
             e = header + 0x10 + i * 32
             p.put(e, conv)
@@ -209,6 +214,17 @@ class EventBrowser:
         p.put(header + 4, len(entries))
         p.put(header, 0x47505356)
         self.header_written = True
+
+    def main_page(self):
+        """主菜单主页（入场 27 或稳态 28/1）。"""
+        p = self.p
+        app = p.app_instance()
+        scene, state = p.word(app + 0x22bc), p.word(app + 0x22dc)
+        if scene == 27:
+            return True
+        if scene != 28 or state != 1:
+            return False
+        return True
 
     # ---------- 流程 ----------
     def open(self, immediate=False):
@@ -364,15 +380,17 @@ class EventBrowser:
         rects = {'start': ROW_RECTS[0], 'detail': ROW_RECTS[1], 'back': BACK_RECT, 0: HALF_RECTS[0], 1: HALF_RECTS[1]}
         if action == 1:
             self.end_native_press()
-            self.pressed, self.cancelled = None, False
+            self.pressed, self.cancelled, self.swallow = None, False, False
             if not self.menu_ready():
-                return inside(ROW_RECTS[2], x, y) or any(inside(ROW_RECTS[i], x, y) for i in (0, 1))
+                self.swallow = inside(GUARD_RECT, x, y)
+                return self.swallow
             for key in ('start', 'detail', 'back', 0, 1):
                 if inside(rects[key], x, y):
                     self.pressed = key
                     break
             if self.pressed is None:
-                return inside(ROW_RECTS[2], x, y)          # 两段之间的间隙不受理，也不送入原生
+                self.swallow = inside(GUARD_RECT, x, y)    # 间隙与外缘：整次触点不受理，也不送入原生
+                return self.swallow
             if self.pressed in ('start', 'detail'):
                 self.native_touch(action, x, y)            # 原生按压白光（主菜单大按钮于释放时受理，释放在框外即不触发）
             elif self.pressed == 'back':
@@ -381,6 +399,10 @@ class EventBrowser:
                 self.write_header(True)                    # 第三行对应半段换为按下图块
             return True
         if self.pressed is None:
+            if getattr(self, 'swallow', False):
+                if action == 3:
+                    self.swallow = False
+                return True
             return False
         key = self.pressed
         if action == 5:

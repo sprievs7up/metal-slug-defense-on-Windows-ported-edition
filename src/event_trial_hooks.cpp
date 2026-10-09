@@ -421,6 +421,17 @@ SHOP_HOOK(base_shop_panel,0x1021d63du,{
         wr<uint32_t>(c,task+0x7c,rd<uint32_t>(c,task+0x7c)|0xa0u);ret(c,0u);return;
     }
 })
+// 活动拾取物计数（战斗左下 HUD）：1.46 BattlePlayerOperator::createGrahics 以 1.39 版 event_otakara_ui.obm 的坐标
+// （内嵌星形 9 帧、数字 10 项与 "x"）裁切 1.46 重排后的图集，得到错位图块。H+216 非零时为宿主提供的 1.39 布局
+// 图集文件名，仅替换该调用点（返回地址 0x101dadc2）的 readFileFromOBM 参数；H+220 非零时指向 9 项转换表，
+// 于首次循环前覆盖栈上的星形帧副本（秘宝活动以金币代替）。
+SHOP_HOOK(hud_item_atlas,0x101c3badu,{
+    if(active(c)&&(c.r[14]&~1u)==0x101dadc2u&&rd<uint32_t>(c,H+216))c.r[1]=rd<uint32_t>(c,H+216);
+})
+SHOP_HOOK(hud_item_frames,0x101dade5u,{
+    uint32_t table=active(c)?rd<uint32_t>(c,H+220):0u;
+    if(table&&c.r[8]==c.r[13]+0xb0u)for(uint32_t i=0;i<9u*16u;i+=4u)wr<uint32_t>(c,c.r[8]+i,rd<uint32_t>(c,table+i));
+})
 SHOP_HOOK(map_stage_new,0x10167ff1u,if(stage_wt(c,true)){ret(c,0);return;})
 SHOP_HOOK(map_stage_new_delete,0x1016807du,if(stage_wt(c,true)){ret(c,0);return;})
 SHOP_HOOK(map_area_new,0x10168659u,if(map_wt(c,c.r[3],true)){ret(c,0);return;})
@@ -510,6 +521,7 @@ extern "C" __declspec(dllexport) void msd_enable_historical_event_hooks(){
     INSTALL(map_prisoner_button_input,0x101ff4e9u);
     INSTALL(map_prisoner_button_draw,0x102003bdu);
     INSTALL(base_shop_panel,0x1021d63du);
+    INSTALL(hud_item_atlas,0x101c3badu);INSTALL(hud_item_frames,0x101dade5u);
     INSTALL(map_world_init,0x10215009u);INSTALL(map_bgm,0x101663c1u);
     INSTALL(map_background,0x102146cdu);
     INSTALL(cat_world_draw,0x10213b35u);

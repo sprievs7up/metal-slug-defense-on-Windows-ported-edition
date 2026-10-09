@@ -15,6 +15,8 @@ OriginalProbe=probe.Probe
 class TrialProbe(OriginalProbe):
     def path(self,s):
         path=super().path(s)
+        if path.name=='event_otakara_ui_hud.obm':                 # 战斗拾取物计数的 1.39 布局图集（第 85 节）
+            return ROOT/'historical_events/assets'/path.name
         if hasattr(self,'event_trial') and self.event_trial.native_map.active:
             selected=ROOT/'historical_events/assets'/self.event_trial.selected/path.name
             if path.name.startswith('stage_thumbnail_') and selected.is_file():return selected

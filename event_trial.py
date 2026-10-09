@@ -228,6 +228,7 @@ class EventTrial:
         # 原生 Survival 兑换商店（地图 BASE 区域，MenuShop 模式 6）在活动中读取该活动目录与原价。
         if self.has_shop():self.prepare_native_shop()
         p.put(HEADER+48,len(self.medal_rows()))
+        self.prepare_item_hud()
         if enter:
             p.call('_ZN7AppMain12SceneEndFuncEi',self.app,p.word(self.app+0x22bc))
             p.call('_ZN7AppMain23SC_WiFiMenuInit_TagTeamEv',self.app)
@@ -376,7 +377,7 @@ class EventTrial:
         self.native_selector.disable()
         for i,raw in enumerate(self.original_groups):p.write(self.groups+i*8,raw)
         p.write(self.db+0x20,self.original_survival)
-        p.write(HEADER,b'\0'*216)
+        p.write(HEADER,b'\0'*224)
         if self.selected is not None and self.original_currency is not None:
             p.call('_ZN7AppMain24SetSurvivalPointSaveDataEi',self.app,self.original_currency)
         self.selected=None;self.selected_phase=None;self.overlay=None;self.native_shop_active=False;self.active_battle=None
@@ -435,6 +436,20 @@ class EventTrial:
             self.p.call('_ZN7AppMain10SetPopupOKEPcS0_PFvvEiiii',self.app,self.p.cstr(message),self.p.cstr(title),0,290,30,-256,0)
             return
         self.overlay=page;self.page=0;self.last_message='';self.revision+=1;self.image=None
+    # 战斗左下拾取物计数：1.46 原生合成代码沿用 1.39 版图集坐标（第 85 节），秘宝（1.37/1.38）为静态金币，圣诞（1.39）为旋转星形。
+    HUD_ATLAS='event_otakara_ui_hud.obm'
+    HUD_COIN=struct.pack('<8h',0,16,14,14,7,7,0,0)*9          # 1.39 图集 ConvEventOtakaraUI 第 0 项（金币）
+    def prepare_item_hud(self):
+        p=self.p
+        atlas=frames=0
+        if self.selected in ('melty_christmas_2015','treasure_recovery_2015') and (self.root/'historical_events/assets'/self.HUD_ATLAS).is_file():
+            if not getattr(self,'hud_atlas_name',0):self.hud_atlas_name=p.cstr(self.HUD_ATLAS)
+            atlas=self.hud_atlas_name
+            if self.selected=='treasure_recovery_2015':
+                if not getattr(self,'hud_coin_frames',0):
+                    self.hud_coin_frames=p.alloc(len(self.HUD_COIN));p.write(self.hud_coin_frames,self.HUD_COIN)
+                frames=self.hud_coin_frames
+        p.put(HEADER+216,atlas);p.put(HEADER+220,frames)
     def prepare_native_shop(self):
         p=self.p;t=self.active_shop_table()
         for i,r in enumerate(self.shop_rows()):p.put(t['records']+i*64+16,self.state()['purchase_counts'].get(str(r['id']),0))
@@ -489,8 +504,9 @@ class EventTrial:
         p.call('_ZN7AppMain12SceneEndFuncEi',self.app,p.word(self.app+0x22bc))
         # 活动商店返回女教官基地，保留活动与分期身份。
         p.put(self.app+0xc63c,4);p.put(self.app+0xc06c,1);p.put(self.app+0xc8c8,6)
-        p.call('_ZN7AppMain23SC_WiFiMenuInit_TagTeamEv',self.app)
+        # 原生基地初始化期间的面板钩子依据商店目录头决定隐藏标记（0xa0 持续保留），须先恢复目录头。
         if self.has_shop():self.prepare_native_shop()
+        p.call('_ZN7AppMain23SC_WiFiMenuInit_TagTeamEv',self.app)
     def native_shop_purchase(self,sid):
         if not self.has_shop() or not (self.native_shop_active or self.p.word(HEADER+84)):return False
         p=self.p;row=next((r for r in self.shop_rows() if r['id']==sid),None)
