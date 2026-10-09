@@ -100,3 +100,115 @@
 | 预取与缓存 | `asset_cache.py`、`native_audio.py`、`text_render.py` |
 | 既有性能证据 | `verification/system_requirements_20261008/`（`sample_menus.py`、`audit_summary.json`）、`docs/VALIDATION_2026.10.02.1.md` |
 | 构建 | `src/build.py`（`--library`、`--no-activate`、`--no-sha256`） |
+
+## 10. 进度记录
+
+### 10.1 精简版 P0（2026-10-09，已完成）
+
+- 范围：用户按额度限定为精简版，只测两种分辨率（1280×720、1920×1080）、三个场景（冷启动、首次进入战斗、战斗中），测试条件只用一种（强制 Intel UHD 集显）。游戏代码未修改。
+- 驱动与结果：`verification/performance_20261009/p0_measure.py`，汇总见同目录 `SUMMARY.md`，逐帧数据为 `runs/*/frames.jsonl`。分项计时在驱动中包装 `Probe.dispatch` 完成；本任务书第 4 节第 1 条所述 `player.py` 内置开关尚未实现。
+- 结论（高端 CPU + 集显，pbuffer，无交换链）：
+  - 战斗稳态 total p95 为 12.4 ms（1280×720）与 13.9 ms（1920×1080），集显 GPU p95 为 4.9 ms 与 6.5 ms，3596 帧中各只有 1 帧超过 33 ms（战斗结束时的场景释放）。
+  - 卡顿集中在一次性加载点：
+    - 启动第 1 帧约 0.85–0.92 秒，主要为着色器校验与链接，glValidateProgram 约 0.5 秒；
+    - 进入战斗首帧约 0.47 秒，其中 fopen 约 0.19 秒、malloc 0.04 秒、glTexImage2D 0.03 秒，核心约 0.13 秒；
+    - LAB 准备界面打开约 0.28 秒，为宿主 Python 绘制；
+    - 标题首帧约 0.16–0.19 秒。
+- P1 优先级建议：
+  1. 着色器预热或程序缓存（启动）；
+  2. 进入战斗前的资源预取（fopen、解码、纹理上传）；
+  3. LAB 准备界面的绘制缓存。
+  
+  依据为上述实测，需与用户确认。
+- 未覆盖：低端 CPU、8 GB 内存、真实窗口与垂直同步、音频输出、40/80 单位高负载、二次进入对比、普通关卡与 EVENT 战斗。第 4 节第 3 条要求的 WARP 下限参考与 2560×1440 均未测；社群问卷（第 4 节第 4 条）未发布。
+
+### 10.2 P1 三项（2026-10-09，已完成并同步）
+
+按用户确认的顺序实施。均为宿主修改，核心保持 r32；测量条件同 10.1（Intel UHD 集显，1280×720，pbuffer）。
+
+1. **着色器缓存**：新增 `shader_cache.py`，由 `graphics.py` 在 `eglInitialize` 之后登记 ANGLE `EGL_ANDROID_blob_cache` 的存取回调，关闭时保存。
+   - 缓存位于 `%LOCALAPPDATA%\MSD_WINDOWS_S1XLV\shader_cache\<渲染器 crc32>.bin`，不在存档目录内，删除后自动重建，上限 64 MiB。`MSD_SHADER_CACHE_DIR` 可改变目录，设为空值时停用。
+   - 第二次启动时 76 次查找全部命中，glValidateProgram 519 → 34 ms，启动第 1 帧 960 → 464 ms。
+   - 首次启动仍需编译。剩余开销主要是 GLSL 着色器对象的编译（glGetShaderiv 约 90 ms），以及资源打开。
+   - 标题画面比对：开启缓存与关闭缓存的运行只在一处约 36×47 的小区域有差异，两次关闭缓存的运行之间同样有差异，判定为随时间变化的标题动画，与缓存无关。
+2. **进入战斗前的读取**：逐文件计时显示，LAB 进入战斗首帧打开 178 个文件，实际读盘合计约 34 ms。主要开销来自 LAB 存档隔离 `sandbox_open` 对每次读取都做 `Path.resolve()`，合计约 110 ms。
+   - 修改 `lab_runtime.py`：只读请求在尚无虚拟文件时，或请求 `.obm`/`.msdf` 时，跳过路径解析，直接按原流程处理。
+   - LAB 进入战斗首帧 470 → 约 265–305 ms。剩余部分为实际读取、原生分配（malloc 约 30 ms）、纹理上传（约 25 ms）和核心资源初始化（约 100 ms）。
+   - 现有预读（界面、关卡、音乐）合计约 160 MB，已超过 128 MB 缓存上限；单位图集读盘收益约 30 ms，因此本轮不扩大预读范围。
+   - 普通关卡的本地目录试探在基类中提前返回，原本就没有这项开销。
+3. **LAB 准备界面**：整张画面原本已按版本号缓存，首次打开慢是因为缓存未命中。
+   - 新增 `LabPrep.warm` 与 `Lab.warm_prep`：主菜单（28/1）稳定 30 帧后，每帧预热一项，依次为底纹、单位列表、地图目录、当前关卡缩略图。所用函数与打开时相同，画面结果不变。
+   - 首次打开 210–280 → 约 105 ms。代价是主菜单空闲时有两帧稍超预算（约 57 ms、37 ms），每次启动只发生一次。
+
+**附带修复**：第 90 节同步 r32 时，`core_runtime.json` 已改为 r32，`lab_runtime.LAB_CORE` 仍指向 r31。注册表中 KT-21 的 `ground_special_attack` 需要 r32，所以独立 LAB 入口（`Start_LAB.exe`/`lab_launcher.py`）启动时报 “Native core lacks grounded special attacks” 并退出。现已改为 r32。普通入口读取 `core_runtime.json`，不受影响。
+
+**验证**：
+- 精简 P0 驱动多次运行：冷启动、LAB 首次进入战斗、战斗，均成功。
+- 窗口模式退出路径驱动 4 组（battle-close×2、menu-close、title-esc）退出码均为 0、无错误日志，窗口模式下缓存文件正常写出。
+- 未运行 EVENT、双人对战、浏览页等其他回归。
+
+**同步**：每个目标 9 个文件，目标为 `dist/MSD_Windows` 与用户固定运行副本。
+- 文件清单：`graphics.py`、`shader_cache.py`、`lab_runtime.py` 及三者的 src 镜像，`lab.py`、`lab_prep.py`、本任务书。
+- 同步前目标文件与 HEAD 一致，同步后逐字节一致；两个目标分别有 131、75 个存档与 LAB 设置文件，同步前后大小与修改时间不变。
+- 覆盖前副本位于 `verification/performance_20261009/sync_before/`。
+
+**未做**：首次启动的着色器编译（可考虑在加载画面期间编译）、P2 宿主转接迁移（malloc 线性空闲块搜索等）、P3 内部渲染分辨率，以及低配 CPU 与 8 GB 内存的实测。
+
+**追加修复（同日，用户报告）**：LAB/双人对战按 OK 后会闪现一帧主菜单或 SHOP。
+
+- 逐帧截图复现：场景进入战斗初始化（100）的当帧，宿主就松开了自己的闸门，而原生闸门要到下一帧才开始绘制，中间一帧露出主菜单。该问题与缓存无关，在本次 P1 修改之前就存在。
+- 修复：`lab.py` 中宿主闸门在场景切换后再保持 2 帧才交给原生闸门。修复后逐帧截图确认不再露出主菜单。
+- `lab.py` 已同步两个运行目录。
+
+### 10.3 阶段状态与 P4 更新稿（2026-10-09）
+
+- P1：用户确认的三项已完成（10.2）。第 5 节的其余项（扩大预读、GPU 纹理预上传、文字光栅缓存、音频预取核查、首次启动的着色器预热）实测单项收益均在几十毫秒以内，列为可选项。第 7 节的验收条件（低配实测、二次进入无超过 100 ms 的帧）尚未验证。
+- P2、P3：依实测数据（战斗中宿主转接 p95 约 0.5 ms，集显 1080p 下 GPU p95 6.5 ms）暂缓，待取得低配设备数据后再决定。
+- P4：以下为更新后的英文说明，取代第 8 节草稿，发布前由用户审定。
+
+> Thanks for the feedback. A clarification on how S1XLV works: the game is not run in a CPU emulator. The original ARM game code is statically recompiled ahead of time into a native x64 Windows DLL, so all game logic runs as native code. That is also why the structure matches the original Android game: the goal is to preserve it exactly. What remains is a thin platform layer (Python) that provides what Android used to provide: file access, fonts, audio, input, and OpenGL ES through ANGLE (Direct3D 11).
+>
+> We measured it on an Intel UHD integrated GPU at 1280×720 and 1920×1080. In battle, frames take about 12–14 ms at the 95th percentile, well within the 33 ms budget of the 30 FPS target, and the GPU part is only about 5–7 ms. The stutters people notice come from one-time loading moments, not from battles themselves. The next update addresses these:
+> - shaders are now cached after the first launch (the first frame on later launches is about 2× faster);
+> - entering a LAB battle no longer does slow per-file path checks (about 470 → 280 ms);
+> - the LAB setup screen is prepared while the main menu is idle (first open about 250 → 105 ms).
+>
+> Our test machine has a fast CPU, so results on low-end CPUs or 8 GB RAM may differ. If you still see lag or glitches, please share your CPU, GPU, RAM, resolution, game version, where it happens, and `player_error.log` if present.
+
+### 10.4 P2 宿主转接（2026-10-09，已完成并同步）
+
+依据实测排名，只处理有数据支持的两项，核心不重建（仍为 r32）。
+
+1. **三个每帧 GL 调用改为直接绑定**：`glClear`、`glDepthFunc`、`glClearColor` 加入 `native_imports.GRAPHICS`，复用核心已有的调用类型 32（单个整数参数）和 53（四个浮点参数）。经核查，宿主对这三个调用没有附加状态；`clear_bars` 从 GL 状态读回清屏色。`glViewport` 需要做坐标缩放，继续留在 Python。
+2. **`Probe.free` 改为二分插入并只与相邻块合并**：空闲块表本来就保持“按地址排序且相邻块已合并”，因此结果与原来的整表排序加全量合并完全相同。`alloc` 的首次适配逻辑未改。
+   - `verification/performance_20261009/test_allocator.py`：40 组随机种子各 5000 步，每次分配返回的地址与空闲块表逐步一致；在约 290 个空闲块的碎片程度下，速度为原来的 4.8 倍。
+
+**A/B 实测**（`p0_measure.py --p2-off` 作对照，60 秒战斗，交替各两轮，Intel UHD，1280×720）：
+- 战斗中每帧宿主转接 p50：0.12–0.15 → 0.06 ms；
+- 战斗中最长一帧：18.6–19.8 → 9.2–11.1 ms；
+- 战斗中 p95：6.0–6.5 → 5.7 ms。
+
+这台机器上收益很小，符合 P0 的判断（宿主转接不是瓶颈）。
+
+**测量修正**：10.1 节的 P0 基线运行时，驱动把 probe 日志逐行刷写到 console.log，这会抬高每帧耗时；当时战斗 p50 为 8.2 ms，在与游戏一致的条件（stdout 为 None）下约为 3.5–4 ms。10.1 节中卡顿点的结论（一次性加载帧）不受影响。
+
+**验证**：分配器等价性测试、A/B 实测、120 秒战斗完整运行（进入、对战、结束）均成功；窗口模式 battle-close、menu-close 退出码均为 0。未运行 EVENT、双人对战、浏览页回归。
+
+**同步**：每个目标 5 个文件，目标为 `dist/MSD_Windows` 与用户固定运行副本：`probe.py`、`native_imports.py` 及二者的 src 镜像、本任务书。同步前目标文件与 HEAD 一致。
+
+**未做**：`alloc` 的首次适配线性查找（需要更复杂的数据结构，收益未测）、`fopen` 与 `glTexImage2D`（进入战斗时的一次性开销）。
+
+### 10.5 P3 内部渲染分辨率上限（2026-10-09，已完成并同步）
+
+- **设置**：游戏根目录 `display_settings.json` 的 `max_render_height`，默认 0（按窗口实际分辨率渲染，行为不变）；环境变量 `MSD_MAX_RENDER_HEIGHT` 可覆盖。例如设为 1080 时，2560×1440 全屏以 1920×1080 渲染。
+- **实现**（`graphics.py`）：使用 ANGLE `EGL_ANGLE_window_fixed_size` 创建固定尺寸的窗口表面，高度为上限值，宽度按窗口宽高比计算，由 D3D 在呈现时放大到窗口。
+  - 窗口宽高比变化（切换全屏或窗口）时重建表面，GL 上下文和已加载资源保留，并重新设置垂直同步间隔。
+  - 鼠标坐标按窗口尺寸换算，不受影响；扩展不可用时回退到普通窗口表面。
+  - pbuffer（验证驱动）路径不变。
+- **验证**：
+  - 真实窗口退出路径驱动在上限 480 下 battle-close 退出码 0，日志记录 `RENDER_FIXED_SIZE 853 480 window 1280 720`，标题截图为 853×480 且内容正确；
+  - `verification/performance_20261009/test_render_cap.py` 在真实窗口中依次测试 1280×720 → 1440×900（重建为 768×480）→ 同尺寸（不处理）→ 去掉上限（1280×720 普通表面）→ 重新开启，各步清屏读回正确。
+- **限制**：
+  - 放大由 DXGI 完成，像素画会略显柔和；
+  - 尚无游戏内设置界面，需手动编辑 JSON；
+  - 低端显卡上的实际收益未测。

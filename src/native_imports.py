@@ -13,7 +13,9 @@ GRAPHICS={'glEnable':32,'glDisable':33,'glActiveTexture':34,'glUseProgram':35,
           'glDrawArrays':44,'glDrawElements':45,'glVertexAttribPointer':46,
           'glUniform4fv':47,'glUniform3fv':48,'glUniformMatrix4fv':49,'glUniform1i':50,
           'glUniform1f':51,'glUniform4f':52,'glBlendColor':53,'glTexParameterf':54,
-          'glGetUniformLocation':55,'glGetAttribLocation':55}
+          'glGetUniformLocation':55,'glGetAttribLocation':55,
+          # 每帧固定调用，宿主无附加状态：沿用既有的单整数参数与四浮点参数调用类型。
+          'glClear':32,'glDepthFunc':32,'glClearColor':53}
 
 def bind(p, graphics=None):
     if os.environ.get('MSD_NATIVE_IMPORTS','1')=='0':return

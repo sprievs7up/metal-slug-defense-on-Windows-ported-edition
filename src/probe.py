@@ -4,7 +4,7 @@ Experimental implementation: unresolved host calls stop execution and are logged
 ELF bytes supply data/relocations. Game execution uses precompiled x64 blocks.
 """
 from pathlib import Path
-import sys, io, json, struct, zipfile, tarfile, ctypes, math, time, os, re, collections
+import bisect, sys, io, json, struct, zipfile, tarfile, ctypes, math, time, os, re, collections
 if hasattr(sys.stdout,'reconfigure'):sys.stdout.reconfigure(encoding='utf-8',errors='backslashreplace')
 if hasattr(sys.stderr,'reconfigure'):sys.stderr.reconfigure(encoding='utf-8',errors='backslashreplace')
 ROOT = Path(__file__).resolve().parent
@@ -150,13 +150,14 @@ class Probe:
             raise RuntimeError('Decoder worker unexpectedly released a guarded allocation')
         size=self.allocations.pop(p,None)
         if size is None:raise RuntimeError(f'Unknown or duplicate free: {p:08x}')
-        self.free_blocks.append((p,size));self.free_blocks.sort()
-        merged=[]
-        for addr,length in self.free_blocks:
-            if merged and merged[-1][0]+merged[-1][1]==addr:
-                q,n=merged[-1];merged[-1]=(q,n+length)
-            else:merged.append((addr,length))
-        self.free_blocks=merged
+        # free_blocks stays sorted by address with adjacent blocks merged, so the
+        # released block only joins its immediate neighbours (same result as a
+        # full sort and merge, without rescanning the whole list).
+        blocks=self.free_blocks;i=bisect.bisect_left(blocks,(p,0))
+        if i<len(blocks) and p+size==blocks[i][0]:size+=blocks.pop(i)[1]
+        if i and blocks[i-1][0]+blocks[i-1][1]==p:
+            q,n=blocks[i-1];blocks[i-1]=(q,n+size)
+        else:blocks.insert(i,(p,size))
 
     def cstr(self, s):
         data = s.encode() + b'\0'

@@ -19,7 +19,7 @@ except BaseException:
 
 PROFILE = 'lab_test_save'
 # 含 LAB 钩子的核心由正式版配置统一加载；独立入口和验证保留显式指定核心接口。
-LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r31_20261009.dll'
+LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r32_KT21Ground_20261009.dll'
 KEYS = {glfw.KEY_F7: ('prep',), glfw.KEY_F5: ('exit',), glfw.KEY_F8: ('toggle_full',),
         glfw.KEY_F4: ('toggle_enemy_ai',), glfw.KEY_F3: ('toggle_player_ai',),
         glfw.KEY_LEFT_BRACKET: ('enemy_ap',), glfw.KEY_RIGHT_BRACKET: ('enemy_slug',),
@@ -135,6 +135,10 @@ def install():
 
         def sandbox_open(self, lab, requested, mode):
             """LAB 存档隔离（T9）：存档目录内的写入改写到 lab.virtual_files；已写过的文件读回虚拟内容。"""
+            # 只读且尚无虚拟文件，或读取 .obm/.msdf 素材时，结果必为 None；跳过路径解析
+            # （原生每次资源读取都会先尝试本地数据目录，逐个解析约 0.6 ms，进入战斗时累计约 110 ms）。
+            if not any(k in mode for k in 'wa+') and (not lab.virtual_files or requested.endswith(('.obm', '.msdf'))):
+                return None
             path = self.path(requested)
             if not path.is_relative_to(self.guest_root):
                 return None

@@ -88,6 +88,7 @@ class LabPrep:
         self.press_overlay = None
         self.tier_colors = {}
         self.message = ''
+        self.warm_steps = None
 
     # ---------- 数据 ----------
     def t(self, key, *args):
@@ -195,6 +196,23 @@ class LabPrep:
                 image = image.resize((image.width * THUMB_SCALE, image.height * THUMB_SCALE), Image.NEAREST)
             self.thumbs[key] = image
         return self.thumbs[key]
+
+    def warm(self):
+        """主菜单空闲时每次调用预热一项首次打开所需的缓存（与打开时调用相同的函数，结果相同），
+        把首次打开的一次性开销分散到多个空闲帧。语言改变后各缓存仍按原规则重新读取。"""
+        if self.warm_steps is None:
+            def thumb():
+                worlds, wi, si = self.stage_position()
+                if worlds:
+                    self.thumbnail(worlds[wi][1][si])
+            self.warm_steps = [lambda: self.skin.tiled(BRICK, W, H), self.unit_list,
+                               lambda: self.lab.stage_catalog().load(), thumb]
+        if self.warm_steps:
+            step = self.warm_steps.pop(0)
+            try:
+                step()
+            except Exception as error:
+                self.lab.p.log('LAB_PREP_WARM_SKIPPED', type(error).__name__, str(error))
 
     # ---------- 打开与关闭（闸门） ----------
     def show(self, from_closed=False):

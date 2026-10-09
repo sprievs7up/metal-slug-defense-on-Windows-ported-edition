@@ -605,6 +605,15 @@ class Lab:
             if restart:
                 self.restart_at = p.frame + 10
 
+    def warm_prep(self):
+        """主菜单（28/1）稳定 30 帧后，每帧预热一项准备界面缓存（见 LabPrep.warm）。"""
+        app = self.app()
+        idle = (not self.prep.open and self.prep.warm_steps != []
+                and self.p.word(app + 0x22bc) == 28 and self.p.word(app + 0x22dc) == 1)
+        self.menu_idle_frames = getattr(self, 'menu_idle_frames', 0) + 1 if idle else 0
+        if self.menu_idle_frames > 30:
+            self.prep.warm()
+
     # ---------- 每帧 ----------
     def update(self):
         while self.commands:
@@ -617,12 +626,24 @@ class Lab:
                     self.leave_sandbox()   # 启动中途失败：还原存档映像并关闭隔离
                 self.feedback(T(self.p, 'fb_failed', command, error), False)
         if self.release_shutter_on_battle and self.p.word(self.app() + 0x22bc) in (99, SCENE_BATTLE):
+            # 原生闸门在进入战斗场景的下一帧才开始绘制；宿主闸门再保持 2 帧，避免中间一帧露出主菜单。
+            since = getattr(self, 'battle_scene_since', None)
+            if since is None:
+                self.battle_scene_since = since = self.p.frame
+            if self.p.frame - since < 2:
+                since = None
+        else:
+            since = None
+            self.battle_scene_since = None
+        if self.release_shutter_on_battle and since is not None:
             self.release_shutter_on_battle = False
+            self.battle_scene_since = None
             self.prep.shutter.release()          # SC_BattleInit 的 SetShutterOpen 接管（原生开闸）
         if not self.active:
             if self.restart_at is not None and self.p.frame >= self.restart_at:
                 self.restart_at = None
                 self.start()
+            self.warm_prep()
             self.prep.draw()
             return
         self.vs_view.prepare()                   # 双人对战选中格光标：写入头部，由原生钩子在出兵格绘制中画出
