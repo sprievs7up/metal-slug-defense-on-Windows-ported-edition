@@ -7,7 +7,7 @@
   三张卡的插画与标签图块换为本地对战 / 局域网对战 / 远程对战，并跳过底栏 SHOP 的 LOCK 叠层；位置、缩放与入场动画
   沿用原生调用。原生 BACK 返回 MENU 时页面关闭；在页面中点击底栏 SHOP 时解除原生“当前页”标记，由原生切换动画进入商店（场景离开 28 时页面关闭）。
 - 卡片点击由宿主拦截：本地对战以双人模式打开 LAB 准备界面；局域网（N6a）与远程（N6b：按地址与房间码直连）经原生闸门进入
-  同一联机大厅（netplay_lobby，原版 Wi-Fi VERSUS 菜单改造）。
+  同一联机大厅（netplay_lobby，原版 Wi-Fi VERSUS 菜单改造）。离开大厅回到主菜单时重新显示本页（follow_lobby_return）。
 卡片图块为 98×123（与原生卡片插画加标签的转换项相同）：上 98×102 为插画，下方为 12 行原生标题字体的标签
 （artwork/title_font_20261008/titles/*_12.png）。存在 custom_content/versus_card_{local,lan,online}.png（98×102）时采用用户插画，
 否则使用占位插画（原生叛军普通兵头像相对）。三张卡的 VS 字样均由程序以原始像素尺寸固定叠加，用户插画仅包含人物图标。
@@ -56,6 +56,7 @@ class VersusPage:
         self.images = {}                        # 语言 → 已建立的原生图像
         self.error = None
         self.lobby = None                       # 联机大厅（netplay_lobby.NetplayLobby，lab_runtime 建立）
+        self.lobby_return = None                # 离开联机大厅回到主菜单时重开本页：None / 'lobby' / 'armed'
 
     # ---------- 文字 ----------
     def rename_strings(self, a):
@@ -196,7 +197,30 @@ class VersusPage:
             self.p.log('VERSUS_PAGE_CLOSE', reason, self.p.frame)
         self.state, self.pressed = 'closed', None
 
+    def follow_lobby_return(self):
+        """离开联机大厅（大厅 BACK，或经编队页进入的勋章商店、单位改造等页面返回）回到主菜单时显示本页。
+        原生按 app+0xb168 选择回到主菜单后的子页；大厅打开后该值置 0（原版从 MENU 进入 Wi-Fi 菜单时的状态），
+        途中在原生底栏另选 OPTION / SHOP 时由原生改写，按原生前往。主菜单初始化（场景 27）时仍为 0 则改为 4（SHOP 子页），
+        场景 28 起以 VERSUS 替换表打开本页，入场动画沿用原生。"""
+        p = self.p
+        app = p.app_instance()
+        scene, _ = self.menu_state()
+        if scene == 27 and self.lobby_return == 'lobby':
+            if p.word(app + 0xb168) == 0:
+                p.put(app + 0xb168, 4)
+                self.lobby_return = 'armed'
+            else:
+                self.lobby_return = None
+        elif scene == 28:
+            if self.lobby_return == 'armed' and self.state == 'closed':
+                self.write_header(True)
+                self.state, self.left_menu, self.unlocked, self.leaving = 'opening', False, False, 0
+                p.log('VERSUS_PAGE_RETURN', p.frame)
+            self.lobby_return = None
+
     def prepare_frame(self):
+        if self.lobby_return is not None:
+            self.follow_lobby_return()
         if self.state == 'closed':
             return
         scene, state = self.menu_state()
@@ -208,6 +232,9 @@ class VersusPage:
         if self.state == 'lan_transition':
             # 原生闸门合拢、进入联机大厅（场景 66）之前继续显示 VERSUS 的标题与卡片。
             if scene != 28 or self.lobby is None or not self.lobby.active():
+                if scene != 28 and self.lobby is not None and self.lobby.active():
+                    self.lobby_return = 'lobby'
+                    self.p.put(self.p.app_instance() + 0xb168, 0)
                 self.close('lan')
             return
         if scene != 28 or self.lab.active or self.lab.prep.open:

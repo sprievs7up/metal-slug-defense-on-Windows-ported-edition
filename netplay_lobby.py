@@ -26,8 +26,8 @@ from pathlib import Path
 from lab_ui import (W, H, WHITE, GOLD, GRAY, BLUE, RED, DARK, PANEL, SE_DECIDE, SE_CLOSE, Canvas, Skin, fonts, lang, play_se)
 
 WIFI_INIT, WIFI_LOOP, WIFI_DECK_INIT, WIFI_DECK_LOOP, BATTLE_START = 66, 67, 73, 74, 105
-MENU_SCENES = (66, 67)
-DECK_SCENES = (54, 55, 56, 57)                   # Wi-Fi 菜单 DECK 按钮进入的原生编队页
+MENU_SCENES = (66, 67, 68)                       # 68 SC_WiFiMenuEnd：点 DECK 进入编队页、按 BACK 离开大厅时各经过一帧
+DECK_SCENES = (54, 55, 56, 57)                   # Wi-Fi 菜单 DECK 按钮进入的原生编队页（返回经 56 → 66）
 POPUP_SCENES = (119, 120, 121, 122)              # 原生弹窗（头像、留言选择，首次进入的说明等）
 SCALE, MARGIN = 1.125, 88.9                      # 原生参考坐标 → 1280×720 逻辑坐标
 
@@ -878,6 +878,7 @@ class NetplayLobby:
         self.shutter_closing = False
         self.vs_fixed = False
         self.error = None
+        self.base_scene = None            # 最近一个非弹窗场景（判断原生弹窗下面是 Wi-Fi 菜单还是编队页）
 
     # ---------- 公共 ----------
     def font(self):
@@ -925,6 +926,7 @@ class NetplayLobby:
         self.version = branding.load(self.root)['display_version']
         self._manifest = None
         self.state, self.since = 'entering', p.frame
+        self.base_scene = None
         self.shutter_closing = True
         p.call('_ZN7AppMain15SetShutterCloseEv', p.app_instance())
         p.log('NETPLAY_LOBBY_OPEN', kind)
@@ -938,6 +940,10 @@ class NetplayLobby:
         self.pressed = None
         self.revision += 1
 
+    def menu_shown(self, scene):
+        """Wi-Fi 菜单在画面上：菜单场景本身，或菜单之上的原生弹窗（编队页之上的弹窗如 SORT 不算）。"""
+        return scene in MENU_SCENES or (scene in POPUP_SCENES and self.base_scene in MENU_SCENES)
+
     # ---------- 每帧（原生 step 之前） ----------
     def prepare_frame(self):
         if self.state == 'closed':
@@ -946,6 +952,8 @@ class NetplayLobby:
         try:
             self.process_commands()
             scene, state = self.scene()
+            if scene not in POPUP_SCENES:
+                self.base_scene = scene
             app = p.app_instance()
             if self.state == 'entering':
                 if self.shutter_closing and p.frame - self.since > 2 and p.call('_ZN7AppMain14IsShutterCloseEv', app):
@@ -977,8 +985,8 @@ class NetplayLobby:
                 if self.room is None:
                     self.close('left_menu')
                     return
-            # 菜单上的原生弹窗（换头像、留言、首次说明等）期间背景仍是 Wi-Fi 菜单，隐藏表保持有效。
-            self.write_menu(scene in MENU_SCENES + POPUP_SCENES and self.state == 'menu')
+            # 菜单上的原生弹窗（换头像、留言、首次说明等）期间背景仍是 Wi-Fi 菜单，隐藏表保持有效；编队页期间不写。
+            self.write_menu(self.menu_shown(scene) and self.state == 'menu')
             if scene in MENU_SCENES:
                 self.write_name()
         except Exception as error:
@@ -1022,7 +1030,7 @@ class NetplayLobby:
 
     def rename_strings(self, a):
         """原生 Wi-Fi 菜单文字批次（按钮、名称、战绩、分数、OK、留言…）：改按钮文字，战绩数字改为本地联机战绩，分数 / 排名为 “-”。"""
-        if self.state == 'closed' or self.scene()[0] not in MENU_SCENES + POPUP_SCENES:
+        if self.state == 'closed' or not self.menu_shown(self.scene()[0]):
             return
         p = self.p
         try:
