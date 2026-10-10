@@ -328,6 +328,9 @@ class LabPrep:
             index = AI_TIER_NAMES.index(current) if current in AI_TIER_NAMES else AI_TIER_NAMES.index('SILVER')
             lab.config[key] = AI_TIER_NAMES[max(0, min(len(AI_TIER_NAMES) - 1, index + step))]
             self.changed()
+        elif name == 'cpu_side':
+            lab.config['cpu_side'] = args[0] if args[0] in ('p1', 'p2') else 'p1'
+            self.changed()
         elif name == 'toggle':
             setattr(lab, args[0], not getattr(lab, args[0]))
             lab.config[args[0]] = getattr(lab, args[0])
@@ -528,7 +531,7 @@ class LabPrep:
     def draw_main(self):
         lab, c, p = self.lab, self.c, self.lab.p
         names = self.names()
-        c.header(T(p, 'vs_prep_title' if lab.versus else 'prep_title'))
+        c.header(T(p, 'cpu_prep_title' if lab.cpu else 'vs_prep_title' if lab.versus else 'prep_title'))
         self.header_buttons()
         if lab.versus:
             # 双人对战：顶栏增加按键设定与操作说明两个入口页（位于标题与“开始战斗”之间，顶栏深色区内）。
@@ -537,7 +540,7 @@ class LabPrep:
                          ('vs_page', page), 16)
         for row, side in enumerate(('player', 'enemy')):
             top = DECK_TOP + row * DECK_PITCH
-            c.text((DECK_X, top + 13), self.t(side + '_deck'), 18, BLUE if side == 'player' else RED, 'lm', 2, 140)
+            c.text((DECK_X, top + 13), self.deck_label(side), 18, BLUE if side == 'player' else RED, 'lm', 2, 140)
             x = DECK_X + 150
             c.text((x, top + 13), T(p, 'all_level'), 14, WHITE, 'lm', 2, 80)
             c.button((x + 84, top, 28, 26), '-', ('level_all', side, -1))
@@ -553,8 +556,8 @@ class LabPrep:
             c.text((bx + 54 + 28 + 38, top + 13), shown, 16, GRAY if lab.full_control else GOLD, 'mm', 2, 70)
             c.button((bx + 54 + 28 + 76, top, 28, 26), '>', ('base', side, 1))
             right = DECK_X + DECK_W
-            c.button((right - 292, top, 100, 26), self.t('copy_enemy' if side == 'player' else 'copy_player'),
-                     ('copy', side), 14, 'light')
+            c.button((right - 292, top, 100, 26), T(p, 'cpu_copy') if lab.cpu else
+                     self.t('copy_enemy' if side == 'player' else 'copy_player'), ('copy', side), 14, 'light')
             c.button((right - 186, top, 90, 26), T(p, 'random'), ('random', side), 14)
             c.button((right - 90, top, 90, 26), T(p, 'clear'), ('clear', side), 14, 'off')
             for slot, entry in enumerate(self.deck(side)):
@@ -617,6 +620,17 @@ class LabPrep:
         self.stepper(x + 14, ty + th + 60, w - 28, f"{entry['area'] + 1}-{entry['stage'] + 1}   ({si + 1}/{len(stages)})",
                      ('stage', -1), ('stage', 1))
 
+    def human_side(self):
+        """VS CPU：玩家所在的一行（'player' 为 P1，'enemy' 为 P2）。"""
+        return 'enemy' if self.lab.config.get('cpu_side') == 'p2' else 'player'
+
+    def deck_label(self, side):
+        if not self.lab.cpu:
+            return self.t(side + '_deck')
+        p = self.lab.p
+        slot = 'P1' if side == 'player' else 'P2'
+        return T(p, 'cpu_you_deck' if side == self.human_side() else 'cpu_cpu_deck', slot)
+
     def draw_control(self, box, top, height):
         """控制：LAB 为完全控制、双方 AI（开/关 + 段位选择器）、双方自动绝招；双人对战显示双方键位与对战规则
         （完全控制、AI 与自动绝招在对战中关闭，设定保留）。两种模式由入口决定，此处不提供切换。"""
@@ -624,6 +638,17 @@ class LabPrep:
         x, w = box
         c.panel((x, top, w, height), T(p, 'control'))
         y = top + 26
+        if lab.cpu:
+            # VS CPU：玩家所在一边（P1 左 / P2 右，CPU 在另一边）与 CPU 段位；完全控制与玩家方 AI 不在本模式中使用。
+            side = lab.config.get('cpu_side', 'p1')
+            c.text((x + 14, top + 58), T(p, 'cpu_side'), 15, WHITE, 'lm', 2, 90)
+            for index, value in enumerate(('p1', 'p2')):
+                c.button((x + 110 + index * ((w - 124) // 2 + 4), top + 44, (w - 124) // 2 - 4, 28),
+                         T(p, 'cpu_side_' + value), ('cpu_side', value), 14, 'on' if side == value else 'light')
+            c.text((x + 14, top + 102), T(p, 'cpu_tier'), 15, WHITE, 'lm', 2, 90)
+            self.tier_selector((x + 110, top + 88, w - 124, 28), 'cpu', True)
+            c.text((x + 14, top + 150), T(p, 'cpu_rules'), 12, GRAY, 'lm', 2, w - 28)
+            return
         if lab.versus:
             keys = lab.versus_keys()
             for row, (side, color) in enumerate((('p1', BLUE), ('p2', RED))):
@@ -675,7 +700,8 @@ class LabPrep:
         c.panel((x, top, w, height), T(p, 'advantage'))
         y = top + 42
         for side in ('player', 'enemy'):
-            c.text((x + 14, y + 10), self.t('adv_' + side), 15, BLUE if side == 'player' else RED, 'lm', 2, w - 28)
+            label = self.deck_label(side) if lab.cpu else self.t('adv_' + side)
+            c.text((x + 14, y + 10), label, 15, BLUE if side == 'player' else RED, 'lm', 2, w - 28)
             y += 24
             for stat in ('hp', 'atk'):
                 key = f'{side}_{stat}_boost'
@@ -835,7 +861,11 @@ class LabPrep:
             winner = entry.get('winner')
             c.paste(self.skin.nine(ROW_STYLES.get(winner, ROW_STYLES[None]), W - 48, 45, 8), (24, y))
             key = {'player': 'win_player', 'enemy': 'win_enemy'}.get(winner, 'aborted')
-            result = T(p, 'vs_' + key if entry.get('versus') and winner else key)
+            if entry.get('cpu') and winner:
+                human = 'enemy' if entry.get('cpu_side') == 'p2' else 'player'
+                result = T(p, 'cpu_win_you' if winner == human else 'cpu_win_cpu') + ' · ' + str(entry.get('cpu_tier', ''))
+            else:
+                result = T(p, 'vs_' + key if entry.get('versus') and winner else key)
             c.text((40, y + 22), T(p, 'history_row', entry.get('time', ''), result, entry.get('seconds', 0),
                                    self.lab.stage_label(entry.get('stage_id'))), 16, WHITE, 'lm', 2, 380)
             for side_index, key in enumerate(('player_units', 'enemy_units')):

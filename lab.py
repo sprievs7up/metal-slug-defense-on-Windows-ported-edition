@@ -45,6 +45,8 @@ DEFAULT_CONFIG = {
     'versus_keys': None,           # 双人键位（None 为 VERSUS_KEYS 默认）；值为 GLFW 键名（KEY_ 之后部分）
     'versus_pad': None,            # 双人手柄功能键（None 为 lab_versus_input.PAD_DEFAULTS）；值为 PAD_BINDABLE 名称
     'versus_pad_single': 'p2',     # 只连接一只手柄时分配给的玩家
+    'cpu_side': 'p1',              # VS CPU：玩家所在一边（p1 左 / p2 右），CPU 在另一边（vs_cpu.py）
+    'cpu_ai_tier': 'SILVER',          # VS CPU：CPU 的 AI 段位
 }
 # 双人对战默认键位（用户 2026-10-08 修订）：玩家1（P1）为左半区，玩家2（P2）为右半区。
 # 出兵、绝招、AP、弹头车依次为 R T Y U 与 M , . /（同一行相邻四键）。
@@ -144,6 +146,9 @@ class Lab:
         self.active = False
         self.saved_flags = None
         self.versus = False           # 当前模式（双人对战 / LAB），由打开准备界面的入口决定
+        self.cpu = False              # VS CPU 模式（VERSUS 页第一张卡），设定与预设使用独立文件（vs_cpu.py）
+        self.cpu_battle_state = None  # VS CPU 战斗中的 vs_cpu.CpuBattle
+        self.cpu_saved = None         # VS CPU：开战时保存的 LAB 开关（vs_cpu.OVERRIDES）
         self.vs_saved = None          # 双人对战：开战时保存的 LAB 开关（VERSUS_OVERRIDES）；None 表示非双人对战
         self.vs_cursor = [0, 0]       # 双人对战：P1、P2 的选中格
         from lab_versus import VersusCursor
@@ -190,8 +195,12 @@ class Lab:
         p.log('LAB_READY', json.dumps(self.config, ensure_ascii=False))
 
     # ---------- 配置与记录 ----------
+    def config_name(self):
+        import vs_cpu
+        return vs_cpu.CONFIG_NAME if getattr(self, 'cpu', False) else CONFIG_NAME
+
     def load_config(self):
-        path = self.config_dir / CONFIG_NAME
+        path = self.config_dir / self.config_name()
         if not path.is_file():
             path.write_text(json.dumps(DEFAULT_CONFIG, ensure_ascii=False, indent=2), encoding='utf-8')
             return dict(DEFAULT_CONFIG)
@@ -209,7 +218,9 @@ class Lab:
             self.config[name] = getattr(self, name)
         if getattr(self, 'vs_saved', None):
             self.config.update(self.vs_saved)        # 双人对战期间的临时关闭不写入设定
-        (self.config_dir / CONFIG_NAME).write_text(json.dumps(self.portable_config(), ensure_ascii=False, indent=2), encoding='utf-8')
+        if getattr(self, 'cpu_saved', None):
+            self.config.update(self.cpu_saved)       # VS CPU 期间由模式决定的开关不写入设定
+        (self.config_dir / self.config_name()).write_text(json.dumps(self.portable_config(), ensure_ascii=False, indent=2), encoding='utf-8')
 
     def portable_config(self):
         """写入文件的设定：牌组中的模组单位以稳定键保存（模组 UnitID 随启用情况分配，停用后再启用时按键找回）。"""
@@ -225,7 +236,8 @@ class Lab:
 
     # ---------- 预设与履历（lab_presets/） ----------
     def preset_path(self, name):
-        folder = self.config_dir / PRESET_DIR
+        import vs_cpu
+        folder = self.config_dir / (vs_cpu.PRESET_DIR if getattr(self, 'cpu', False) else PRESET_DIR)
         folder.mkdir(exist_ok=True)
         return folder / f'preset_{name}.json'
 
@@ -251,7 +263,7 @@ class Lab:
         self.player_support = self.enemy_support = 0
 
     def read_history(self):
-        path = self.config_dir / PRESET_DIR / 'history.jsonl'
+        path = self.preset_path('A').parent / 'history.jsonl'
         if not path.is_file():
             return []
         entries = []
@@ -274,6 +286,8 @@ class Lab:
                  'seconds': (self.p.frame - self.started_frame) / 30, 'stage_id': self.config['stage_id'],
                  'player_units': [e[0] if e else 0 for e in self.player_units],
                  'enemy_units': [e[0] if e else 0 for e in self.enemy_units], 'versus': bool(self.versus)}
+        if self.cpu:
+            entry.update(cpu=True, cpu_side=self.config.get('cpu_side', 'p1'), cpu_tier=self.config.get('cpu_ai_tier', 'SILVER'))
         with self.preset_path('A').parent.joinpath('history.jsonl').open('a', encoding='utf-8') as stream:
             stream.write(json.dumps(entry, ensure_ascii=False) + '\n')
 
@@ -370,7 +384,10 @@ class Lab:
         return main, scene
 
     def controllers(self):
-        """返回 (我方控制器, 敌方控制器, 场景信息)。"""
+        """返回 (我方控制器, 敌方控制器, 场景信息)。VS CPU 中固定为 (P1, P2)（开战时记下，不随底栏绑定改变）。"""
+        if self.cpu_battle_state is not None and self.active:
+            p1, p2 = self.cpu_battle_state.controllers
+            return p1, p2, None
         p = self.p
         main, scene = self.battle()
         if not scene:
@@ -414,6 +431,7 @@ class Lab:
         if self.config_override is not None:
             self.config.update(self.config_override)
         self.vs_restore()
+        self.cpu_restore()
         if self.versus:
             # 双人对战：完全控制、双方 AI 与自动绝招关闭（正常 AP 增长与冷却），离开战斗时还原。
             self.vs_saved = {name: getattr(self, name) for name in VERSUS_OVERRIDES}
@@ -421,6 +439,17 @@ class Lab:
                 setattr(self, name, False)
             self.vs_cursor = [0, 0]
             self.vs_camera.reset()
+        if self.cpu:
+            # VS CPU：完全控制、玩家一方 AI 与自动绝招、支援关闭；CPU 一方以所选段位自动出兵与施放绝招。
+            import vs_cpu
+            self.cpu_saved = {name: getattr(self, name) for name in vs_cpu.OVERRIDES}
+            human = vs_cpu.side_index(self.config)
+            for name in vs_cpu.OVERRIDES:
+                setattr(self, name, 0 if name.endswith('_support') else False)
+            cpu_side = ('player', 'enemy')[1 - human]
+            setattr(self, cpu_side + '_ai', True)
+            setattr(self, cpu_side + '_auto_special', True)
+            self.config[cpu_side + '_ai_tier'] = self.config.get('cpu_ai_tier', 'SILVER')
         # 先完成全部校验与查表，确认无误后才改动原生场景状态。
         configured = None
         if self.config['enemy_deck'] is not None:
@@ -471,6 +500,11 @@ class Lab:
             for entry in player_deck:
                 uid, level = (0xffffffff, 0) if entry is None else entry
                 p.call('_ZN16BattleController9entryUnitE6UnitIDib', mine, uid, level, 0)
+        if self.cpu:
+            import vs_cpu
+            self.cpu_battle_state = vs_cpu.CpuBattle(self, vs_cpu.side_index(self.config),
+                                                     p.call('_ZN10BattleMain19getPlayerControllerEv', main),
+                                                     p.call('_ZN10BattleMain18getEnemyControllerEv', main))
         p.call('_ZN7AppMain25BattleStartSetStatusEnemyEv', app)
         # 取代 BattleStartSetUnitEnemy（0x1e8966）：与原生相同按槽位顺序调用 entryUnit，空槽传 -1，
         # 但 UnitID 不经 10 位编码，社区单位可直接写入。
@@ -504,7 +538,7 @@ class Lab:
                     enemy_deck=[None if e is None else [e[0], e[1] + 1] for e in deck],
                     player_deck=[None if e is None else [e[0], e[1] + 1] for e in player_deck],
                     saved_flags=self.saved_flags, config=self.config)
-        if self.netplay_mode != 'regular':
+        if self.netplay_mode != 'regular' and not self.cpu:
             self.feedback(T(p, 'fb_start', self.stage_label(stage)))
 
     # ---------- 存档隔离（T9） ----------
@@ -605,6 +639,8 @@ class Lab:
         except Exception as error:
             p.log('LAB_HISTORY_ERROR', type(error).__name__, str(error))
         try:
+            if self.cpu_battle_state is not None:
+                self.cpu_battle_state.unbind()          # 交还原生底栏对象后再释放 P2 出兵格图集
             self.release_enemy_graphics()
             # 原生战斗结束先经 SC_BattleEnd（0x1ea098）再进结算，结算后 SC_BattleEndLoop 才 BattleEnd_ClearBattleMain。
             # LAB 不进结算，SceneEndFunc 也无战斗场景分支，此处按原生顺序补做 SC_BattleEnd 的清理：
@@ -631,6 +667,7 @@ class Lab:
         p.call('_ZN7AppMain11ChangeExeSTEi', app, target)
         self.active = False
         self.vs_restore()
+        self.cpu_restore()
         self.finishing = None
         if reopen_prep:
             self.prep.show(from_closed=True)   # 原生闸门已合拢：宿主闸门接手并在准备界面上打开（T8）
@@ -762,9 +799,16 @@ class Lab:
         self.apply_advantage(mine, enemy)
         if self.native_hooks >= 3 and not p.word(LAB_HEADER + LAB_ENEMY_GFX_READY):
             self.build_enemy_graphics(enemy)
+        cpu = self.cpu_battle_state
+        if cpu is not None:
+            cpu.bind()                                   # 玩家在 P2：开场前绑定底栏
         if not playing:
             return
-        self.fix_units(mine, enemy)
+        if cpu is not None:
+            cpu.move_camera()
+            cpu.fix_units()
+        else:
+            self.fix_units(mine, enemy)
         if not self.applied:
             self.applied = True
             if self.native_hooks >= 13:
@@ -941,6 +985,12 @@ class Lab:
         p.put(LAB_HEADER, LAB_MAGIC)
 
     def header_flags(self):
+        if self.cpu_battle():
+            # VS CPU：原生单方底栏，不显示 CPU 的绝招等待条、不能点击 CPU 单位；胜负演出按玩家视角。
+            flags = LAB_FLAG_AUTO_SPLIT | LAB_FLAG_SUPPORT | LAB_FLAG_AI_TIER
+            if self.p.word(LAB_HEADER + LAB_SE_MAGIC) == 0x4c534531:
+                flags |= LAB_FLAG_SE_EXTEND
+            return flags
         if self.netplay_mode == 'regular':
             # 常规联机：原生单方底栏（不分栏、不显示与点击对方单位），本方操作经捕获钩子转为联机输入。
             flags = LAB_FLAG_AUTO_SPLIT | LAB_FLAG_SUPPORT | LAB_FLAG_AI_TIER
@@ -1034,7 +1084,7 @@ class Lab:
 
     def reveal_slot(self, enemy, slot):
         """分栏每侧只显示 3 格：按键出兵的槽位不在可见范围时，把该侧滚动到能看见它。常规联机不分栏，不改动底栏。"""
-        if self.native_hooks < 3 or not self.active or self.netplay_mode == 'regular':
+        if self.native_hooks < 3 or not self.active or self.netplay_mode == 'regular' or self.cpu_battle():
             return
         p = self.p
         _, scene = self.battle()
@@ -1254,8 +1304,10 @@ class Lab:
         if kind == 'prep':
             if not self.active and not self.prep.busy():
                 if not self.prep.open:
-                    # 打开方式决定模式：VERSUS 页本地对战为双人对战；主菜单 LAB 图标与 F7 为 LAB。
-                    self.versus = len(command) > 1 and command[1] == 'versus'
+                    # 打开方式决定模式：VERSUS 页本地对战为双人对战、VS CPU 卡为 VS CPU；主菜单 LAB 图标与 F7 为 LAB。
+                    mode = command[1] if len(command) > 1 else 'lab'
+                    self.versus = mode == 'versus'
+                    self.set_cpu_mode(mode == 'cpu')
                 if self.prep.open:
                     self.prep.hide()
                 elif self.p.word(self.app() + 0x22bc) in (99, SCENE_BATTLE):
@@ -1279,6 +1331,8 @@ class Lab:
             if self.menu.open:
                 self.menu.activate()
             return
+        if kind in ('toggle_full', 'toggle_enemy_ai', 'toggle_player_ai') and (self.cpu or self.cpu_battle()):
+            return                                  # VS CPU：完全控制与 AI 由模式决定（F8 / F4 / F3 不生效）
         if kind == 'toggle_full':
             self.full_control = not self.full_control
             if self.full_control and self.active:
@@ -1298,6 +1352,8 @@ class Lab:
             return
         if not self.active:
             return
+        if self.cpu_battle():
+            return                                  # VS CPU：停用 LAB 的敌方直出键（Q–P、[ ] \）
         mine, enemy, _ = self.controllers()
         if not enemy:
             self.feedback(T(self.p, 'fb_no_enemy'), False)
@@ -1343,6 +1399,30 @@ class Lab:
             self.menu.set_open(not self.menu.open)
             return True
         return False
+
+    # ---------- VS CPU ----------
+    def set_cpu_mode(self, value):
+        """切换 VS CPU 模式：设定、预设与履历改用对应文件（开关随之重新读取）。"""
+        if bool(value) == self.cpu:
+            return
+        self.cpu = bool(value)
+        self.config = self.load_config()
+        self.apply_switches()
+        if self.cpu:
+            import vs_cpu
+            for name in vs_cpu.OVERRIDES:                # 由模式决定（开战时按玩家一边设定 AI），准备界面不显示
+                setattr(self, name, 0 if name.endswith('_support') else False)
+        self.prep.revision += 1
+
+    def cpu_restore(self):
+        if getattr(self, 'cpu_saved', None):
+            for name, value in self.cpu_saved.items():
+                setattr(self, name, value)
+        self.cpu_saved = None
+        self.cpu_battle_state = None
+
+    def cpu_battle(self):
+        return self.active and self.cpu_battle_state is not None
 
     # ---------- 本地双人对战 ----------
     def vs_restore(self):

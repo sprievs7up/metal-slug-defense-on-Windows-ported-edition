@@ -1516,6 +1516,23 @@ void draw_conv(Context& c){
     }
     old_draw_conv(c);
 }
+// ---------- 第 23 版：VERSUS 页第四张卡（VS CPU） ----------
+// VSPG 启用时，头部 VS_PAGE+8 为第四张卡的菜单任务槽号（app+0x3360 起，0 为停用），+12 为 AppMain 指针。
+// GT_MenuGenrePanelDraw 绘制该槽的任务时，透明度（+212）取 LOCAL 卡（app+0x33a4，槽 17）的当前值：离开页面时原生在同一帧内
+// 把三张卡转入 GT_MenuGenrePanelOut 并递减透明度，第四张卡由宿主在下一帧才转入，绘制时取值使四张卡每帧透明度相同。
+// 以槽号识别第四张卡（不保存任务指针）：场景重建后该槽为空，不会匹配到其他任务。
+constexpr uint32_t GENRE_DRAW=0x102001d9u;
+Block old_genre_draw;
+void genre_draw(Context& c){
+    if(rd<uint32_t>(c,VS_PAGE)==VS_PAGE_MAGIC){
+        uint32_t slot=rd<uint32_t>(c,VS_PAGE+8u),app=rd<uint32_t>(c,VS_PAGE+12u);
+        if(slot && slot<256u && app && c.r[0] && c.r[0]==rd<uint32_t>(c,app+0x3360u+slot*4u)){
+            uint32_t src=rd<uint32_t>(c,app+0x33a4u);
+            if(src)wr<uint32_t>(c,c.r[0]+212u,rd<uint32_t>(c,src+212u));
+        }
+    }
+    old_genre_draw(c);
+}
 // ---------- 第 18 版：出兵决策的前置规则（全部段位，含 SILVER；在开局据点目标与场上投资之前） ----------
 // 1 相持建筑：对方前线相持（front_stable）时，有已冷却且 AP 足够的建筑类单位即先出（按单位价值最高者）。
 // 2 压前线（据点等级 0–1）：己方场上单位（不含据点）少于 SCREEN_UNITS 时，随机出一个 CHEAP_AP 以内的单位，
@@ -1637,6 +1654,7 @@ void install_ui_hooks(){
     old_unit_created=find_block(0x101df441u);register_block(0x101df441u,unit_created);
     old_change_scene=find_block(0x101d0b57u);register_block(0x101d0b57u,change_scene);
     old_draw_conv=find_block(0x10136985u);register_block(0x10136985u,draw_conv);
+    old_genre_draw=find_block(GENRE_DRAW);register_block(GENRE_DRAW,genre_draw);
     old_operator_update=find_block(0x101d6ae5u);register_block(0x101d6ae5u,operator_update);
     old_target_update=find_block(TARGET_UPDATE|1u);register_block(TARGET_UPDATE|1u,target_update);
     old_banner_begin=find_block(0x101d932fu);register_block(0x101d932fu,banner_begin);
@@ -1842,7 +1860,7 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     if(dropped){*dropped=net_action_dropped;net_action_dropped=0;}
     return n;
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 22u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 23u;}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;

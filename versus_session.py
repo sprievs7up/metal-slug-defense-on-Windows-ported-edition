@@ -5,8 +5,9 @@
 - 输入层 InputLayer：双方键盘 / 手柄的离散指令（左右选格、出兵、AP、绝招、弹头车）在下一帧开始时以输入字节应用（N6 联机的本机输入复用）；
   选格属于本地界面，不进入输入；同一方同一帧的多个出兵顺延到后续各帧。鼠标只移动镜头（宿主直接移动，不送入原生触点）。
 - 暂停菜单打开期间以“只渲染帧”保持画面（渲染后恢复状态），战斗时间与状态不前进，回放中也不出现暂停；
-- 结束（战斗结束后 30 帧，或菜单的重新开始 / 退出且已进行 MIN_SAVE_FRAMES 帧以上）时按准备界面的完整设定保存回放（netplay_replay，保留最近 100 场）。
-环境变量 MSD_VERSUS_SESSION=0 时不使用本会话（回到原来的本地对战流程，不录制）。
+- 回放录制（2026-10-11 用户决定停用）：默认不保存。环境变量 MSD_VERSUS_RECORD=1 时（开发与验证）在结束（战斗结束后 30 帧，
+  或菜单的重新开始 / 退出且已进行 MIN_SAVE_FRAMES 帧以上）时按准备界面的完整设定保存回放（netplay_replay，保留最近 100 场）。
+环境变量 MSD_VERSUS_SESSION=0 时不使用本会话（回到原来的本地对战流程）。
 """
 import os
 import time
@@ -25,6 +26,10 @@ CONFIG_KEYS = ('stage_id', 'player_deck', 'enemy_deck', 'player_base_level', 'en
 
 def enabled():
     return os.environ.get('MSD_VERSUS_SESSION', '1') != '0'
+
+
+def recording():
+    return os.environ.get('MSD_VERSUS_RECORD') == '1'
 
 
 class InputLayer:
@@ -198,9 +203,9 @@ class LocalVersusDriver:
 
     # ---------- 结束 ----------
     def close(self, reason):
-        """保存回放（战斗结束，或中途退出且已进行 MIN_SAVE_FRAMES 帧以上），结束会话并交还 LAB 的正常流程。"""
+        """结束会话并交还 LAB 的正常流程；录制开启时先保存回放（战斗结束，或中途退出且已进行 MIN_SAVE_FRAMES 帧以上）。"""
         session = self.session
-        if session.finished_frame is not None or len(session.input_log) >= MIN_SAVE_FRAMES:
+        if recording() and (session.finished_frame is not None or len(session.input_log) >= MIN_SAVE_FRAMES):
             self.save(reason)
         self.end()
         self.p.step_frame()                                   # 本显示帧交给 LAB 的正常流程（结果演出、闸门等）

@@ -1472,7 +1472,7 @@ static void cc_1020be14(Context& c){if(!active(c)){old_block_1020be14(c);return;
 c.pc=270581293u;}
 static Block old_block_1020c0c4;
 static void cc_1020c0c4(Context& c){if(!active(c)){old_block_1020c0c4(c);return;}
-{uint32_t v=(259u+head(c,4));c.r[3]=v;}
+{uint32_t v=head(c,48);c.r[3]=v;}   // 商品目录实际长度（原生 259 项 + 实际追加的社区商品，加载器写入）
 {uint32_t a=(c.r[5]+0u+160u);wr<uint32_t>(c,a+0u,c.r[3]);}
 {uint32_t a=(c.r[5]+0u+156u);c.r[3]=rd<uint32_t>(c,a+0u);}
 {if(c.r[3] == 0){c.pc=(270582012u|1u);return;}}
@@ -1489,6 +1489,36 @@ static void cc_1020dc74(Context& c){if(!active(c)){old_block_1020dc74(c);return;
 {uint32_t v=add(c,c.r[7],~((head(c,72)-1u)),1,true);}
 {if(cond(c,13)){c.pc=(270589256u|1u);return;}}
 c.pc=270589049u;}
+// 单位商店 BACK（UpdateSelectedMenuShop 0x1020c3e6）：从当前页首向前数 50 件可售商品求上一页起点，原生读 259 项原版目录；
+// 社区商品追加在目录末尾（索引 259 起），须读同一份扩展目录（头部 +44），否则读到原版目录之后的数据。
+static Block old_block_1020c3e6;
+static void cc_1020c3e6(Context& c){if(!active(c)){old_block_1020c3e6(c);return;}
+{uint32_t a=((270582762u&~3u)+0u+112u);c.r[3]=rd<uint32_t>(c,a+0u);}
+{uint32_t v=shift(c,c.r[7],2u,1,false);c.r[11]=v;}
+{uint32_t v=0u;c.r[8]=v;}
+{uint32_t v=add(c,c.r[3],270582772u,0,false);c.r[3]=v;}
+{uint32_t v=c.r[8];c.r[6]=v;}
+{uint32_t v=add(c,c.r[3],32u,0,false);c.r[10]=v;}
+{uint32_t v=add(c,c.r[3],96u,0,false);c.r[9]=v;}
+{uint32_t v=head(c,44);c.r[3]=v;}
+{uint32_t v=add(c,c.r[10],c.r[11],0,false);c.r[10]=v;}
+{uint32_t v=add(c,c.r[9],c.r[11],0,false);c.r[9]=v;}
+{uint32_t a=(c.r[13]+0u+12u);wr<uint32_t>(c,a+0u,c.r[10]);}
+{uint32_t a=(c.r[13]+0u+8u);wr<uint32_t>(c,a+0u,c.r[9]);}
+{uint32_t v=add(c,c.r[11],c.r[3],0,false);c.r[11]=v;}
+{uint32_t v=~(3u);c.r[10]=v;}
+{c.pc=(270582470u|1u);return;}
+c.pc=270582803u;}
+// 单位商店单卡重建（InitMenuShopWindowOnlyOneTask 0x10209a04）：目录索引同样取扩展目录。
+static Block old_block_10209a04;
+static void cc_10209a04(Context& c){if(!active(c)){old_block_10209a04(c);return;}
+{uint32_t index4=c.r[3];c.r[5]=rd<uint32_t>(c,head(c,44)+index4);}
+{uint32_t v=480u;c.r[1]=v;}
+{uint32_t v=114u;nz(c,v);c.r[2]=v;}
+{uint32_t v=c.r[5];c.r[3]=v;}
+{uint32_t v=c.r[4];c.r[0]=v;}
+{c.r[14]=270572059u;c.pc=(270570668u|1u);return;}
+c.pc=270572059u;}
 extern "C" __declspec(dllexport) void msd_enable_community_content(){static bool done=false;if(done)return;find_block(0x101652a9u);done=true;
 old_block_101c9abc=find_block(270310077u);register_block(270310077u,cc_101c9abc);
 old_block_101d09b4=find_block(270338485u);register_block(270338485u,cc_101d09b4);
@@ -1647,6 +1677,8 @@ old_block_1020bb9a=find_block(270580635u);register_block(270580635u,cc_1020bb9a)
 old_block_1020be14=find_block(270581269u);register_block(270581269u,cc_1020be14);
 old_block_1020c0c4=find_block(270581957u);register_block(270581957u,cc_1020c0c4);
 old_block_1020c0e8=find_block(270581993u);register_block(270581993u,cc_1020c0e8);
+old_block_1020c3e6=find_block(270582759u);register_block(270582759u,cc_1020c3e6);
+old_block_10209a04=find_block(270572037u);register_block(270572037u,cc_10209a04);
 old_block_1020dc74=find_block(270589045u);register_block(270589045u,cc_1020dc74);
 old_vehicle_motion=find_block(0x101dde11u);register_block(0x101dde11u,vehicle_motion);
 old_unitdata=find_block(0x101652a9u);register_block(0x101652a9u,unitdata);

@@ -33,7 +33,7 @@ class LabMenu:
     # ---------- 行 ----------
     def rows(self):
         lab, p = self.lab, self.lab.p
-        rows = [] if lab.vs_battle() else [(T(p, name), getattr(lab, name), ('toggle', name)) for name in
+        rows = [] if lab.vs_battle() or lab.cpu_battle() else [(T(p, name), getattr(lab, name), ('toggle', name)) for name in
                 ('full_control', 'player_ai', 'player_auto_special', 'enemy_ai', 'enemy_auto_special')]
         app = p.app_instance()
         rows += [(T(p, name), bool(p.word(app + offset)), ('audio', offset)) for name, offset in AUDIO_ROWS]
