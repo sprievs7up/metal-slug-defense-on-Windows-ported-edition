@@ -51,11 +51,11 @@
       "description": "일반 공격: 소총     특수 공격: 소총\n사정 거리가 긴 소총으로 후방에서 사격이 가능하나, 약하다."
     },
     "ES": {
-      "name": "EJÉRCITO REGULAR FUSILERO REBELDE",
+      "name": "EJÉRCITO REGULAR FUSILERO",
       "description": "ATQ ESTÁND. : Rifle     ATQ ESPEC. : Rifle\nDébil, pero puede ayudar desde la retaguardia con un rifle de\nlargo alcance."
     },
     "PT": {
-      "name": "EXÉRCITO REGULAR FUZILEIRO REBELDE",
+      "name": "EXÉRCITO REGULAR FUZILEIRO",
       "description": "ATQ. PADR. : Rifle   ATQ. ESPEC. : Rifle\nFraco, mas pode dar suporte desde a retaguarda com um rifle de \nlongo alcance."
     },
     "RU": {
@@ -63,7 +63,7 @@
       "description": "СТАНД. АТАК: Винтовка   СПЕЦ. АТАК: Винтовка\nСлабая, но может поддерживать с тыла \nпри помощи винтовки дальнего боя."
     },
     "FR": {
-      "name": "ARMÉE RÉGULIÈRE FUSILIER REBELLE",
+      "name": "ARMÉE RÉGULIÈRE FUSILIER",
       "description": "ATT. STAND : Fusil   ATT. SPÉ : Fusil\nFaible mais peut aider à l'arrière avec un fusil à longue portée."
     },
     "DE": {
@@ -71,7 +71,7 @@
       "description": "STAND. ATK : Rifle     SPEC. ATK : Rifle\nWeak, but can support from the rear with a long-range rifle."
     },
     "IT": {
-      "name": "ESERCITO REGOLARE FUCILIERE RIBELLE",
+      "name": "ESERCITO REGOLARE FUCILIERE",
       "description": "ATC STAND.: Carabina   ATC SPEC.: Carabina\nDebole, ma aiuta dalle retrovie con una carabina a lungo raggio."
     },
     "ZT": {

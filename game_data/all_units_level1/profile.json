@@ -2,7 +2,8 @@
   "status": "verified_locally",
   "version": "1.46.3.1",
   "original_units": 399,
-  "community_units": 13,
+  "community_units": 17,
+  "community_units_revision": "26.10.1: added s1xlv.white_mummy, s1xlv.green_mummy, s1xlv.mummy_generator_mk2 and s1xlv.kt21 at Lv1; applies to newly created profiles only",
   "display_level": 1,
   "customize_ids": [
     0,
