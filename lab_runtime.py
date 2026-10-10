@@ -19,7 +19,7 @@ except BaseException:
 
 PROFILE = 'lab_test_save'
 # 含 LAB 钩子的核心由正式版配置统一加载；独立入口和验证保留显式指定核心接口。
-LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r35_20261009.dll'
+LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r45_20261010.dll'
 KEYS = {glfw.KEY_F7: ('prep',), glfw.KEY_F5: ('exit',), glfw.KEY_F8: ('toggle_full',),
         glfw.KEY_F4: ('toggle_enemy_ai',), glfw.KEY_F3: ('toggle_player_ai',),
         glfw.KEY_LEFT_BRACKET: ('enemy_ap',), glfw.KEY_RIGHT_BRACKET: ('enemy_slug',),
@@ -28,6 +28,13 @@ KEYS.update({key: ('enemy_unit', slot) for slot, key in enumerate(
     (glfw.KEY_Q, glfw.KEY_W, glfw.KEY_E, glfw.KEY_R, glfw.KEY_T,
      glfw.KEY_Y, glfw.KEY_U, glfw.KEY_I, glfw.KEY_O, glfw.KEY_P))})
 BLOCKED_MODS = glfw.MOD_SHIFT | glfw.MOD_CONTROL | glfw.MOD_ALT | glfw.MOD_SUPER
+# 常规联机（N6a）：普通关卡的战斗快捷键（AGENTS 第 5 节）→ 联机输入。
+NETPLAY_KEYS = {glfw.KEY_SPACE: ('special',), glfw.KEY_GRAVE_ACCENT: ('ap',), glfw.KEY_MINUS: ('slug',)}
+NETPLAY_KEYS.update({key: ('deploy', slot) for slot, key in enumerate(
+    (glfw.KEY_1, glfw.KEY_2, glfw.KEY_3, glfw.KEY_4, glfw.KEY_5, glfw.KEY_6, glfw.KEY_7, glfw.KEY_8, glfw.KEY_9, glfw.KEY_0))})
+NETPLAY_KEYS.update({key: ('deploy', slot) for slot, key in enumerate(
+    (glfw.KEY_KP_1, glfw.KEY_KP_2, glfw.KEY_KP_3, glfw.KEY_KP_4, glfw.KEY_KP_5, glfw.KEY_KP_6, glfw.KEY_KP_7,
+     glfw.KEY_KP_8, glfw.KEY_KP_9, glfw.KEY_KP_0))})
 # 双人对战：始终交给原有流程的按键（菜单、全屏、截图、静音），其余按键只按双方键位处理。
 VS_PASS_KEYS = (glfw.KEY_ESCAPE, glfw.KEY_F7, glfw.KEY_F9, glfw.KEY_F11, glfw.KEY_F12)
 VS_BAR_TOP = 573          # 底栏上沿（1280×720 逻辑坐标，HANDOFF 设计文档 4.1b）
@@ -82,6 +89,9 @@ def install_core(path):
     probe.Uc = LabUc
 
 
+DRIVER_FACTORY = None           # 可选：probe → 会话驱动（drive() 推进并返回本帧是否有画面；finished 为真时撤除）
+
+
 def install():
     probe_class = player.Probe
     player_class = player.Player
@@ -95,6 +105,8 @@ def install():
             super().initialize()
             from lab import Lab
             self.lab = Lab(self, ROOT)
+            # 未经 LAB 拦截的原生触点入口（常规联机在实际显示的帧中送入，netplay_regular.RegularBattle.simulate）。
+            self.native_touch = lambda action, x, y: probe_class.touch_event(self, action, x, y)
             enable = getattr(self.uc.lib, 'msd_enable_lab_hooks', None)
             if enable is None:
                 self.lab.native_hooks = 0
@@ -109,11 +121,19 @@ def install():
             self.menu_entry = LabMenuEntry(self, self.lab, ROOT)
             from lab_versus_page import VersusPage
             self.versus_page = VersusPage(self, self.lab, ROOT, probe_class.touch_event)
+            from mod_page import ModPage
+            self.mod_page = ModPage(self, self.lab, ROOT)
+            from netplay_lobby import NetplayLobby
+            self.netplay_lobby = NetplayLobby(self, self.lab, ROOT)
+            self.versus_page.lobby = self.netplay_lobby
 
         def draw_text(self, a, idx):
             page = getattr(self, 'versus_page', None)
             if page is not None:
                 page.rename_strings(a)              # 主菜单 Wi-Fi 对战按钮 → 对战
+            lobby = getattr(self, 'netplay_lobby', None)
+            if lobby is not None:
+                lobby.rename_strings(a)             # 联机大厅（原生 Wi-Fi VERSUS 菜单）的按钮与战绩文字
             return super().draw_text(a, idx)
 
         def filecall(self, name, a):
@@ -160,8 +180,42 @@ def install():
             return handle
 
         def touch_event(self, action, x, y):
+            mods = getattr(self, 'mod_page', None)
+            if mods is not None and mods.touch(action, x, y):
+                return
+            lobby = getattr(self, 'netplay_lobby', None)
+            if lobby is not None and lobby.touch(action, x, y):
+                return
             lab = getattr(self, 'lab', None)
             if lab is not None and (lab.menu.touch(action, x, y) or lab.prep.touch(action, x, y)):
+                return
+            netplay = getattr(lab, 'netplay', None) if lab is not None else None
+            if netplay is not None and lab.active and hasattr(netplay, 'queue_touch'):
+                # 常规联机（N6a）：触点在下一个实际显示的帧中送入原生（底栏与点击单位的操作由核心捕获后转为联机输入）。
+                netplay.queue_touch(action, x, y)
+                return
+            if lab is not None and lab.vs_battle() and not lab.menu.open and getattr(lab, 'netplay', None) is not None:
+                # 会话模式（本地对战录制、联机）：鼠标拖动由宿主直接移动镜头，不送入原生触点（触点会进入模拟、也不会出现在回放中）。
+                if action == 1:
+                    self.vs_press = (x, y) if y < VS_BAR_TOP else None
+                    self.vs_dragging = False
+                    return
+                press = getattr(self, 'vs_press', None)
+                if press is None:
+                    return
+                if action == 5:
+                    if not self.vs_dragging:
+                        if abs(x - press[0]) + abs(y - press[1]) < VS_DRAG_START or not lab.vs_camera.mouse_allowed():
+                            return
+                        self.vs_dragging, self.vs_last = True, press[0]
+                        lab.vs_camera.mouse = True
+                    lab.vs_camera.drag(x - self.vs_last)
+                    self.vs_last = x
+                elif action == 3:
+                    self.vs_press = None
+                    if self.vs_dragging:
+                        self.vs_dragging = False
+                        lab.vs_camera.mouse = False
                 return
             if lab is not None and lab.vs_battle() and not lab.menu.open:
                 # 双人对战：鼠标只拖动镜头。按下先缓存，移动超过阈值后才把按下送入原生（成为战场拖动）；
@@ -198,6 +252,12 @@ def install():
             super().touch_event(action, x, y)
 
         def back(self):
+            mods = getattr(self, 'mod_page', None)
+            if mods is not None and mods.back():
+                return True
+            lobby = getattr(self, 'netplay_lobby', None)
+            if lobby is not None and lobby.back():
+                return True
             lab = getattr(self, 'lab', None)
             if lab is not None and lab.back():
                 return True
@@ -215,6 +275,12 @@ def install():
             page = getattr(self, 'versus_page', None)
             if page is not None:
                 page.shutdown()
+            mods = getattr(self, 'mod_page', None)
+            if mods is not None:
+                mods.close()
+            lobby = getattr(self, 'netplay_lobby', None)
+            if lobby is not None:
+                lobby.shutdown()
             return super().close()
 
         def activate_unit_slot(self, slot):
@@ -225,12 +291,33 @@ def install():
             return result
 
         def step_frame(self):
+            # 会话驱动（N5.5：回放播放器；N6：联机与本地对战会话）：窗口游戏循环的每一帧交给驱动推进，驱动内部再调用本函数
+            # 执行实际的一帧（可能为零帧、一帧或多帧）。frame_drawn 为假时游戏循环不交换缓冲区，窗口保持上一帧画面。
+            driver = getattr(self, 'session_driver', None)
+            if driver is None and DRIVER_FACTORY is not None:
+                driver = self.session_driver = DRIVER_FACTORY(self)
+            if driver is not None and not getattr(self, 'driving', False):
+                self.driving = True
+                try:
+                    self.frame_drawn = bool(driver.drive())
+                finally:
+                    self.driving = False
+                if getattr(driver, 'finished', False):
+                    self.session_driver = None
+                return
+            self.frame_drawn = True
             entry = getattr(self, 'menu_entry', None)
             if entry is not None:
                 entry.prepare_frame()
             page = getattr(self, 'versus_page', None)
             if page is not None:
                 page.prepare_frame()
+            mods = getattr(self, 'mod_page', None)
+            if mods is not None:
+                mods.prepare_frame()
+            lobby = getattr(self, 'netplay_lobby', None)
+            if lobby is not None:
+                lobby.prepare_frame()
             super().step_frame()
             lab = getattr(self, 'lab', None)
             if lab is None:
@@ -239,6 +326,10 @@ def install():
                 lab.update()
                 if entry is not None:
                     entry.draw()
+                if mods is not None:
+                    mods.draw()
+                if lobby is not None:
+                    lobby.draw()
             except Exception as error:
                 import traceback
                 self.log('LAB_UPDATE_ERROR', type(error).__name__, str(error), traceback.format_exc())
@@ -253,6 +344,10 @@ def install():
 
         def poll_input(self):
             """窗口线程：准备界面打开或双人对战进行中时轮询手柄（GLFW 手柄函数只在主线程调用）。"""
+            if not getattr(self, 'char_installed', False) and getattr(self, 'window', None):
+                # 文字输入（联机大厅的名称与 IP，N6a）：GLFW 字符回调在窗口线程送出已确认的字符（含输入法的结果）。
+                glfw.set_char_callback(self.window, self.text_input)
+                self.char_installed = True
             lab = getattr(self.probe, 'lab', None) if self.probe else None
             if lab is None or not self.ready:
                 return
@@ -269,12 +364,38 @@ def install():
                     self.pad_error = f'{type(error).__name__}: {error}'
                     self.probe.log('VS_PAD_ERROR', self.pad_error)
 
+        def text_input(self, window, codepoint):
+            lobby = getattr(self.probe, 'netplay_lobby', None) if self.probe else None
+            if lobby is not None and self.ready and lobby.wants_text():
+                lobby.commands.append(('text', chr(codepoint)))
+
         def key(self, window, key, scan, action, mods):
+            lobby = getattr(self.probe, 'netplay_lobby', None) if self.probe else None
+            if lobby is not None and self.ready and lobby.wants_keys() and action in (glfw.PRESS, glfw.REPEAT):
+                # 联机大厅窗口（名称、IP、房间等）：Enter 确定、Esc 取消、Backspace 删除；其他按键不送入原生菜单（F 键除外）。
+                name = {glfw.KEY_ENTER: 'enter', glfw.KEY_KP_ENTER: 'enter', glfw.KEY_ESCAPE: 'escape',
+                        glfw.KEY_BACKSPACE: 'backspace', glfw.KEY_TAB: 'tab'}.get(key)
+                if name and (action == glfw.PRESS or name == 'backspace'):
+                    lobby.commands.append(('key', name))
+                if key not in (glfw.KEY_F11, glfw.KEY_F12, glfw.KEY_F9):
+                    return
             lab = getattr(self.probe, 'lab', None) if self.probe else None
             if (lab is not None and self.ready and action == glfw.PRESS and lab.prep.open and key != glfw.KEY_ESCAPE
                     and lab.prep.capture is not None and lab.prep.capture[1] == 'key'):
                 # 按键设定：等待指定时下一次按键（含修饰键与保留键，由游戏线程校验）交给准备界面。
                 lab.commands.append(('prep_key', 'bind', key))
+                return
+            netplay = getattr(lab, 'netplay', None) if lab is not None else None
+            if (lab is not None and self.ready and lab.active and hasattr(netplay, 'queue_touch') and key == glfw.KEY_ESCAPE
+                    and action == glfw.PRESS and lobby is not None):
+                lobby.commands.append(('battle_menu',))     # 常规联机：Esc 打开不暂停的菜单（netplay_lobby.NetMenu）
+                return
+            if lab is not None and self.ready and lab.active and hasattr(netplay, 'queue_touch') and key not in VS_PASS_KEYS:
+                # 常规联机（N6a）：与普通关卡相同的战斗快捷键转为联机输入（1–0 出兵、空格全体绝招、` 据点升级、- 弹头车）。
+                if action == glfw.PRESS and not mods & BLOCKED_MODS:
+                    command = NETPLAY_KEYS.get(key)
+                    if command:
+                        lab.commands.append(('np',) + command)
                 return
             if lab is not None and self.ready and lab.vs_battle() and not lab.menu.open and key not in VS_PASS_KEYS:
                 # 双人对战：只接受双方键位（修饰键状态为全局，不据此拒绝）；左右选择允许按住连发。其余游戏按键不送入战斗。

@@ -1,5 +1,6 @@
 // Additive native hooks; original game blocks remain the fallback for stock IDs.
 #include "aot_runtime.h"
+#include "netplay.h"
 static constexpr uint32_t H=0x1ffee000u,MAGIC=0x434f4d32u,R=0x90u,U=1024u;
 static uint32_t head(Context& c,uint32_t o){return rd<uint32_t>(c,H+o);}
 static bool active(Context& c){return head(c,0)==MAGIC;}
@@ -47,11 +48,23 @@ static uint32_t array_base(Context& c,uint32_t a,bool deck){
  return a;
 }
 static uint32_t image_base(Context& c,uint32_t a){return active(c)&&a==0x10922f28u?head(c,20):a;}
+// 已拥有单位紧凑列表的字节数（头部 +40 为单位个数，宿主取 8 的倍数，保持栈 8 字节对齐）。
+// CreateUnitListCustum 与 InitDeckPanels 的栈上暂存表及列表清零、复制按此长度。
+static uint32_t list_bytes(Context& c){return head(c,40)*4u;}
+// BattleSpriteFactory::releaseUnusedResourcesAll 的栈上“使用中”标记表（每个图片索引 1 字节，清零长度为 images(c)）。
+// 原覆盖块的帧固定为 516 字节（按 64 个社区单位）；帧长取不小于 images(c) 且 ≡4 mod 8（加 36 字节保存寄存器后 8 字节对齐）。
+static uint32_t used_bytes(Context& c){return std::max(516u,(images(c)+3u)/8u*8u+4u);}
 // 有理数参数在原生等级插值完成后应用；既有单位的默认倍率为一。
 static uint32_t combat_profile(Context& c,uint32_t uid){
+ // 原版单位（模组覆盖补丁，M3b）：头部 +148 为 400 个指针的表，被补丁修改的 UnitID 指向 48 字节倍率组，其余为 0。
+ if(uid<400u){
+  uint32_t table=active(c)&&head(c,80)==1u?head(c,148u):0u;
+  return table?rd<uint32_t>(c,table+uid*4u):0u;
+ }
  if(!record(c,uid)||head(c,80)!=1u||!head(c,76))return 0u;
  return head(c,76)+(uid-U)*48u;
 }
+extern "C" __declspec(dllexport) uint32_t msd_community_stock_profile_version(){return 1u;}
 static bool shop_unlocked(Context& c,uint32_t entry,uint32_t app){
  uint32_t table=head(c,92);if(!table)return true;
  uint32_t index=(entry-head(c,8))/R,reference=rd<uint32_t>(c,table+index*4u);
@@ -201,10 +214,16 @@ HOOK(enemy_special_policy,0x101c9da3u,
   c.r[3]=rd<uint32_t>(c,0x1ffec014u)?1u:0u;
  )
 // 独立音乐复用已核验的空闲音频槽，保持原生缓存边界。
+// 自定义音效（M6）：头部 +152 为 1032 项的 SoundID → 24 字节音效记录指针表（宿主只为原生表中不存在的 SoundID 写入），
+// +156 为登记数。原生音效缓存与引用计数数组（app+0x9b30、app+0xab54）按 SoundID 0..1031 定址，扩展 ID 位于该范围内。
 HOOK(extension_music,0x101c6625u,
  if(c.r[1]==1031u&&rd<uint32_t>(c,0x1ffec000u)==0x45585431u){
   uint32_t bank=rd<uint32_t>(c,0x1ffec004u);if(bank){ret(c,bank);return;}
+ }
+ if(active(c)&&head(c,152)&&c.r[1]<1032u){
+  uint32_t entry=rd<uint32_t>(c,head(c,152)+c.r[1]*4u);if(entry){ret(c,entry);return;}
  })
+extern "C" __declspec(dllexport) uint32_t msd_community_sound_version(){return 1u;}
 HOOK(extension_mission,0x101d09fdu,
  if(rd<uint32_t>(c,0x1ffec000u)==0x45585431u&&c.r[1]>=1000000u){
   uint32_t base=rd<uint32_t>(c,0x1ffec00cu);uint32_t count=rd<uint32_t>(c,0x1ffec010u);
@@ -223,6 +242,9 @@ struct FlameMark{uint32_t target,target_id,owner,count;};
 static FlameMark flame_marks[1024];static uint32_t flame_mark_count=0;
 struct FlameOwner{uint32_t owner,count;};
 static FlameOwner flame_owners[128];static uint32_t flame_owner_count=0;
+void msd_flame_netplay_state(StateIO& io){         // 联机回滚：喷火击退记录属于战斗状态（netplay.h）
+ io.field(flame_marks);io.field(flame_mark_count);io.field(flame_owners);io.field(flame_owner_count);
+}
 static uint32_t flame_owner_key(Context& c,uint32_t object){return uint32_t(rd<uint16_t>(c,object+0x62u))|((rd<uint32_t>(c,object+0x70u)&0xffu)<<16);}
 static void flame_owner_store(uint32_t owner,uint32_t count){
  for(uint32_t i=0;i<flame_owner_count;++i)if(flame_owners[i].owner==owner){flame_owners[i].count=count;return;}
@@ -303,5 +325,65 @@ HOOK(ground_special_update,0x10192571u,
  }
 )
 extern "C" __declspec(dllexport) uint32_t msd_community_ground_special_version(){return 1u;}
+// 多页单位图标（M1b）：页 0/1 为原版 unit_icon_01/02（菜单图像 33/34），页 2 起为社区图标页。
+// 头部 +120 为页表、+124 为页数、+128 为扩展 ConvUnitIcon 地址；每页 16 字节：+0 文件名、+4 菜单纹理 Image*（宿主创建与释放）、
+// +8 保留、+12 标记（位 0 菜单请求）。头部 +132 为战斗面板共用的页 ImageDesc，+136 为其中当前载入的页号（无为 0xffffffff）。
+static uint32_t icon_page_entry(Context& c,int32_t page){
+ if(!active(c)||page<2||uint32_t(page-2)>=head(c,124u)||!head(c,120u))return 0u;
+ return head(c,120u)+uint32_t(page-2)*16u;
+}
+// GraphicsOpt::drawConv(Image**,…,const C_CONV*,…)：任务绘制共用的单矩形入口，按矩形 +0xe 的页号取 images[page]。
+// 各场景把 unit_icon_01/02 载入不同的菜单图像槽（主菜单 33/34、编队 25/26），故以矩形本身判定：
+// 矩形位于扩展 ConvUnitIcon（头部 +128）的社区段且页号 ≥2 时，把基址改到页表，使 images[page] 取得该页纹理。
+// 纹理尚未创建时登记请求并跳过本次绘制，宿主在下一帧前创建。
+static void icon_page_draw(Context& c){
+ uint32_t conv=rd<uint32_t>(c,c.r[13]),table=head(c,128u);
+ if(!active(c)||!table||conv<table+340u*16u||conv>=table+(340u+head(c,4u))*16u)return;
+ int32_t page=rd<int16_t>(c,conv+14u);
+ uint32_t e=icon_page_entry(c,page);
+ if(!e)return;
+ if(rd<uint32_t>(c,e+4u)){c.r[1]=e+4u-uint32_t(page)*4u;return;}
+ wr<uint32_t>(c,e+12u,rd<uint32_t>(c,e+12u)|1u);
+ c.pc=c.r[14];
+}
+static Block old_icon_page_draw_hook;
+static void icon_page_draw_hook(Context& c){
+ icon_page_draw(c);
+ if(c.pc==c.r[14])return;
+ old_icon_page_draw_hook(c);
+}
+// BattlePlayerOperator::createGrahics 的出兵格头像循环（块 0x101dacbc）：源图为 unit_icon_02 的 ImageDesc（fp）。
+// 页号 ≥2 的社区单位改用共用的页 ImageDesc（头部 +132），+136 记录其中当前载入的页号。所需页未载入时调用
+// ImageDesc::readFileFromOBM（其内部 create 先释放上一页像素，同一时刻只占一页内存）并返回循环头 0x101dacaa
+// 重新取同一格（循环头只依赖被调用者保存的寄存器）。页图集在加载时已校验存在与格式。宿主在下一帧释放该 ImageDesc。
+static bool battle_icon_source(Context& c,uint32_t rect){
+ int32_t page=rd<int16_t>(c,rect+14u);
+ uint32_t e=icon_page_entry(c,page),desc=head(c,132u);if(!e||!desc)return false;
+ if(head(c,136u)==uint32_t(page)){if(rd<uint32_t>(c,desc))c.r[11]=desc;return false;}
+ wr<uint32_t>(c,H+136u,uint32_t(page));
+ c.r[0]=desc;c.r[1]=rd<uint32_t>(c,e);c.r[14]=0x101dacabu;c.pc=0x101c3badu;
+ return true;
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_icon_pages_version(){return 1u;}
+// 保留强化武器（行为 retained_special_weapon）：返回 UnitID 对应的角色类（原版十类角色为其自身 UnitID）；
+// 社区单位在逐单位行为标记（头部 +116）位 1 置位时取其基准 UnitID（行为库限定为这十类）；其他单位返回 0。
+uint32_t msd_retained_class(Context& c,uint32_t uid){
+ switch(uid){
+  case 16u:case 17u:case 18u:case 19u:case 96u:case 97u:case 98u:case 99u:case 344u:case 362u:return uid;
+  default:break;
+ }
+ uint32_t p=record(c,uid);
+ if(p&&head(c,116u)&&(rd<uint32_t>(c,head(c,116u)+(uid-U)*4u)&2u))return rd<uint32_t>(c,p+4u);
+ return 0u;
+}
+// 诊断计数：保留武器参数组替换次数，头部 +140 社区单位、+144 原版角色（只计数，不影响行为）。
+void msd_retained_count(Context& c,uint32_t uid){
+ if(!active(c))return;
+ uint32_t field=H+(uid>=U?140u:144u);wr<uint32_t>(c,field,rd<uint32_t>(c,field)+1u);
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_retained_weapon_version(){return 1u;}
+// 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
+#include "behavior_manifest.inc"
+extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}
 // Generated block overrides and registration are emitted by the build script.
 #include "community_blocks.inc"

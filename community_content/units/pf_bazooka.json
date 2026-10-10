@@ -1,0 +1,89 @@
+{
+  "key": "s1xlv.pf_bazooka",
+  "base_id": 45,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 15,
+  "available_from_start": true,
+  "ap": 35,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 45,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      512,
+      41,
+      45
+    ],
+    "anchor": [
+      -7,
+      0
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY BAZOOKA SOLDIER",
+      "description": "STAND. ATK : Bazooka     SPEC. ATK : Rapid-Fire Bazooka\nWeak, but can hit multiple enemies with shock waves."
+    },
+    "JP": {
+      "name": "正規軍バズーカ兵",
+      "description": "通常攻撃：バズーカ     特殊攻撃：バズーカ連射\n爆風で複数敵を攻撃できるが、弱い。"
+    },
+    "KR": {
+      "name": "정규군 바주카병",
+      "description": "일반 공격: 바주카     특수 공격: 바주카 연사\n약하지만 폭풍으로 여러 적을 공격할 수 있다."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR SOLDADO BAZUCA",
+      "description": "ATQ ESTÁND. : Bazuca     ATQ ESPEC. : Bazuca disparo rápido\nDébil, pero puede impactar en múltiples enemigos."
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR SOLDADO C/ BAZUCA",
+      "description": "ATQ. PADR. : Bazuca   ATQ. ESPEC. : Bazuca de Tiro Rápido\nFraco, mas pode acertar múltiplos inimigos com ondas de choque."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ СОЛДАТ БАЗУКА",
+      "description": "СТАНД. АТАК: Базука   СПЕЦ. АТАК: Быстрострельная Базука\nСлабая, но может бить по множественным врагам \nпри помощи шоковых волн."
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE SOLDAT BAZOOKA",
+      "description": "ATT. STAND : Bazooka   ATT. SPÉ : Bazooka à tir rapide\nFaible mais peut toucher plusieurs ennemis avec une onde de choc."
+    },
+    "DE": {
+      "name": "REGULAR ARMY BAZOOKA SOLDIER",
+      "description": "STAND. ATK : Bazooka     SPEC. ATK : Rapid-Fire Bazooka\nWeak, but can hit multiple enemies with shock waves."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE SOLDATO BAZOOKA",
+      "description": "ATC STAND.: Bazooka   ATC SPEC.: Bazooka a Fuoco Rapido\nDebole, ma può colpire diversi nemici con l'onda d'urto."
+    },
+    "ZT": {
+      "name": "正規軍反坦克兵",
+      "description": "普通攻擊：巴祖卡火箭筒     特殊攻擊：巴祖卡火箭筒連擊\n雖能以爆風攻擊複數敵人，但很弱。"
+    },
+    "ZS": {
+      "name": "正规军反坦克兵",
+      "description": "普通攻击：巴祖卡火箭筒     特殊攻击：巴祖卡火箭筒连击\n虽能以爆风攻击复数敌人，但很弱。"
+    }
+  },
+  "textures": [
+    "pf_bazooka_0.obm"
+  ]
+}

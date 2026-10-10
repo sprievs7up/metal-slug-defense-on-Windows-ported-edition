@@ -1,6 +1,6 @@
 # 扩展世界与社区敌军接口
 
-核验日期：2026-10-04。接口版本：1。运行入口为项目根目录的 `event_trial_launcher.py`。世界目录为 `campaign_content/catalog.json`，社区单位目录为 `community_content/registry.json`。示例配置保存在 `campaign_content/catalog.example.json`；默认目录保留空世界列表。
+核验日期：2026-10-04。接口版本：1。运行入口为项目根目录的 `event_trial_launcher.py`。世界目录为 `campaign_content/catalog.json`，社区单位目录为 `community_content/content.json`（内容索引）与 `community_content/units/`（逐单位文件，2026-10-10 M1a 起；此前为单一 `registry.json`，见 `docs/modding/M1A_REGISTRY_SPLIT_2026-10-10.md`）。示例配置保存在 `campaign_content/catalog.example.json`；默认目录保留空世界列表。
 
 ## 1. 使用流程
 
@@ -72,7 +72,7 @@
 
 已注册单位的敌军身份由运行注册表解析。新增社区单位沿用 schema 2 的素材、动画、参数、名称、图标和稳定键约定，在关卡中填入其 `key` 即可。敌军名单与出击路径支持当前 1024–1029 及后续登记 ID；接口验证还使用了隔离登记的第七款单位 1030。
 
-社区单位当前容量为 64，ID 范围 1024–1087；单位和图标登记顺序需要连续，已有键与顺序应保留。缺失登记的 ID 继续由原生边界处理。单位注册与关卡登记属于两个步骤，关卡目录不会自动生成单位素材或独立行动类。完整单位素材约定见开发目录的 `CONTENT_EXTENSION_CONTRACT.txt` 与既有社区注册表。
+社区单位容量（2026-10-10 M1 起）：本体 ID 1024–2047（`content.json` 的 `unit_ids`，只追加、不重排）、模组 2048–5119；ID 可以不连续，空位由加载器以未启用占位记录填充。单位文件不写 `id` 与 `icon.index`。图标写 `"page": 1`（`unit_icon_02.obm`）或 `"atlas": "<图集>.obm"`（图标页，页号由加载器分配，见 `docs/modding/M1B_ICON_PAGES_AND_SCALE_2026-10-10.md`）。缺失登记的 ID 继续由原生边界处理。特殊行为（修筑、召唤、投放、喷火、保留武器等）在单位文件中以 `behaviors` 组合，可用行为与参数见 `docs/modding/BEHAVIOR_CATALOG.md`（`content_tool.py list-behaviors`）。模组的目录结构、清单与启用方式见 `mods/README.md` 与 `docs/modding/M3_MOD_LOADER_2026-10-10.md`，发布前可运行 `content_tool.py check-mods`。单位注册与关卡登记属于两个步骤，关卡目录不会自动生成单位素材或独立行动类。完整单位素材约定见开发目录的 `CONTENT_EXTENSION_CONTRACT.txt` 与既有社区注册表。
 
 ## 4. 新场景、OBM 与 PNG
 
@@ -82,7 +82,7 @@
 .\windows_runtime\python.exe content_tool.py import-png .\art\author_desert.png .\campaign_content\author_desert.obm
 ```
 
-工具输出文件名、SHA-256、原始尺寸与运行画布尺寸。将 SHA-256 登记到目录的 `assets`，再登记场景：
+工具输出文件名、BLAKE2b-256 摘要（`blake2b`，2026-10-10 M5 起；此前为 SHA-256）、原始尺寸与运行画布尺寸。将摘要登记到目录的 `assets`（也可登记 `null` 跳过核对），再登记场景：
 
 ```json
 {
@@ -108,7 +108,7 @@ PNG 导入要求单帧、通道位深不超过 8 位的 RGB/RGBA、灰度或调�
 
 当前 GLES 场景采样要求二的整数次幂画布。工具补充透明边缘并保持原始图像、像素坐标与 RGBA 数值，执行解码往返检查；已有 OBM 也需符合运行画布约束。隔离验证同时检查了原生显示和 GPU 纹理像素。图块宽高使用原始素材范围，避免将透明边缘计入可见图块。
 
-新增资源要求独立文件名，避免与原生资源或社区资源产生冲突。单文件上限 64 MiB，目录资源合计上限 512 MiB；登记值须匹配文件 SHA-256。PNG、PSD 源稿及其坐标保留在作者素材目录。
+新增资源要求独立文件名，避免与原生资源或社区资源产生冲突。单文件上限 64 MiB，目录资源合计上限 512 MiB；登记值须匹配文件 BLAKE2b-256 摘要（按“大小+修改时间”缓存，见 `content_digest.py`）。PNG、PSD 源稿及其坐标保留在作者素材目录。
 
 ## 5. 独立关卡音乐
 
@@ -118,7 +118,7 @@ PNG 导入要求单帧、通道位深不超过 8 位的 RGB/RGBA、灰度或调�
 .\windows_runtime\python.exe content_tool.py import-music .\audio\author_desert.ogg .\campaign_content\author_desert.msdf
 ```
 
-将输出哈希登记至 `assets`，在 `music` 中登记：
+将输出的 `blake2b` 摘要登记至 `assets`，在 `music` 中登记：
 
 ```json
 {"key": "author.desert_bgm", "file": "author_desert.msdf", "base_sound_id": 100}
@@ -128,7 +128,40 @@ PNG 导入要求单帧、通道位深不超过 8 位的 RGB/RGBA、灰度或调�
 
 本轮音效与音乐的独立关闭功能按用户要求暂缓。设置界面和 F9 总静音继续保留现行行为；后续恢复该功能时需要采用原版按钮样式。
 
-## 6. 进度、奖励与验证范围
+## 6. 模组提供的世界与关卡（M5）
+
+模组在 `mod.json` 的 `content` 中写 `"campaign": "campaign/"`，该目录下每个 `*.json` 为一个目录片段，可含 `scenes`、`music`、`worlds` 三个列表，格式与本节以上相同，**不写 `assets`**：场景图集与音乐文件放在模组 `assets/`（文件名以 `<模组 id>_` 开头），按文件名引用。规则：
+
+- 模组定义的世界、区域、关卡、场景、音乐的键须以 `<模组 id>.` 开头。
+- 引用只能指向本体、本模组与所依赖模组（`depends`）的内容：场景、音乐、关卡解锁条件、敌军与奖励单位；原版场景、音乐与单位以整数引用。本体目录不能引用模组内容。
+- 本体目录与已载入模组按加载顺序合并后整体校验（键唯一、容量、解锁循环）。某个模组的关卡校验失败时，该模组整体跳过（含其单位），原因显示在 MOD 页，本体与其他模组不受影响。
+- 进度按关卡稳定键保存于 `campaign_progress.json`；停用模组后其关卡进度与奖励单位进度保留，重新启用后恢复。
+- 发布前可运行 `content_tool.py check-mods`，或 `content_tool.py validate --enable <模组 id ...>` 查看合并后的世界与关卡数量。
+
+扩展世界选择界面仍按用户要求暂缓显示（待世界 4 / 里世界 4 规划完成）；目录、战斗、结算与进度接口对本体与模组均已可用。详见 `docs/modding/M5_CAMPAIGN_CONTENT_2026-10-10.md`。
+
+## 7. 自定义音效（M6）
+
+本体与模组可登记自己的音效文件，并以稳定键引用：
+
+```json
+{"key": "author_mod.cannon", "file": "author_mod_cannon.msdf", "type": "se", "volume": 100}
+{"key": "author_mod.theme", "file": "author_mod_theme.msdf", "type": "bgm", "loop": [1.5, 40.0]}
+```
+
+- 文件为 `.msdf`（Ogg Vorbis 数据），可用 `content_tool.py import-music <输入.ogg> <输出.msdf>` 生成并做解码检查；不得与原版资源同名。
+- `type` 为 `se`（缺省）、`vo`、`bgm`；`volume` 1–127（缺省 100）；`loop` 仅用于 `bgm`。
+- 本体写在 `community_content/content.json` 的 `sounds` 列表（键 `s1xlv.`，文件放在 `community_content/`）；模组写在 `content.sounds` 目录的 `*.json` 列表中（键 `<模组 id>.`，文件放在模组 `assets/`）。
+- 单位动作脚本播放音效：`{"opcode": 23, "values": ["author_mod.cannon"]}`；关卡音乐：`"music": "author_mod.theme"`（类型须为 `bgm`）。只能引用本体、本模组与所依赖模组的音效。
+- SoundID 由游戏在原生音效表的空闲区段（32–99、165–199、523–799）中按加载顺序分配，本体与模组合计 380 个；使合计超限的模组被跳过。详见 `docs/modding/M6A_CUSTOM_SOUNDS_2026-10-10.md`。
+
+## 8. 自制 EVENT（M6b）
+
+本体 EVENT 放在 `community_content/events/*.json`（键 `s1xlv.`），模组在 `content.events` 目录（键 `<模组 id>.`），每个文件一个 EVENT：名称、细则、作者、日期、可选 360×240 左屏图，以及 1–16 个区域（地图坐标与区域名）、每区域 1–5 个小关（标记偏移、预览帧与扩展世界关卡相同的战斗字段）。EVENT 出现在 EVENT 浏览页（按日期并入循环），经女教官基地进入原生活动地图；进度按关卡稳定键保存。目前支持 `clear_reward`（通关与首胜奖励）及人质类 `rescue`、`collaboration_rescue`、`parts`、`invitation`（小关 `prisoners`、区域 `reward`、`final_reward_units`，见 `docs/modding/M6B3_RESCUE_EVENTS_2026-10-10.md`），以及积分与商店类 `legacy_survival`、`current_cooperation`（代币兑换店 `shop`、活动勋章商店 `medal_shop`、分期 `part1`，见 `docs/modding/M6B4_POINTS_SHOP_EVENTS_2026-10-10.md`）。可选自制地图：`"map": {"image": ...}`（1440×709，替换活动地图的世界地图图层，区域 `position` 即该图上的像素坐标）与小关 `"thumbnail"`（128×56）。格式与示例见 `docs/modding/M6B1_CUSTOM_EVENTS_2026-10-10.md`、`docs/modding/M6B2_CUSTOM_EVENT_MAPS_2026-10-10.md`。
+
+语言规则（单位、组合包、EVENT 共用）：只写一种语言时全部语言使用该文本；部分翻译时未填写的语言使用英语，未写英语时使用第一种。
+
+## 9. 进度、奖励与验证范围
 
 每个存档目录新增 `campaign_progress.json`，按稳定关卡键记录挑战次数、胜利次数、捕虏数量、评级、最佳用时及首次单位奖励状态。原生 MSP、社区单位进度和扩展关卡进度使用 `campaign_transaction.json` 协调保存；写入失败恢复文件与内存，启动时恢复未完成事务。评级使用模板的原生时间阈值，捕虏数量来自实际战斗结果。独立捕虏编排、捕虏集齐奖励和复杂关卡目标需后续扩展配置。
 

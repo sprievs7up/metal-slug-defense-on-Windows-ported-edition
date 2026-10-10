@@ -1,0 +1,108 @@
+{
+  "key": "s1xlv.girida_o_mk2",
+  "base_id": 51,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 50,
+  "available_from_start": false,
+  "shop_unlock_reference_id": 64,
+  "ap": 110,
+  "hp_multiplier": [
+    3,
+    2
+  ],
+  "knockback_threshold_multiplier": [
+    3,
+    2
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    3,
+    2
+  ],
+  "move_speed_multiplier": [
+    4,
+    5
+  ],
+  "production_reference_id": 51,
+  "production_interval_multiplier": [
+    6,
+    5
+  ],
+  "attack_range_multiplier": [
+    3,
+    2
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    8
+  ],
+  "ballistic_range_multiplier": [
+    3,
+    2
+  ],
+  "texture": "girida_o_gunmetal.obm",
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      320,
+      44,
+      41
+    ],
+    "anchor": [
+      -5,
+      -4
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "GIRIDA-O MK.II",
+      "description": "STAND. ATK : Tank Cannon     SPEC. ATK : Rapid-Fire Tank Cannon\nA Girida-O designed for mountain operations. Slower\nmovement permits greater firepower and stronger armor."
+    },
+    "JP": {
+      "name": "ギリダ・O MK.II",
+      "description": "通常攻撃：戦車砲     特殊攻撃：戦車砲連射\n山岳での作戦用に設計されたギリダ・O。\n移動速度を抑え、攻撃力と装甲を強化している。"
+    },
+    "KR": {
+      "name": "기리다-O MK.II",
+      "description": "일반 공격: 전차포     특수 공격: 전차포 연사\n산악 작전용으로 설계된 기리다-O. 이동 속도를 낮추고 공격력과 장갑을 강화하였다."
+    },
+    "ES": {
+      "name": "GIRIDA-O MK.II",
+      "description": "ATQ ESTÁND. : Cañón tanque ATQ ESPEC. : Cañón tanque disparo rápido\nGirida-O diseñado para operaciones de montaña. Su\nmenor velocidad permite más potencia de fuego y\nblindaje."
+    },
+    "PT": {
+      "name": "GIRIDA-O MK.II",
+      "description": "ATQ. PADR. : Canhão de Tanque   ATQ. ESPEC. : Canhão de T. Tiro Ráp.\nGirida-O projetado para operações nas montanhas. A\nvelocidade menor permite mais poder de fogo e\nblindagem."
+    },
+    "RU": {
+      "name": "ГИРИДА-О MK.II",
+      "description": "СТАНД. АТАК: Танк.Пушка   СПЕЦ. АТАК: Быстростр. Танк.Пушка\nГирида-О для действий в горах. Снижение скорости\nпозволяет усилить огневую мощь и броню."
+    },
+    "FR": {
+      "name": "GIRIDA-O MK.II",
+      "description": "ATT. STAND : Canon de Tank   ATT. SPÉ : Canon de tank à tir rapide\nGirida-O conçu pour les opérations en montagne. Sa\nvitesse réduite permet de renforcer le blindage et la\npuissance de feu."
+    },
+    "DE": {
+      "name": "GIRIDA-O MK.II",
+      "description": "STAND. ATK : Tank Cannon     SPEC. ATK : Rapid-Fire Tank Cannon\nGirida-O für Einsätze im Gebirge. Die geringere\nGeschwindigkeit ermöglicht stärkere Panzerung und\nhöhere Feuerkraft."
+    },
+    "IT": {
+      "name": "GIRIDA-O MK.II",
+      "description": "ATC STAND.: Cannone Tank   ATC SPEC.: Cannone Tank a Fuoco Rapido\nGirida-O progettato per operazioni in montagna. La\nvelocità ridotta permette di aumentare potenza di\nfuoco e corazza."
+    },
+    "ZT": {
+      "name": "吉利塔 · O MK.II",
+      "description": "普通攻擊：戰車砲     特殊攻擊：戰車砲連擊\n為山地地形作戰設計的吉利塔 · O。\n更慢的移動速度換來了更高的攻擊力與裝甲。"
+    },
+    "ZS": {
+      "name": "吉利塔 · O MK.II",
+      "description": "普通攻击：战车炮     特殊攻击：战车炮连击\n为山地地形作战设计的吉利塔 · O。\n更慢的移动速度换来了更高的攻击力与装甲。"
+    }
+  }
+}

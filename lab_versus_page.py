@@ -6,7 +6,8 @@
   页面打开期间，src/lab_hooks.cpp 的 drawConv 替换表（头部 +0xb40，'VSPG'）把 SHOP 标题字换为原生 VERSUS 整词，
   三张卡的插画与标签图块换为本地对战 / 局域网对战 / 远程对战，并跳过底栏 SHOP 的 LOCK 叠层；位置、缩放与入场动画
   沿用原生调用。原生 BACK 返回 MENU 时页面关闭；在页面中点击底栏 SHOP 时解除原生“当前页”标记，由原生切换动画进入商店（场景离开 28 时页面关闭）。
-- 卡片点击由宿主拦截：本地对战以双人模式打开 LAB 准备界面；局域网、远程尚未实现，显示“准备中”并播放原生取消音。
+- 卡片点击由宿主拦截：本地对战以双人模式打开 LAB 准备界面；局域网（N6a）与远程（N6b：按地址与房间码直连）经原生闸门进入
+  同一联机大厅（netplay_lobby，原版 Wi-Fi VERSUS 菜单改造）。
 卡片图块为 98×123（与原生卡片插画加标签的转换项相同）：上 98×102 为插画，下方为 12 行原生标题字体的标签
 （artwork/title_font_20261008/titles/*_12.png）。存在 custom_content/versus_card_{local,lan,online}.png（98×102）时采用用户插画，
 否则使用占位插画（原生叛军普通兵头像相对）。三张卡的 VS 字样均由程序以原始像素尺寸固定叠加，用户插画仅包含人物图标。
@@ -30,7 +31,6 @@ WIFI_TASK = 0x3384                          # 主菜单第三项（原生 panel 
 CARD_TASKS = (0x33a4, 0x33a8, 0x33ac)       # 三张原生卡片任务
 WIFI_LABELS = {'Wi-Fi對戰': '對戰', 'Wi-Fi対戦': '対戦', 'Wi-Fi 대전': '대전', 'Wi-Fi VS': 'VERSUS',
                'Wi-Fi V/S': 'VERSUS', 'Wi-Fi ВЕР': 'ВЕРСУС'}
-SOON = {'ZT': '準備中', 'ZS': '准备中', 'JP': '準備中', 'EN': 'SOON'}
 
 
 def card_rect(index):
@@ -55,6 +55,7 @@ class VersusPage:
         self.press_cancelled = False
         self.images = {}                        # 语言 → 已建立的原生图像
         self.error = None
+        self.lobby = None                       # 联机大厅（netplay_lobby.NetplayLobby，lab_runtime 建立）
 
     # ---------- 文字 ----------
     def rename_strings(self, a):
@@ -74,8 +75,7 @@ class VersusPage:
 
     # ---------- 图块 ----------
     def card_image(self, index, lang):
-        from PIL import Image, ImageDraw
-        from lab_ui import fonts
+        from PIL import Image
         name = CARDS[index]
         art_path = self.root / 'custom_content' / f'versus_card_{name}.png'
         art_y = 0
@@ -95,13 +95,6 @@ class VersusPage:
         bbox = label.getchannel('A').getbbox()
         label = label.crop(bbox)
         card.alpha_composite(label, ((98 - label.width) // 2, 123 - label.height))
-        if index:                                   # 局域网、远程：灰度并标注“准备中”
-            gray = card.convert('LA').convert('RGBA')
-            gray.putalpha(card.getchannel('A'))
-            card = gray
-            d = ImageDraw.Draw(card)
-            d.text((49, 51), SOON[lang], fill=(255, 220, 120, 255), font=fonts()(16), anchor='mm',
-                   stroke_width=2, stroke_fill=(0, 0, 0, 255))
         return card
 
     def placeholder_art(self):
@@ -211,6 +204,11 @@ class VersusPage:
             # 准备界面 reveal() 在闸门完全闭合后置 open；此前继续显示 VERSUS 的标题与卡片。
             if self.lab.prep.open or self.lab.active or scene != 28:
                 self.close('local')
+            return
+        if self.state == 'lan_transition':
+            # 原生闸门合拢、进入联机大厅（场景 66）之前继续显示 VERSUS 的标题与卡片。
+            if scene != 28 or self.lobby is None or not self.lobby.active():
+                self.close('lan')
             return
         if scene != 28 or self.lab.active or self.lab.prep.open:
             self.close('left_menu')
@@ -336,6 +334,11 @@ class VersusPage:
             play_se(self.p, SE_DECIDE)
             self.state = 'local_transition'
             self.lab.commands.append(('prep', 'versus'))
+            return
+        if index in (1, 2) and self.lobby is not None:
+            play_se(self.p, SE_DECIDE)
+            self.state = 'lan_transition'                 # 局域网与远程（N6b）进入同一大厅
+            self.lobby.open('lan' if index == 1 else 'remote')
             return
         play_se(self.p, SE_CLOSE)
         self.lab.feedback(T(self.p, 'vs_soon'), False)

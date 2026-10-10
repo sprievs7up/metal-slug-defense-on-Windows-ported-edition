@@ -192,5 +192,14 @@ class VersusCamera:
             p.call('_ZN12BattleScreen12movePositionEi', screen, dx & 0xffffffff)
             self.moves[self.owner] += dx
 
+    def drag(self, dx):
+        """宿主直接移动镜头（会话模式的鼠标拖动；方向与原生拖动相同：向右拖动看向左侧）。"""
+        lab, p = self.lab, self.lab.p
+        _, scene = lab.battle()
+        operator = p.word(scene + 0x3c) if scene else 0
+        screen = p.word(operator + 28) if operator else 0
+        if screen and int(dx):
+            p.call('_ZN12BattleScreen12movePositionEi', screen, (-int(dx)) & 0xffffffff)
+
     def mouse_allowed(self):
         return self.owner != 1

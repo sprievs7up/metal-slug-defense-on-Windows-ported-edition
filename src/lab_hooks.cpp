@@ -25,6 +25,7 @@
 // 触点在 onUITouchBegan/Moved/Ended 入口按片段换回原生坐标，敌方片段在处理期间换入敌方状态。
 #include "aot_runtime.h"
 #include "native_imports.h"
+#include "netplay.h"
 #include <utility>
 namespace {
 constexpr uint32_t H=0x1ffeb000u,MAGIC=0x4c414231u;   // "LAB1"
@@ -92,7 +93,32 @@ void touch_loop_exit(Context& c){
     }
     old_touch_loop_exit(c);
 }
+// ---------- 第 22 版：联机输入捕获（功能位 1024，N6a 常规联机） ----------
+// 联机对战中原生底栏与点击单位照常处理触点（命中、按压高亮、滚动），但出兵、据点升级、弹头车与单体绝招不立即执行，
+// 而是记入核心静态缓冲区，由宿主取走后转为本方逐帧输入，在双方相同的帧上执行（netplay_session.apply）。
+// 缓冲区不在客体内存中、也不在回滚快照内：回滚恢复不会重放或复制已取走的操作。
+// onUITouchEnded（0x1d7314）：0x1d738a 出兵（r6 槽位；原生先播放 SE 8）、0x1d7356 弹头车（原生先播放 SE 12）、
+// 0x1d7404 据点升级，三处均跳到公共出口 0x1d739c（不播放、不执行）；onGameScreenTouchEnded 0x1d76d2 以 r6 单位发动绝招。
+// getScreenItem 的屏幕按钮（暂停、倍速、AUTO）在联机中一律视为未命中（0x1d74f8）。
+constexpr uint32_t FLAG_NET_CAPTURE=1024u,NET_UI_EXIT=0x101d739du,NET_TOUCH_EXIT=0x101d772du;
+constexpr uint32_t NET_ACTION_CAP=32u;
+struct NetAction{uint32_t kind,value;};
+NetAction net_actions[NET_ACTION_CAP];uint32_t net_action_count=0,net_action_dropped=0;
+void net_capture(uint32_t kind,uint32_t value){
+    if(net_action_count<NET_ACTION_CAP)net_actions[net_action_count++]={kind,value};
+    else ++net_action_dropped;
+}
+Block old_cap_deploy,old_cap_slug,old_cap_levelup,old_cap_item;
+void cap_deploy(Context& c){if(enabled(c,FLAG_NET_CAPTURE)){net_capture(1u,c.r[6]);c.pc=NET_UI_EXIT;return;}old_cap_deploy(c);}
+void cap_levelup(Context& c){if(enabled(c,FLAG_NET_CAPTURE)){net_capture(2u,0u);c.pc=NET_UI_EXIT;return;}old_cap_levelup(c);}
+void cap_slug(Context& c){if(enabled(c,FLAG_NET_CAPTURE)){net_capture(3u,0u);c.pc=NET_UI_EXIT;return;}old_cap_slug(c);}
+void cap_item(Context& c){if(enabled(c,FLAG_NET_CAPTURE))c.r[0]=0xffffffffu;old_cap_item(c);}
 void touch_activate(Context& c){
+    if(enabled(c,FLAG_NET_CAPTURE)){
+        wr<uint32_t>(c,TOUCH_PASS,0u);
+        net_capture(4u,rd<uint16_t>(c,c.r[6]+0x62u));
+        c.pc=NET_TOUCH_EXIT;return;
+    }
     if(rd<uint32_t>(c,TOUCH_PASS)==2u){
         wr<uint32_t>(c,TOUCH_PASS,0u);
         if(enabled(c,FLAG_ENEMY_TOUCH)){
@@ -366,6 +392,8 @@ void draw_enemy_ap_frame(Context& c,float a,float d,float tx,float ty){
 constexpr uint32_t SEG_LOG=H+0xb10u,SEG_LOG_MAGIC=0x474f4c53u;
 // 敌方弹头车按钮框：底栏图集中 73×71、源 v 103 的按钮框图块（u 343/417 等各状态），底部含 “MAX” 字样。
 // 整块翻转会显示为 “XAM”（第 34 版诊断 SLOG 实测：绘制 tx 808、ty 496）。
+// 充满状态按钮框图块中弹头车与 “MAX” 铭牌的分界行（图块内第 52 行；弹头车止于约第 49 行，字样起于约第 55 行，2026-10-10 截图实测）。
+constexpr float SLUG_MAX_SPLIT=52.0f;
 bool is_slug_max_text(Context& c){
     uint32_t sp=c.r[13];
     return c.r[1]==pass.atlas && rd<uint32_t>(c,sp)==fbits(103.0f) &&
@@ -406,11 +434,21 @@ template<uint32_t ENTRY> void DrawHook<ENTRY>::run(Context& c){
             wr<uint32_t>(c,dst+4u,fbits(-bitsf(rd<uint32_t>(c,dst+4u))));
             wr<uint32_t>(c,dst+8u,fbits(2.0f*cx-bitsf(rd<uint32_t>(c,dst+8u))));
             if(pass.mirror && !pass.coin_overlay && !pass.banner_overlay && is_slug_max_text(c)){
-                // 弹头车按钮框（含 “MAX” 字样，不受 ty≥590 例外覆盖）：保留翻转后的位置，
-                // 图像恢复正向（x 范围不变：tx' = tx + a'·w，a' < 0），避免显示为 “XAM”；按钮内的弹头车图像仍翻转。
-                float fa=bitsf(rd<uint32_t>(c,dst)),fb=bitsf(rd<uint32_t>(c,dst+4u)),w=bitsf(rd<uint32_t>(c,c.r[13]+4u));
-                wr<uint32_t>(c,dst,fbits(-fa));wr<uint32_t>(c,dst+4u,fbits(-fb));
-                wr<uint32_t>(c,dst+8u,fbits(bitsf(rd<uint32_t>(c,dst+8u))+fa*w));
+                // 弹头车按钮框（充满状态，不受 ty≥590 例外覆盖）：图块上部为充满时的彩色弹头车，下部为 “MAX” 铭牌。
+                // 第 34 版把整块恢复正向，弹头车随之朝向错误（用户 2026-10-10 报告）。第 36 版按行分割：
+                // 第 0…SLUG_MAX_SPLIT−1 行保持翻转（弹头车），其余行（对称的铭牌与 “MAX” 字样）在同一 x 范围内正向绘制。
+                float fa=bitsf(rd<uint32_t>(c,dst)),fd=bitsf(rd<uint32_t>(c,dst+16u)),w=bitsf(rd<uint32_t>(c,c.r[13]+4u));
+                float ftx=bitsf(rd<uint32_t>(c,dst+8u)),fty=bitsf(rd<uint32_t>(c,dst+20u));
+                uint32_t tail[6];
+                for(uint32_t i=0;i<6u;++i)tail[i]=rd<uint32_t>(c,c.r[13]+i*4u);
+                float v=bitsf(tail[0]),h=bitsf(tail[2]);
+                tail[0]=fbits(v+SLUG_MAX_SPLIT);tail[2]=fbits(h-SLUG_MAX_SPLIT);
+                {
+                    bool was=pass.active;pass.active=false;
+                    draw_quad(c,H+0x840u,-fa,fd,ftx+fa*w,fty+fd*SLUG_MAX_SPLIT,bitsf(c.r[3]),w,tail);
+                    pass.active=was;
+                }
+                wr<uint32_t>(c,c.r[13]+8u,fbits(SLUG_MAX_SPLIT));      // 本次调用只画上部（翻转的弹头车）
             }
         }
         if(pass.rotate){                                   // 中间分隔条：绕片段中心旋转 180°
@@ -1410,6 +1448,8 @@ constexpr uint32_t DRAW_LOG=H+0xb00u,DRAW_LOG_MAGIC=0x474f4c44u;
 // ---------- 第 16 版：VERSUS 子页面（借用原生 SHOP 子页面 scene28/state4 的图块替换） ----------
 // 头部 +0xb40 为 'VSPG' 时启用（与 LAB 战斗头部无关，主菜单中由宿主写入）：+4 条目数（≤8），+0x10 起每条 32 字节：
 // [匹配的转换项指针, 匹配的 Image*（0 为任意）, 新 Image*（0 为跳过绘制）, 匹配的 y 坐标位（0 为任意）, 新转换项 16 字节]。
+// 第 21 版：匹配的 Image* 写 1 时不比较图像，+12 改为按 x 坐标匹配（浮点，容差 8；标题 OPTION 的半宽按钮，
+// 面板入场时纵向滑动、横向不变）。
 // 历史活动浏览页（event_browser.py）在主菜单中使用同一表，以 y 坐标区分共用图块的第二、三行按钮。
 // drawConv 的转换项为原生只读数据中的固定地址（SHOP 标题字、三张卡的插画与标签、底栏 LOCK），位置与参数沿用原生调用。
 constexpr uint32_t VS_PAGE=H+0xb40u,VS_PAGE_MAGIC=0x47505356u;
@@ -1418,10 +1458,15 @@ bool in_vs_cursor=false;
 void draw_conv(Context& c){
     uint32_t lr=c.r[14]&~1u;
     if(rd<uint32_t>(c,VS_PAGE)==VS_PAGE_MAGIC){
-        uint32_t conv=rd<uint32_t>(c,c.r[13]),n=std::min(rd<uint32_t>(c,VS_PAGE+4u),8u);
+        // 第 22 版：表项上限 8 → 16（联机大厅隐藏原生图块）；转换项指针写 0 时不比较转换项，须同时指定 y 坐标（同一位置的动画各帧）。
+        uint32_t conv=rd<uint32_t>(c,c.r[13]),n=std::min(rd<uint32_t>(c,VS_PAGE+4u),16u);
         for(uint32_t i=0;i<n;++i){
-            uint32_t e=VS_PAGE+0x10u+i*32u,want=rd<uint32_t>(c,e+4u),wanty=rd<uint32_t>(c,e+12u);
-            if(rd<uint32_t>(c,e)!=conv || (want && want!=c.r[1]) || (wanty && wanty!=c.r[3]))continue;
+            uint32_t e=VS_PAGE+0x10u+i*32u,want=rd<uint32_t>(c,e+4u),wanty=rd<uint32_t>(c,e+12u),wantc=rd<uint32_t>(c,e);
+            if((wantc?wantc!=conv:!wanty) || (want>1u && want!=c.r[1]))continue;
+            if(want==1u){
+                float wx,x;uint32_t xb=c.r[2];std::memcpy(&wx,&wanty,4);std::memcpy(&x,&xb,4);
+                if(x<wx-8.0f||x>wx+8.0f)continue;
+            }else if(wanty && wanty!=c.r[3])continue;
             uint32_t image=rd<uint32_t>(c,e+8u);
             if(!image){c.pc=c.r[14];return;}                        // 跳过绘制（底栏 LOCK）
             c.r[1]=image;wr<uint32_t>(c,c.r[13],e+16u);              // 新图像与新转换项（沿用原生位置与缩放）
@@ -1775,7 +1820,29 @@ void install_se_hooks(){
     old_se_release=find_block(0x101c833du);register_block(0x101c833du,se_release);
 }
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 20u;}
+// 联机回滚（netplay.cpp）：本文件中跨帧保留、参与战斗、AI 决策或音效队列的静态状态，随客体内存快照保存与恢复；
+// 仅在单次原生调用内有效的绘制遍标记（pass、in_ui 等）与布局缓存不在其中。
+void msd_lab_netplay_state(StateIO& io){
+    io.field(ai_rng);io.field(unit_values);io.field(unit_value_count);io.field(ai_saving);io.field(ai_saving_controller);
+    io.field(ai_hoard);io.field(front_track);io.field(lab_frame);io.field(sat_state);io.field(forced_deploy);
+    io.field(origins);io.field(origin_count);io.field(origin_serial);io.field(origin_gen);io.field(ai_frame);
+    io.field(invest_state);io.field(tactic_state);
+    io.field(se_queue);io.field(se_queued);io.field(se_seq_counter);io.field(se_seq);
+    io.field(touch_segment);io.field(touch_swapped);io.field(touch_op);
+}
+void msd_lab_netplay_defaults(uint32_t seed){
+    ai_rng=seed?seed:0x9e3779b9u;origin_serial=0xffffffffu;touch_segment=-1;
+}
+// 第 22 版：取走联机捕获的本方操作（每项两个字：种类 1 出兵/2 据点升级/3 弹头车/4 单体绝招，值为槽位或单位实例号）；
+// 返回取走的项数并清空缓冲区。dropped 不为空时写入并清零溢出计数。
+extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out,uint32_t max,uint32_t* dropped){
+    uint32_t n=net_action_count<max?net_action_count:max;
+    for(uint32_t i=0;i<n;++i){out[i*2u]=net_actions[i].kind;out[i*2u+1u]=net_actions[i].value;}
+    net_action_count=0;
+    if(dropped){*dropped=net_action_dropped;net_action_dropped=0;}
+    return n;
+}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 22u;}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;
@@ -1786,6 +1853,10 @@ extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     old_touch_list=find_block(0x101d764bu);register_block(0x101d764bu,touch_list);
     old_touch_loop_exit=find_block(0x101d76c9u);register_block(0x101d76c9u,touch_loop_exit);
     old_touch_activate=find_block(0x101d76d3u);register_block(0x101d76d3u,touch_activate);
+    old_cap_deploy=find_block(0x101d738bu);register_block(0x101d738bu,cap_deploy);
+    old_cap_slug=find_block(0x101d7357u);register_block(0x101d7357u,cap_slug);
+    old_cap_levelup=find_block(0x101d7405u);register_block(0x101d7405u,cap_levelup);
+    old_cap_item=find_block(0x101d74f9u);register_block(0x101d74f9u,cap_item);
     old_menu_layout=find_block(MENU_LAYOUT);register_block(MENU_LAYOUT,menu_layout);
     old_cockpit_push=find_block(0x101ff51bu);register_block(0x101ff51bu,cockpit_push);
     old_menu_button_draw=find_block(0x102003bdu);register_block(0x102003bdu,menu_button_draw);

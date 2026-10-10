@@ -99,7 +99,7 @@ import lab_runtime
 lab_runtime.install()
 lab_runtime.install_platform()
 def create_player(self_test=False,audio_mode=None,fullscreen=None):
-    player.TITLE='MSD WINDOWS S1XLV · 1.47.3'
+    player.TITLE='MSD WINDOWS S1XLV · 26.10.1'
     session=player.Player(self_test=self_test,audio_mode=audio_mode,fullscreen=fullscreen)
     session.guest_root=ROOT/('ui_test_guest' if self_test else config['profile'])
     session.status_file=ROOT/('ui_test_status.json' if self_test else 'event_trial_status.json')
@@ -108,7 +108,7 @@ def create_player(self_test=False,audio_mode=None,fullscreen=None):
     return session
 if __name__=='__main__':
     try:
-        parser=argparse.ArgumentParser(description='MSD WINDOWS S1XLV 1.47.3')
+        parser=argparse.ArgumentParser(description='MSD WINDOWS S1XLV 26.10.1')
         parser.add_argument('--self-test',action='store_true')
         parser.add_argument('--mute',action='store_true')
         parser.add_argument('--windowed',action='store_true')

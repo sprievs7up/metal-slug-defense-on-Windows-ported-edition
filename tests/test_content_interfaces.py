@@ -3,6 +3,7 @@ from pathlib import Path
 import sys,tempfile,json,threading,time,unittest,hashlib
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT));import portable_launcher
 from campaign_catalog import Catalog
+from community_content import load_manifest
 from content_assets import import_png,decode_obm
 from online_session import OnlineClient,validate_snapshot,fingerprint
 from room_server import RoomServer
@@ -32,7 +33,7 @@ class ContentTests(unittest.TestCase):
             with self.assertRaises(ValueError):import_png(source,dest)
             self.assertFalse(dest.exists())
     def test_large_catalog(self):
-        units=json.loads((ROOT/'community_content/registry.json').read_text(encoding='utf-8'))['units']
+        units=load_manifest(ROOT/'community_content')[0]['units']
         data={'schema':1,'assets':{},'scenes':[],'music':[],'worlds':[]}
         for w in range(8):
             stages=[{'key':f'test.w{w}.s{i}','title':f'关卡 {i}','scene':0,'enemies':[{'unit':units[i%6]['key']}],
@@ -45,12 +46,38 @@ class ContentTests(unittest.TestCase):
             self.assertEqual(fingerprint(dict(manifest,stages=[]),catalog),before)
             self.assertNotEqual(fingerprint(manifest,catalog,'a'*64),fingerprint(manifest,catalog,'b'*64))
     def test_unlock_cycle(self):
-        units=json.loads((ROOT/'community_content/registry.json').read_text(encoding='utf-8'))['units']
+        units=load_manifest(ROOT/'community_content')[0]['units']
         data=json.loads((ROOT/'campaign_content/catalog.example.json').read_text(encoding='utf-8'))
         data['worlds'][0]['requires']=['author.world4.area1.stage1']
         with tempfile.TemporaryDirectory() as temp:
             (Path(temp)/'catalog.json').write_text(json.dumps(data),encoding='utf-8')
             with self.assertRaises(ValueError):Catalog(temp,units)
+    def test_mod_campaign_fragment(self):
+        # 模组片段（M5）：键前缀、可见范围、与本体目录合并。
+        units=load_manifest(ROOT/'community_content')[0]['units']
+        body=json.loads((ROOT/'campaign_content/catalog.example.json').read_text(encoding='utf-8'))
+        stage={'key':'m.w.a.s','title':'S','scene':0,'enemies':[{'unit':3}],'waves':[{'tick':0,'enemy':0}],'requires':['author.world4.area1.stage1']}
+        fragment={'owner':'m','raw':{'worlds':[{'key':'m.w','title':'W','areas':[{'key':'m.w.a','title':'A','stages':[stage]}]}]},'assets':{},'visible':set()}
+        with tempfile.TemporaryDirectory() as temp:
+            (Path(temp)/'catalog.json').write_text(json.dumps(body),encoding='utf-8')
+            catalog=Catalog(temp,units,[fragment])
+            self.assertEqual(list(catalog.worlds)[-1],'m.w');self.assertEqual(catalog.owner['m.w.a.s'],'m')
+            bad=json.loads(json.dumps(fragment['raw']));bad['worlds'][0]['key']='other.w'
+            with self.assertRaises(ValueError):Catalog(temp,units,[dict(fragment,raw=bad)])
+            hidden={'owner':'n','raw':{'worlds':[{'key':'n.w','title':'W','areas':[{'key':'n.w.a','title':'A','stages':[dict(stage,key='n.w.a.s',requires=['m.w.a.s'])]}]}]},'assets':{},'visible':set()}
+            with self.assertRaises(ValueError):Catalog(temp,units,[fragment,hidden])
+            self.assertIn('n.w',Catalog(temp,units,[fragment,dict(hidden,visible={'m'})]).worlds)
+    def test_stage_music_sound_key(self):
+        # 自定义音效（M6）：关卡 music 可写已登记且可见的 bgm 音效键。
+        units=load_manifest(ROOT/'community_content')[0]['units']
+        body=json.loads((ROOT/'campaign_content/catalog.example.json').read_text(encoding='utf-8'))
+        stage={'key':'m.w.a.s','title':'S','scene':0,'music':'m.theme','enemies':[{'unit':3}],'waves':[{'tick':0,'enemy':0}]}
+        fragment={'owner':'m','raw':{'worlds':[{'key':'m.w','title':'W','areas':[{'key':'m.w.a','title':'A','stages':[stage]}]}]},'assets':{},'visible':set()}
+        with tempfile.TemporaryDirectory() as temp:
+            (Path(temp)/'catalog.json').write_text(json.dumps(body),encoding='utf-8')
+            self.assertIn('m.w.a.s',Catalog(temp,units,[fragment],sounds={'m.theme':'bgm'}).stages)
+            for sounds in ({},{'m.theme':'se'},{'x.theme':'bgm'}):
+                with self.assertRaises(ValueError):Catalog(temp,units,[json.loads(json.dumps(fragment,default=list))],sounds=sounds)
 
 class NetworkTests(unittest.TestCase):
     def setUp(self):

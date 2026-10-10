@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "units": {
+    "s1xlv.sarubia_future": {
+      "id": 1024,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1790951672,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791216391
+    },
+    "s1xlv.m15a_future": {
+      "id": 1025,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1790960892,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791016309
+    },
+    "s1xlv.heavy_b_future": {
+      "id": 1026,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1790960935,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791198167
+    },
+    "s1xlv.di_cokka_mk2": {
+      "id": 1027,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791047313,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222548
+    },
+    "s1xlv.di_cokka_mk3": {
+      "id": 1028,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791047290,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222550
+    },
+    "s1xlv.girida_o_mk2": {
+      "id": 1029,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791047235,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222547
+    },
+    "s1xlv.pf_shield": {
+      "id": 1030,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136625,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222722
+    },
+    "s1xlv.pf_rifle": {
+      "id": 1031,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136647,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222724
+    },
+    "s1xlv.pf_bazooka": {
+      "id": 1032,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136669,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222725
+    },
+    "s1xlv.pf_gatling": {
+      "id": 1033,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136689,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222727
+    },
+    "s1xlv.pf_paratrooper": {
+      "id": 1034,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136712,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222728
+    },
+    "s1xlv.pf_rocket_bomb": {
+      "id": 1035,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136734,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222730
+    },
+    "s1xlv.pf_mortar": {
+      "id": 1036,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791136754,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222731
+    },
+    "s1xlv.pf_paratrooper_child": {
+      "id": 1037,
+      "level": -1,
+      "level_open": 40,
+      "custom_time": 0,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 0
+    },
+    "s1xlv.pf_mortar_child": {
+      "id": 1038,
+      "level": -1,
+      "level_open": 40,
+      "custom_time": 0,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 0
+    },
+    "s1xlv.white_mummy": {
+      "id": 1039,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791210837,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791222571
+    },
+    "s1xlv.green_mummy": {
+      "id": 1040,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791210904,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791266136
+    },
+    "s1xlv.mummy_generator_mk2": {
+      "id": 1041,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791210931,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791266138
+    },
+    "s1xlv.mummy_generator_mk2_box": {
+      "id": 1042,
+      "level": -1,
+      "level_open": 40,
+      "custom_time": 0,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 0
+    },
+    "s1xlv.kt21": {
+      "id": 1043,
+      "level": 39,
+      "level_open": 40,
+      "custom_time": 1791219504,
+      "new": 0,
+      "shop_new": 0,
+      "deck_time": 1791266141
+    }
+  }
+}

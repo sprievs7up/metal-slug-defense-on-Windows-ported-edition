@@ -45,8 +45,13 @@ class CommunityCampaign:
         return self.original_filecall(name,args)
     def unlocked(self,item):
         return all(self.progress['stages'].get(key,{}).get('wins',0)>0 for key in item.get('requires',[]))
+    def lab_open(self):
+        """LAB 准备界面打开或 LAB 战斗进行中（准备界面保持其 BGM 135，并使用隔离存档）。"""
+        lab=getattr(self.p,'lab',None)
+        return lab is not None and (getattr(lab,'active',False) or getattr(getattr(lab,'prep',None),'open',False))
     def open(self):
         if not self.ui_enabled:return False
+        if self.lab_open():return False
         if self.trial.active_battle:return False
         if self.p.word(self.p.app_instance()+0x22bc) not in (28,31,34,67):return False
         if self.trial.selected:
@@ -143,7 +148,9 @@ class CommunityCampaign:
             for off in (21,22,23,24,28,29):words[off]=0
             records.append(struct.pack('<30I',*words))
             stage=dict(s,id=words[0],group=0,local_stage_key=s['key'],stamina_cost=words[8]);stages.append(stage)
-            bgm[index]={'bgm_id':s.get('music',100) if type(s.get('music',100)) is int else MUSIC_SLOT}
+            music=s.get('music',100)
+            # 音效键（M6，类型 bgm）使用分配的 SoundID；世界目录的音乐使用扩展音乐槽 1031。
+            bgm[index]={'bgm_id':music if type(music) is int else self.content.sound_ids.get(music,MUSIC_SLOT)}
         table=self.blob(b''.join(records));p.put(EXT+12,table);p.put(EXT+16,len(stages))
         p.write(t.groups,struct.pack('<II',table,len(stages)))
         event_key='campaign.'+key
@@ -153,7 +160,7 @@ class CommunityCampaign:
         return event_key
     def set_music(self,key):
         p=self.p;app=p.app_instance()
-        if type(key) is int:return
+        if type(key) is int or key in self.content.sound_ids:return
         music=self.catalog.music[key]
         if p.call('_ZN7AppMain12GetSoundDataE7SoundID',app,MUSIC_SLOT):raise RuntimeError('扩展音乐槽与原生资源冲突')
         source=p.call('_ZN7AppMain12GetSoundDataE7SoundID',app,music.get('base_sound_id',100))
@@ -164,6 +171,7 @@ class CommunityCampaign:
         struct.pack_into('<ff',raw,4,float(music.get('loop_start',0)),float(music.get('loop_end',0)))
         p.put(EXT+4,self.blob(bytes(raw)));self.music_key=key
     def start(self,key):
+        if self.lab_open():return False
         stage=self.catalog.stages[key];world=self.catalog.locations[key][0]
         if not self.unlocked(stage) or not self.unlocked(self.catalog.worlds[world]):return False
         area_key=self.catalog.locations[key][1]

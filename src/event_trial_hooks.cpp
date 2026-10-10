@@ -68,11 +68,19 @@ SHOP_HOOK(shop_standard_price,0x101656c5u,uint32_t row=shop_record(c,c.r[0]);if(
 SHOP_HOOK(shop_discount,0x1016596bu,if(shop_record(c,c.r[0])){ret(c,0u);return;})
 // 勋章目录的展示与开售权限仅作用于当前活动商店，不写入普通商店开放存档。
 SHOP_HOOK(shop_display_type,0x1016595fu,if(medal_event_shop(c)&&shop_record(c,c.r[0])){ret(c,1u);return;})
+// 自制 EVENT 的代币兑换商品（M6b-4）：宿主在记录 +28 写 2，兑换店中始终开放（原生开放位属于玩家存档，按历史商品编号而定）；
+// 历史活动商品的 +28 为 0，沿用原生判定。
+static bool custom_token_row(Context& c,uint32_t sid){
+    if(!event_shop(c)||rd<uint32_t>(c,H+8)!=1u)return false;
+    uint32_t row=shop_record(c,sid);return row&&rd<uint32_t>(c,row+28)==2u;
+}
 SHOP_HOOK(shop_enable,0x102093f5u,if(event_exclusive_sku(c,c.r[1])){ret(c,0u);return;}
+if(custom_token_row(c,c.r[1])){ret(c,1u);return;}
 if(medal_event_shop(c)){
     uint32_t row=shop_record(c,c.r[1]);ret(c,row&&rd<uint32_t>(c,row+28)?1u:0u);return;
 })
 SHOP_HOOK(shop_enable2,0x10209469u,if(event_exclusive_sku(c,c.r[1])){ret(c,0u);return;}
+if(custom_token_row(c,c.r[1])){ret(c,1u);return;}
 if(medal_event_shop(c)){
     uint32_t row=shop_record(c,c.r[1]);ret(c,row&&rd<uint32_t>(c,row+28)?1u:0u);return;
 })
@@ -487,6 +495,7 @@ SHOP_HOOK(selector_chosen,0x1020e805u,if(rd<uint32_t>(c,H+124)){
 // Selecting an Event has no stamina charge. Its stages retain their own costs.
 SHOP_HOOK(selector_cost_icon,0x102005ddu,if(rd<uint32_t>(c,H+124)&&c.r[14]==0x1020e9c5u){ret(c,0);return;})
 SHOP_HOOK(selector_cost_number,0x101c4935u,if(rd<uint32_t>(c,H+124)&&c.r[14]==0x1020ea05u){ret(c,0);return;})
+extern "C" __declspec(dllexport) uint32_t msd_custom_event_shop_version(){return 1u;}
 extern "C" __declspec(dllexport) void msd_enable_historical_event_hooks(){
     static bool done=false;if(done)return;done=true;
     original_end=find_block(0x101ea099u);

@@ -232,7 +232,8 @@ class Player:
                     p.graphics.capture(ROOT/'ui_test_menu.png')
                     p.log('WINDOW_SELF_TEST_COMPLETE',self.hwnd)
                     self.done=True;break
-                p.graphics.present()
+                # 会话驱动本帧没有画面时（回放暂停之外的等待、联机等待对方）不交换缓冲区，窗口保持上一帧（lab_runtime）。
+                if getattr(p,'frame_drawn',True):p.graphics.present()
                 self.last_present=time.perf_counter()
                 sample_frames+=1
                 if self.last_present-sample_time>=1:

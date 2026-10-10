@@ -1,0 +1,108 @@
+{
+  "key": "s1xlv.di_cokka_mk3",
+  "base_id": 3,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 50,
+  "available_from_start": false,
+  "shop_unlock_reference_id": 64,
+  "ap": 180,
+  "hp_multiplier": [
+    2,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    2,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    4,
+    5
+  ],
+  "production_reference_id": 3,
+  "production_interval_multiplier": [
+    6,
+    5
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    4
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "texture": "di_cokka_light.obm",
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      256,
+      40,
+      39
+    ],
+    "anchor": [
+      -5,
+      -6
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "DI-COKKA MK.III",
+      "description": "STAND. ATK : H-Cannon   SPEC. ATK : 3-Shot H-Cannon\nA Di-Cokka tank designed for snowfield operations. Its\nslower movement permits stronger armor."
+    },
+    "JP": {
+      "name": "ジィ・コッカ MK.III",
+      "description": "通常攻撃：水平キャノン     特殊攻撃：水平キャノン3連射\n雪原での作戦用に設計されたジィ・コッカ。\n移動速度を抑え、装甲を強化している。"
+    },
+    "KR": {
+      "name": "디-코카 MK.III",
+      "description": "일반 공격: 수평 캐논   특수 공격: 수평 캐논 3연사 \n설원 작전용으로 설계된 디-코카 전차. 이동 속도를 낮추고 장갑을 강화하였다."
+    },
+    "ES": {
+      "name": "DI-COKKA MK.III",
+      "description": "ATQ. ESTÁND. : Cañón-H   ATQ ESPEC. : Cañón-H de 3 tiros\nDi-Cokka diseñado para operaciones en la nieve. Su\nmenor velocidad permite un blindaje más resistente."
+    },
+    "PT": {
+      "name": "DI-COKKA MK.III",
+      "description": "ATQ. PADR. : Canhão Horiz.    ATQ. ESPEC. : Canhão H. de 3 Tiros\nDi-Cokka projetado para operações na neve. A\nvelocidade menor permite uma blindagem mais\nresistente."
+    },
+    "RU": {
+      "name": "ДИ-КОККА MK.III",
+      "description": "СТАНД. АТАК: Х-Пушка   СПЕЦ. АТАК: 3-Ударная Х-Пушка\nТанк Ди-Кокка для действий на снежной местности.\nСнижение скорости позволяет усилить броню."
+    },
+    "FR": {
+      "name": "DI-COKKA MK.III",
+      "description": "ATT. STAND : Canon-H   ATT. SPÉ : Canon-H à 3 coups\nDi-Cokka conçu pour les opérations dans la neige. Sa\nvitesse réduite permet un blindage renforcé."
+    },
+    "DE": {
+      "name": "DI-COKKA MK.III",
+      "description": "STAND. ATK : H-Cannon   SPEC. ATK : 3-Shot H-Cannon\nDi-Cokka für Einsätze im Schnee. Die geringere\nGeschwindigkeit ermöglicht eine stärkere Panzerung."
+    },
+    "IT": {
+      "name": "DI-COKKA MK.III",
+      "description": "ATC STAND.: H-Cannone   ATC SPEC.: Cannone H 3-Colpi\nDi-Cokka progettato per operazioni sulla neve. La\nvelocità ridotta permette una corazza più resistente."
+    },
+    "ZT": {
+      "name": "基 · 寇卡坦克 MK.III",
+      "description": "普通攻擊：水平加農砲     特殊攻擊：水平加農砲3連發\n為雪原地形作戰設計的基 · 寇卡坦克。\n更慢的速度使其有更強大的裝甲。"
+    },
+    "ZS": {
+      "name": "基 · 寇卡坦克 MK.III",
+      "description": "普通攻击：水平加农炮     特殊攻击：水平加农炮3连发\n为雪原地形作战设计的基 · 寇卡坦克。\n更慢的速度使其有更强大的装甲。"
+    }
+  }
+}

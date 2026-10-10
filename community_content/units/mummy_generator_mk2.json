@@ -1,0 +1,127 @@
+{
+  "key": "s1xlv.mummy_generator_mk2",
+  "base_id": 77,
+  "faction": 4,
+  "identity": "Independent Army",
+  "shop_price": 160,
+  "available_from_start": false,
+  "shop_unlock_reference_id": 80,
+  "ap": 220,
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 51,
+  "production_interval_multiplier": [
+    2,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1270,
+      768,
+      46,
+      42
+    ],
+    "anchor": [
+      -5,
+      -5
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "MUMMY GENERATOR MKII",
+      "description": "STAND. ATK : -     SPEC. ATK : -\n\"WHITE MUMMY\" emerge from gate."
+    },
+    "JP": {
+      "name": "マミーゲート MKII",
+      "description": "通常攻撃：‐     特殊攻撃：‐\nゲートから「白いミイラ」が出てくる。"
+    },
+    "KR": {
+      "name": "미라 제너레이터  MKII",
+      "description": "일반 공격: -     특수 공격: -\n게이트에서 \"흰 흰 미라\"가 나온다."
+    },
+    "ES": {
+      "name": "GENERADOR DE MOMIAS MKII",
+      "description": "ATQ ESTÁND. : -     ATQ ESPEC. : -\n\"MOMIA BLANCA\" emerge del portal."
+    },
+    "PT": {
+      "name": "GERADOR DE MÚMIAS MKII",
+      "description": "ATQ. PADR. : -   ATQ. ESPEC. : -\n\"MÚMIA BRANCA\" emerge do portão."
+    },
+    "RU": {
+      "name": "ГЕНЕРАТОР МУМИЙ MKII",
+      "description": "СТАНД. АТАК: -   СПЕЦ. АТАК: -\n\"БЕЛАЯ МУМИЯ\" появляется из ворот."
+    },
+    "FR": {
+      "name": "GÉNÉRATEUR DE MOMIE MKII",
+      "description": "ATT. STAND : -   ATT. SPÉ : -\n\"MOMIE BLANCHE\" sort par la porte."
+    },
+    "DE": {
+      "name": " MKII",
+      "description": "Weisse MumieWWeisse MumieEWeisse MumieIWeisse MumieSWeisse MumieSWeisse MumieEWeisse Mumie Weisse MumieMWeisse MumieUWeisse MumieMWeisse MumieIWeisse MumieEWeisse Mumie"
+    },
+    "IT": {
+      "name": "GENERATORE DI MUMMIE MKII",
+      "description": "ATC STAND.: -   ATC SPEC.: -\n\"MUMMIA BIANCA\" emerge dal cancello."
+    },
+    "ZT": {
+      "name": "木乃伊召喚箱 MKII",
+      "description": "普通攻擊：‐     特殊攻擊：‐\n「白白木乃伊」會從召喚箱裡出現。"
+    },
+    "ZS": {
+      "name": "木乃伊召唤箱 MKII",
+      "description": "普通攻击：‐     特殊攻击：‐\n「白木乃伊」会从召唤箱里出现。"
+    }
+  },
+  "textures": [
+    "mummy_generator_builder.obm"
+  ],
+  "behaviors": [
+    {
+      "name": "build_structure",
+      "version": 1,
+      "params": {
+        "structure": "s1xlv.mummy_generator_mk2_box",
+        "construction_time_multiplier": [
+          1,
+          1
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1650 @@
+{
+  "key": "s1xlv.sarubia_future",
+  "base_id": 6,
+  "faction": 1,
+  "identity": "X Army",
+  "shop_price": 300,
+  "available_from_start": true,
+  "ap": 400,
+  "hp_multiplier": [
+    8,
+    3
+  ],
+  "move_speed_multiplier": [
+    21,
+    20
+  ],
+  "attack_range_multiplier": [
+    5,
+    4
+  ],
+  "knockback_threshold_multiplier": [
+    8,
+    3
+  ],
+  "special_damage_multiplier": [
+    4,
+    5
+  ],
+  "production_reference_id": 215,
+  "production_interval_multiplier": [
+    3,
+    2
+  ],
+  "texture": "sarubia_future.obm",
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      0,
+      44,
+      47
+    ],
+    "anchor": [
+      -5,
+      2
+    ]
+  },
+  "animations": {
+    "8": [
+      {
+        "address": "0x8f52c0",
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f52c8",
+        "opcode": 0,
+        "values": [
+          12
+        ]
+      },
+      {
+        "address": "0x8f52d0",
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "address": "0x8f52d8",
+        "opcode": 0,
+        "values": [
+          14
+        ]
+      },
+      {
+        "address": "0x8f52e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f52e8",
+        "opcode": 0,
+        "values": [
+          16
+        ]
+      },
+      {
+        "address": "0x8f52f0",
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "address": "0x8f52f8",
+        "opcode": 0,
+        "values": [
+          18
+        ]
+      },
+      {
+        "address": "0x8f5300",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5308",
+        "opcode": 0,
+        "values": [
+          20
+        ]
+      },
+      {
+        "address": "0x8f5310",
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "address": "0x8f5318",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f5320",
+        "opcode": 1,
+        "values": [
+          7
+        ]
+      },
+      {
+        "address": "0x8f5328",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f533c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5344",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f534c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5354",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f515c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5368",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f5370",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5378",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f5380",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5388",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f5390",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f53ac",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f53b4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f53bc",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f53c4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f53cc",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f53d4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f53dc",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f53e4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f53ec",
+        "opcode": 0,
+        "values": [
+          56
+        ]
+      },
+      {
+        "address": "0x8f53f4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f53fc",
+        "opcode": 0,
+        "values": [
+          58
+        ]
+      },
+      {
+        "address": "0x8f5404",
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "address": "0x8f540c",
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "9": [
+      {
+        "address": "0x8f506c",
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5074",
+        "opcode": 0,
+        "values": [
+          12
+        ]
+      },
+      {
+        "address": "0x8f507c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5084",
+        "opcode": 0,
+        "values": [
+          14
+        ]
+      },
+      {
+        "address": "0x8f508c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5094",
+        "opcode": 0,
+        "values": [
+          16
+        ]
+      },
+      {
+        "address": "0x8f509c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f50a4",
+        "opcode": 0,
+        "values": [
+          18
+        ]
+      },
+      {
+        "address": "0x8f50ac",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f50b4",
+        "opcode": 0,
+        "values": [
+          20
+        ]
+      },
+      {
+        "address": "0x8f50bc",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f50c4",
+        "opcode": 0,
+        "values": [
+          14
+        ]
+      },
+      {
+        "address": "0x8f50cc",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f50d4",
+        "opcode": 0,
+        "values": [
+          16
+        ]
+      },
+      {
+        "address": "0x8f50dc",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f50e4",
+        "opcode": 0,
+        "values": [
+          18
+        ]
+      },
+      {
+        "address": "0x8f50ec",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f50f4",
+        "opcode": 0,
+        "values": [
+          20
+        ]
+      },
+      {
+        "address": "0x8f50fc",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5104",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f510c",
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "address": "0x8f5114",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f5128",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5130",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f5140",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f515c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f515c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f515c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          0,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5238",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f5240",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5248",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f5250",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5258",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f5260",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f527c",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f5284",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f528c",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f5294",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f529c",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f52a4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f52ac",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f52b4",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f52bc",
+        "opcode": 21,
+        "values": []
+      }
+    ]
+  },
+  "localization": {
+    "EN": {
+      "name": "NOP-03 SARUBIA (Future)",
+      "faction": "X Army",
+      "description": "STAND. ATK : 2-Shot Cannon     SPEC. ATK : 6-Shot Cannon\nA SARUBIA from the future.\nEven in the future, it remains remarkably cumbersome."
+    },
+    "JP": {
+      "name": "サルビア（未来）",
+      "faction": "X軍",
+      "description": "通常攻撃：大砲2連射     特殊攻撃：大砲6連射\n未来からやって来たサルビア。\n未来でも、その動きは非常に鈍重だ。"
+    },
+    "KR": {
+      "name": "사루비아 (미래)",
+      "faction": "X군",
+      "description": "일반 공격: 2연사 대포     특수 공격: 6연사 대포\n미래에서 온 사루비아.\n미래에서도 여전히 매우 둔중하다."
+    },
+    "ES": {
+      "name": "NOP-03 SARUBIA (Futuro)",
+      "faction": "Ejército X",
+      "description": "ATQ. ESTÁND. : Cañón de 2 tiros     ATQ ESPEC. : Cañón de 6 tiros\nUn SARUBIA llegado del futuro.\nIncluso en el futuro sigue siendo muy pesado y torpe."
+    },
+    "PT": {
+      "name": "NOP-03 SARUBIA (Futuro)",
+      "faction": "Exército X",
+      "description": "ATQ. PADR. : Canhão de 2 Tiros   ATQ. ESPEC. : Canhão de 6 Tiros\nUm SARUBIA vindo do futuro.\nMesmo no futuro, continua muito pesado e desajeitado."
+    },
+    "FR": {
+      "name": "NOP-03 SARUBIA (Futur)",
+      "faction": "Armée X",
+      "description": "ATT. STAND : Canon à 2 coups   ATT. SPÉ : Canon à 6 coups\nUn SARUBIA venu du futur.\nMême dans le futur, il reste très lourd et peu maniable."
+    },
+    "DE": {
+      "name": "NOP-03 SARUBIA (Zukunft)",
+      "faction": "X-Armee",
+      "description": "STANDARDANGR. : 2-Schuss-Kanone   SPEZIALANGR. : 6-Schuss-Kanone\nEin SARUBIA aus der Zukunft.\nSelbst in der Zukunft bleibt er äußerst schwerfällig."
+    },
+    "IT": {
+      "name": "NOP-03 SARUBIA (Futuro)",
+      "faction": "Esercito X",
+      "description": "ATC STAND.: Cannone 2-Colpi   ATC SPEC.: Cannone 6-Colpi\nUn SARUBIA arrivato dal futuro.\nAnche nel futuro rimane molto pesante e goffo."
+    },
+    "ZS": {
+      "name": "爆竹红（未来）",
+      "faction": "X军队",
+      "description": "普通攻击：大炮2连击     特殊攻击：大炮6连击\n从未来而来的爆竹红。\n哪怕是在未来其也十分笨重。"
+    },
+    "ZT": {
+      "name": "爆竹紅（未來）",
+      "faction": "X軍隊",
+      "description": "普通攻擊：大砲2連擊     特殊攻擊：大砲6連擊\n從未來而來的爆竹紅。\n哪怕是在未來其也十分笨重。"
+    },
+    "RU": {
+      "name": "САРУБИЯ (будущее)",
+      "faction": "Армия X",
+      "description": "СТАНД. АТАК: 2-Ударная Пушка   СПЕЦ. АТАК: 6-Ударная Пушка\nСАРУБИЯ из будущего.\nДаже в будущем она остаётся весьма неповоротливой."
+    }
+  },
+  "attack_wait_multiplier": [
+    1,
+    2
+  ]
+}

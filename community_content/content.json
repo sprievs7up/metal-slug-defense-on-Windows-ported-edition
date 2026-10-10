@@ -1,0 +1,124 @@
+{
+  "schema": 3,
+  "original_android_version": "1.46.0",
+  "unit_id_ranges": {
+    "body": [
+      1024,
+      2048
+    ],
+    "mods": [
+      2048,
+      5120
+    ]
+  },
+  "unit_ids": {
+    "s1xlv.sarubia_future": 1024,
+    "s1xlv.m15a_future": 1025,
+    "s1xlv.heavy_b_future": 1026,
+    "s1xlv.di_cokka_mk2": 1027,
+    "s1xlv.di_cokka_mk3": 1028,
+    "s1xlv.girida_o_mk2": 1029,
+    "s1xlv.pf_shield": 1030,
+    "s1xlv.pf_rifle": 1031,
+    "s1xlv.pf_bazooka": 1032,
+    "s1xlv.pf_gatling": 1033,
+    "s1xlv.pf_paratrooper": 1034,
+    "s1xlv.pf_rocket_bomb": 1035,
+    "s1xlv.pf_mortar": 1036,
+    "s1xlv.pf_paratrooper_child": 1037,
+    "s1xlv.pf_mortar_child": 1038,
+    "s1xlv.white_mummy": 1039,
+    "s1xlv.green_mummy": 1040,
+    "s1xlv.mummy_generator_mk2": 1041,
+    "s1xlv.mummy_generator_mk2_box": 1042,
+    "s1xlv.kt21": 1043
+  },
+  "units_dir": "units",
+  "asset_digest": "blake2b-256",
+  "assets": {
+    "future_heavy_b_out.obm": "975167f06425985fa8d5610e7e247d4ee92ab4c659fe2d59d57e381b8e06b07c",
+    "future_m15a_out1.obm": "4e893cf6ce4fa74dd495ca5fe88f30ff71c0fa2e29cd74f271344c56bb1211a0",
+    "future_m15a_out2.obm": "c8a5a2cd542407361dde99792df498eccc4f43f5e8e1f5f5da1dd8599102a0b4",
+    "sarubia_future.obm": "71a8ea782ef64ccc1736669ab1fc24003cd741e7c86f91e1ee67f009e105564f",
+    "unit_icon_02.obm": null,
+    "di_cokka_yellow.obm": "d638c78783d9dc9f58f6e08cd4b5799d93c6b666728d0515a5ff47e7651c4d18",
+    "di_cokka_light.obm": "74398a8e84763fa486109cd4612de65932efa5640faad310a581201ddbf186e9",
+    "girida_o_gunmetal.obm": "16dda9d93640de1100fd7bc7388b06fa8e13adab8dc5f205c49dd4f8071d5443",
+    "pf_shield_0.obm": "0bf70d442144109aee4cdddf712ccad6e07e88dc5bc7b03f9d5e68ab26dd7877",
+    "pf_shield_1.obm": "128bf53e3eba9bd5075719b00210f9832c013cf2c90c009c29e45981368e761e",
+    "pf_rifle_0.obm": "d36b0b90c47a8986da97f8c2167c12796a0cd74af0510fd9836e04e69f945da5",
+    "pf_bazooka_0.obm": "ea185f0565401e637c0fefab4f3500ce5cef445ad796715f02bd58412828d2af",
+    "pf_gatling_0.obm": "893dcd76ad4b783f45e130c87099238df19793442d7bbb248e48c96025e582d1",
+    "pf_paratrooper_0.obm": "d6b2f141926bf8768880d4a3dca5338915f7bae58a8786aa44c7a720557ee5a1",
+    "pf_rocket_bomb_0.obm": "5e2081ccd1458c980f22bc8a63248acff8bca649e2cc10e8d1c7e2eab6a47e69",
+    "pf_mortar_0.obm": "fd87545278e99ec03f9fb2ef06a4129359d8c1396d975378411bd70634f109e0",
+    "white_mummy_out.obm": null,
+    "green_mummy_out.obm": null,
+    "mummy_variant_effects.obm": null,
+    "mummy_variant_bugs.obm": null,
+    "mummy_generator_mk2.obm": null,
+    "mummy_generator_builder.obm": null,
+    "kt21_out.obm": null,
+    "kt21_sv001_effects.obm": null
+  },
+  "unit_pack": {
+    "key": "s1xlv.pf_infantry_pack",
+    "id": 10,
+    "shop_price": 150,
+    "units": [
+      "s1xlv.pf_shield",
+      "s1xlv.pf_rifle",
+      "s1xlv.pf_bazooka",
+      "s1xlv.pf_gatling",
+      "s1xlv.pf_paratrooper",
+      "s1xlv.pf_rocket_bomb",
+      "s1xlv.pf_mortar"
+    ],
+    "localization": {
+      "EN": {
+        "name": "REGULAR ARMY SOLDIER Pack",
+        "description": "A pack containing seven Regular Army infantry units."
+      },
+      "JP": {
+        "name": "正規軍兵士パック",
+        "description": "正規軍の歩兵7種を含むパック。"
+      },
+      "KR": {
+        "name": "정규군 병사 팩",
+        "description": "정규군 보병 7종이 포함된 팩."
+      },
+      "ES": {
+        "name": "Pack EJÉRCITO REGULAR",
+        "description": "Incluye siete unidades de infantería del Ejército Regular."
+      },
+      "PT": {
+        "name": "Pacote EXÉRCITO REGULAR",
+        "description": "Inclui sete unidades de infantaria do Exército Regular."
+      },
+      "RU": {
+        "name": "Набор РЕГУЛЯРНАЯ АРМИЯ",
+        "description": "Набор из семи пехотных юнитов регулярной армии."
+      },
+      "FR": {
+        "name": "Pack ARMÉE RÉGULIÈRE",
+        "description": "Contient sept unités d’infanterie de l’Armée Régulière."
+      },
+      "DE": {
+        "name": "REGULAR ARMY SOLDIER Pack",
+        "description": "A pack containing seven Regular Army infantry units."
+      },
+      "IT": {
+        "name": "Pacchetto ESERCITO REGOLARE",
+        "description": "Contiene sette unità di fanteria dell’Esercito Regolare."
+      },
+      "ZT": {
+        "name": "正規軍士兵包",
+        "description": "包含七種正規軍步兵的單位組合包。"
+      },
+      "ZS": {
+        "name": "正规军士兵包",
+        "description": "包含七种正规军步兵的单位组合包。"
+      }
+    }
+  }
+}

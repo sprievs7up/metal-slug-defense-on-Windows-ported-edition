@@ -88,6 +88,7 @@ LAB_SE_STATS = 0x380             # 每端口 8 字统计：请求、同帧合并
 LAB_FLAG_AI_TIER = 128           # 钩子版本 11：AI 段位（反应间隔、开局据点目标）
 LAB_FLAG_VERSUS = 256            # 钩子版本 14：双人对战中双方胜利均播放 MISSION COMPLETE（changeScene 4→3，计数 +0x780）
 LAB_FLAG_VS_CURSOR = 512         # 钩子版本 15：双人对战选中格光标插入原生出兵格绘制（头部 +0xa00，lab_versus.py）
+LAB_FLAG_NET_CAPTURE = 1024      # 钩子版本 22：常规联机——原生底栏与点击单位的操作记入核心缓冲区（netplay_regular），不立即执行
 LAB_AI_TIER = 0x500              # 头部偏移：我方 +0x500、敌方 +0x520（+0x380..0x3f7 为音效统计），各 [启用, 等待下限, 等待上限, 据点目标]
 AI_ALWAYS_URGENT = 0x3fffffff
 # AI 段位：(名称, 等级, 反应间隔下限/上限（帧，30 帧/秒，均匀随机）, 紧急阈值, 开局据点目标（-1 为原生逻辑）,
@@ -180,6 +181,12 @@ class Lab:
         self.save_snapshot = None
         self.virtual_files = {}
         self.virtual_write_count = 0
+        # 联机对战（netplay_session.NetplayBattle）：config_override 为本场设定（不读写玩家的 lab_config.json）；
+        # netplay 非 None 时，战斗中每帧的处理交给联机会话（输入、逻辑与表现分离），见 update。
+        self.config_override = None
+        self.netplay = None
+        self.netplay_mode = None      # 'regular'：常规联机（原生底栏、操作捕获，见 header_flags 与 netplay_regular）
+        self.start_hook = None        # 开战时（原生战斗初始化之前）调用一次：联机会话在此以比赛种子设定各随机源
         p.log('LAB_READY', json.dumps(self.config, ensure_ascii=False))
 
     # ---------- 配置与记录 ----------
@@ -202,7 +209,19 @@ class Lab:
             self.config[name] = getattr(self, name)
         if getattr(self, 'vs_saved', None):
             self.config.update(self.vs_saved)        # 双人对战期间的临时关闭不写入设定
-        (self.config_dir / CONFIG_NAME).write_text(json.dumps(self.config, ensure_ascii=False, indent=2), encoding='utf-8')
+        (self.config_dir / CONFIG_NAME).write_text(json.dumps(self.portable_config(), ensure_ascii=False, indent=2), encoding='utf-8')
+
+    def portable_config(self):
+        """写入文件的设定：牌组中的模组单位以稳定键保存（模组 UnitID 随启用情况分配，停用后再启用时按键找回）。"""
+        community = getattr(self.p, 'community', None)
+        sources = getattr(community, 'unit_source', {})
+        keys = {u['id']: u['key'] for u in (community.units if community is not None else []) if sources.get(u['key'], 'body') != 'body'}
+        config = dict(self.config)
+        for name in ('enemy_deck', 'player_deck'):
+            if isinstance(config.get(name), list):
+                config[name] = [[keys.get(e[0], e[0]), e[1]] if isinstance(e, list) and isinstance(e[0], int) else e
+                                for e in config[name]]
+        return config
 
     # ---------- 预设与履历（lab_presets/） ----------
     def preset_path(self, name):
@@ -212,7 +231,7 @@ class Lab:
 
     def save_preset(self, name):
         self.save_config()
-        self.preset_path(name).write_text(json.dumps(self.config, ensure_ascii=False, indent=2), encoding='utf-8')
+        self.preset_path(name).write_text(json.dumps(self.portable_config(), ensure_ascii=False, indent=2), encoding='utf-8')
 
     def load_preset(self, name):
         path = self.preset_path(name)
@@ -299,7 +318,10 @@ class Lab:
             unit, level = entry
             uid = by_key.get(unit) if isinstance(unit, str) else int(unit)
             if uid is None or uid not in known:
-                raise ValueError(f'enemy_deck 第 {index + 1} 项：未知单位 {unit!r}')
+                # 未载入的单位（模组停用或卸载）按空格处理，设定中的原值保留，重新启用后恢复。
+                self.p.log('LAB_DECK_UNIT_UNAVAILABLE', index, unit)
+                result.append(None)
+                continue
             if not 1 <= int(level) <= 40:
                 raise ValueError(f'enemy_deck 第 {index + 1} 项：等级 {level} 超出 1–40')
             result.append((uid, int(level) - 1))
@@ -378,8 +400,19 @@ class Lab:
         if scene in (99, SCENE_BATTLE) or self.active:
             self.feedback(T(self.p, 'fb_busy'), False)
             return
-        self.config = self.load_config()
+        if self.versus and self.config_override is None and self.netplay is None:
+            # 本地双人对战（N5.5c）：经确定性会话运行并录制回放（versus_session；MSD_VERSUS_SESSION=0 时不使用）。
+            import versus_session
+            if versus_session.enabled():
+                self.local_driver = versus_session.LocalVersusDriver(self)
+                p.session_driver = self.local_driver
+        if self.start_hook is not None:
+            hook, self.start_hook = self.start_hook, None
+            hook()
+        self.config = self.load_config() if self.config_override is None else dict(self.config_override)
         self.config.update({name: getattr(self, name) for name in SWITCHES})
+        if self.config_override is not None:
+            self.config.update(self.config_override)
         self.vs_restore()
         if self.versus:
             # 双人对战：完全控制、双方 AI 与自动绝招关闭（正常 AP 增长与冷却），离开战斗时还原。
@@ -445,6 +478,11 @@ class Lab:
         for entry in deck:
             uid, level = (0xffffffff, 0) if entry is None else entry
             p.call('_ZN16BattleController9entryUnitE6UnitIDib', enemy, uid, level, 0)
+        if self.config.get('player_status') and self.config.get('enemy_status'):
+            # 常规联机（N6a）：双方据点基础状态取自本场设定（各自存档的发展进度），不使用本机存档。
+            mine = p.call('_ZN10BattleMain19getPlayerControllerEv', main)
+            self.apply_base_status(mine, self.config['player_status'], player_deck)
+            self.apply_base_status(enemy, self.config['enemy_status'], deck)
         p.call('_ZN7AppMain26SetContinueStageIDSaveDataEi', app, 0)
         # 战斗对象已按联机 1v1（GameMode 1）建立；应用层联机标记随即清除，
         # 使 AppMain::BattleConnectionCheck 与战斗循环不再检查 CGameCenter 连接状态（无对端时会弹出“通讯中断”）。
@@ -466,7 +504,8 @@ class Lab:
                     enemy_deck=[None if e is None else [e[0], e[1] + 1] for e in deck],
                     player_deck=[None if e is None else [e[0], e[1] + 1] for e in player_deck],
                     saved_flags=self.saved_flags, config=self.config)
-        self.feedback(T(p, 'fb_start', self.stage_label(stage)))
+        if self.netplay_mode != 'regular':
+            self.feedback(T(p, 'fb_start', self.stage_label(stage)))
 
     # ---------- 存档隔离（T9） ----------
     def enter_sandbox(self):
@@ -517,6 +556,21 @@ class Lab:
                     self.release_enemy_feedback_resource()
                 else:
                     self.enemy_feedback_resource = 0
+
+    def apply_base_status(self, controller, words, deck):
+        """以 17 字的据点基础状态（BattleController::BaseStatus）取代原生 BattleStartSetStatus / SetStatusEnemy 的结果：
+        阵营一致标记（controller+0x3a0）按本场编队重算（原生我方按存档编队、敌方按对手数据计算：全部非空格单位阵营相同时为 1），
+        再以原生 setupBaseStatus（vtable+0xd4）写入状态并重算 AP 上限、回复量、升级成本与单位能力加成。"""
+        p = self.p
+        factions = [self.affiliation(entry[0]) for entry in deck if entry is not None]
+        same = 1 if factions and all(f == factions[0] for f in factions) else 0
+        p.write(controller + 0x3a0, bytes((same,)))
+        scratch = p.alloc(0x44)
+        try:
+            p.write(scratch, struct.pack('<17I', *[int(v) & 0xffffffff for v in words]))
+            p.call(p.word(p.word(controller) + 0xd4), controller, scratch)
+        finally:
+            p.free(scratch)
 
     def read_enemy_deck(self):
         p = self.p
@@ -572,14 +626,16 @@ class Lab:
         self.leave_sandbox()
         self.write_header(False)
         p.call('_ZN7AppMain12SceneEndFuncEi', app, scene)
-        # 27 为原生主菜单初始化，28 为其稳态；31 属于关卡地图初始化。
-        p.call('_ZN7AppMain11ChangeExeSTEi', app, 27)
+        # 27 为原生主菜单初始化，28 为其稳态；31 属于关卡地图初始化。常规联机（N6a）回到 Wi-Fi VERSUS 菜单（66）。
+        target, self.return_scene = getattr(self, 'return_scene', None) or 27, None
+        p.call('_ZN7AppMain11ChangeExeSTEi', app, target)
         self.active = False
         self.vs_restore()
         self.finishing = None
         if reopen_prep:
             self.prep.show(from_closed=True)   # 原生闸门已合拢：宿主闸门接手并在准备界面上打开（T8）
-        self.feedback(T(p, 'fb_back') if reopen_prep else T(p, 'fb_back_menu'))
+        if target == 27:
+            self.feedback(T(p, 'fb_back') if reopen_prep else T(p, 'fb_back_menu'))
 
     def finish(self, reason, reopen_prep=True, restart=False):
         """结束 LAB 战斗：先以原生 SetShutterClose 合拢闸门（与原生战斗结束相同的画面），合拢后离开战斗。"""
@@ -616,6 +672,9 @@ class Lab:
 
     # ---------- 每帧 ----------
     def update(self):
+        if self.netplay is not None and self.active:
+            self.netplay.lab_update()
+            return
         while self.commands:
             command = self.commands.popleft()
             try:
@@ -665,6 +724,10 @@ class Lab:
             self.finish_network_wait(main)
         playing = bool(self.valid(main) and p.word(main + 8) and
                        p.call('_ZN10BattleMain15isBattlePlayingEv', main))
+        if playing and not self.network_wait_done:
+            # 联机等待场景已由原生自行结束（常规联机经原生 Wi-Fi 对手画面开战时，N6a）：战斗已开始即视为等待完成。
+            self.network_wait_done = True
+            self.record('network_wait_absent')
         if playing:
             self.seen_playing = True
             self.idle_frames = 0
@@ -878,6 +941,12 @@ class Lab:
         p.put(LAB_HEADER, LAB_MAGIC)
 
     def header_flags(self):
+        if self.netplay_mode == 'regular':
+            # 常规联机：原生单方底栏（不分栏、不显示与点击对方单位），本方操作经捕获钩子转为联机输入。
+            flags = LAB_FLAG_AUTO_SPLIT | LAB_FLAG_SUPPORT | LAB_FLAG_AI_TIER
+            if self.p.word(LAB_HEADER + LAB_SE_MAGIC) == 0x4c534531:
+                flags |= LAB_FLAG_SE_EXTEND
+            return flags | (LAB_FLAG_NET_CAPTURE if self.native_hooks >= 22 else 0)
         flags = LAB_FLAG_ENEMY_GAUGE if self.native_hooks >= 1 else 0
         if self.native_hooks >= 2:
             flags |= LAB_FLAG_ENEMY_TOUCH
@@ -964,8 +1033,8 @@ class Lab:
         return stats + debug
 
     def reveal_slot(self, enemy, slot):
-        """分栏每侧只显示 3 格：按键出兵的槽位不在可见范围时，把该侧滚动到能看见它。"""
-        if self.native_hooks < 3 or not self.active:
+        """分栏每侧只显示 3 格：按键出兵的槽位不在可见范围时，把该侧滚动到能看见它。常规联机不分栏，不改动底栏。"""
+        if self.native_hooks < 3 or not self.active or self.netplay_mode == 'regular':
             return
         p = self.p
         _, scene = self.battle()
@@ -1039,14 +1108,17 @@ class Lab:
             unit = link - 0x11c if link else 0
         return manager, units
 
-    def fix_units(self, mine, enemy):
+    def fix_units(self, mine, enemy, red_team=None):
         """联机模式的本地修正（每帧）：
         1. BattleScene::setupResourceAll 在 GameMode 1 中把本方据点 +981 置 1（据点 HP 由对端同步，本地不扣血，
            BattleUnit::damage 0x1e0aa8 据此跳过扣血）。LAB 无对端，双方单位与据点 +981 一律清零，伤害本地结算、两边对称。
         2. BattleObjectManager::createUnit（0x1df418）只为本地玩家队伍设置绝招特效渲染器（+972/+976）；
-           为敌方单位补设同一渲染器（类型 1），使敌方也显示绝招可释放光圈。"""
+           为敌方单位补设同一渲染器（类型 1），使敌方也显示绝招可释放光圈。
+        red_team（常规联机 P2 视角，N6a）：显示红色光圈的队伍为队伍 0（P1），本方 P2 的单位补设原生渲染器（类型 1）。
+        光圈类型随视角不同（常规联机双方的全部单位为类型 1，回放与观战按 P1 视角只设定对方单位），属于显示，周期校验不计入
+        （netplay_session.UNIT_AURA；渲染器指针按指针屏蔽）。"""
         p = self.p
-        enemy_team = p.word(enemy + 0x38c)
+        enemy_team = p.word(enemy + 0x38c) if red_team is None else red_team
         cleared = 0
         red = self.ensure_red_renderer()
         for team in (0, 1):
@@ -1063,6 +1135,10 @@ class Lab:
                 if team == enemy_team and enemy_renderer and p.word(unit + 972) != enemy_renderer:
                     p.call('_ZN10BattleUnit17setEffectRendererEP20BattleEffectRendererNS_18SpAttackEffectTypeE',
                            unit, enemy_renderer, 1)
+                elif (red_team is not None and team != enemy_team and renderer
+                      and (p.word(unit + 972) != renderer or p.word(unit + 976) != 1)):
+                    p.call('_ZN10BattleUnit17setEffectRendererEP20BattleEffectRendererNS_18SpAttackEffectTypeE',
+                           unit, renderer, 1)
         for controller in (mine, enemy):
             base = p.call('_ZNK16BattleController11getBaseUnitEv', controller)
             if self.valid(base) and p.read(base + 981, 1)[0]:

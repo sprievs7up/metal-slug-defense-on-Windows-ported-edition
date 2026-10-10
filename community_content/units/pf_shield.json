@@ -1,0 +1,90 @@
+{
+  "key": "s1xlv.pf_shield",
+  "base_id": 8,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 15,
+  "available_from_start": true,
+  "ap": 35,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 8,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      384,
+      32,
+      38
+    ],
+    "anchor": [
+      -9,
+      -7
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY SHIELDED SOLDIER",
+      "description": "STAND. ATK : Sword     SPEC. ATK : Shield\nA durable soldier that guards with a shield."
+    },
+    "JP": {
+      "name": "正規軍シールド兵",
+      "description": "通常攻撃：ソード     特殊攻撃：シールド\nシールドでガードをする耐久力の高い兵士。"
+    },
+    "KR": {
+      "name": "정규군 방패병",
+      "description": "일반 공격: 검     특수 공격: 방패\n방패로 가드를 하는 내구력이 높은 병사."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR SOLDADO BLINDADO",
+      "description": "ATQ ESTÁND. : Espada     ATQ ESPEC. : Escudo\nUn soldado duradero que protege con un escudo."
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR SOLDADO C/ ESCUDO",
+      "description": "ATQ. PADR. : Espada   ATQ. ESPEC. : Escudo\nUm soldado resistente que monta guarda com um escudo."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ СОЛДАТ СО ЩИТОМ",
+      "description": "СТАНД. АТАК: Меч   СПЕЦ. АТАК: Щит\nВыносливый солдат, который защищает щитом."
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE SOLDAT EN ARMURE",
+      "description": "ATT. STAND : Épée   ATT. SPÉ : Bouclier\nUn soldat résistant qui se protège avec un bouclier."
+    },
+    "DE": {
+      "name": "REGULAR ARMY SHIELDED SOLDIER",
+      "description": "STAND. ATK : Sword     SPEC. ATK : Shield\nA durable soldier that guards with a shield."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE SOLDATO CON SCUDO",
+      "description": "ATC STAND.: Spada   ATC SPEC.: Scudo\nUn soldato robusto che protegge con uno scudo."
+    },
+    "ZT": {
+      "name": "正規軍盾牌兵",
+      "description": "普通攻擊：長劍     特殊攻擊：盾牌\n利用盾牌來防禦的高耐久力士兵。"
+    },
+    "ZS": {
+      "name": "正规军盾牌兵",
+      "description": "普通攻击：长剑     特殊攻击：盾牌\n利用盾牌来防御的高耐久力士兵。"
+    }
+  },
+  "textures": [
+    "pf_shield_0.obm",
+    "pf_shield_1.obm"
+  ]
+}

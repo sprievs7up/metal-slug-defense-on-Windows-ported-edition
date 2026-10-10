@@ -159,8 +159,12 @@ class Graphics:
             f=getattr(self.gl,name);f.restype=ret;f.argtypes=[types[c] for c in signature];self.funcs[key]=f
         return self.funcs[key]
 
+    ledger=None   # 联机回滚期间的 GL 对象登记（netplay_state.GLLedger）：推迟删除、回滚时删除被撤销帧中新建的对象
+
     def call(self,name,args):
         p=self.p
+        ledger=self.ledger
+        if ledger is not None and name in ledger.hooked and not ledger.busy:return ledger.handle(name,args)
         if name=='glBindFramebuffer':self.bindings[0x8D40]=args[1]
         if name in ('glViewport','glScissor') and not self.bindings[0x8D40]:
             rect=tuple(C.c_int(value).value for value in args[:4])

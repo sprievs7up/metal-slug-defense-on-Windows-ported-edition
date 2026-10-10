@@ -3,6 +3,9 @@
 
 // Retention follows each original BattleUnit instance, including truck
 // passengers. No new save fields, global unit-ID flags or frame polling.
+// 角色类：原版十类角色为自身 UnitID；带 retained_special_weapon 行为的社区单位为其基准 UnitID（community_content.cpp）。
+uint32_t msd_retained_class(Context& c,uint32_t uid);
+void msd_retained_count(Context& c,uint32_t uid);
 static uint32_t retained_unit(Context& c){
     uint32_t sprite=c.r[4],animation=c.r[5];
     // BattleSpriteFactory owns a static ELF-data pool; the sprite can reside
@@ -16,12 +19,7 @@ static uint32_t retained_unit(Context& c){
     if(rd<uint32_t>(c,unit)!=0x1092f710u||
        rd<uint32_t>(c,unit+0x5cu)!=sprite||
        !rd<uint32_t>(c,unit+0x324u))return 0u;
-    switch(rd<uint32_t>(c,unit+0x128u)){
-        case 16u:case 17u:case 18u:case 19u:
-        case 96u:case 97u:case 98u:case 99u:
-        case 344u:case 362u:return unit;
-        default:return 0u;
-    }
+    return msd_retained_class(c,rd<uint32_t>(c,unit+0x128u))?unit:0u;
 }
 void msd_retained_weapon_script(Context& c){
     if(rd<uint32_t>(c,c.r[5]+0xcu)!=9u)return;
@@ -32,7 +30,7 @@ bool msd_retained_weapon_discard(Context& c){
     if(script!=9u&&script!=10u)return false;
     uint32_t unit=retained_unit(c);
     if(!unit)return false;
-    uint32_t id=rd<uint32_t>(c,unit+0x128u),effect=rd<uint32_t>(c,c.r[6]+4u);
+    uint32_t id=msd_retained_class(c,rd<uint32_t>(c,unit+0x128u)),effect=rd<uint32_t>(c,c.r[6]+4u);
     // These effects depict discarding the equipped gun. Other script-12
     // operations include muzzle flashes and laser cleanup and remain active.
     return ((id==16u||id==17u)&&effect==23u)||
@@ -43,7 +41,7 @@ void msd_retained_weapon_frame(Context& c){
     if(script!=9u&&script!=10u)return;
     uint32_t unit=retained_unit(c);
     if(!unit)return;
-    uint32_t id=rd<uint32_t>(c,unit+0x128u);
+    uint32_t id=msd_retained_class(c,rd<uint32_t>(c,unit+0x128u));
     // The fat variants finish their gun burst with unarmed body frames.
     // Retain the matching gun pose while preserving every script timer.
     if(id==96u&&c.r[3]==0u)c.r[3]=198u;
@@ -55,7 +53,7 @@ void msd_retained_fat_eri_laser(Context& c){
     uint32_t unit=c.r[4];
     if(unit<0x12000000u||unit>=0x1e000000u||
        rd<uint32_t>(c,unit)!=0x1092f710u||
-       rd<uint32_t>(c,unit+0x128u)!=98u||
+       msd_retained_class(c,rd<uint32_t>(c,unit+0x128u))!=98u||
        rd<uint32_t>(c,unit+0x88u)!=40u||
        !rd<uint32_t>(c,unit+0x324u))return;
     wr<uint32_t>(c,c.r[13]+12u,50u);
@@ -69,11 +67,8 @@ void msd_retained_weapon_params(Context& c){
        rd<uint32_t>(c,unit+0x88u)!=40u||
        !rd<uint32_t>(c,unit+0x324u)||
        rd<uint32_t>(c,c.r[13]+8u)!=0u)return;
-    switch(rd<uint32_t>(c,unit+0x128u)){
-        case 16u:case 96u:case 17u:case 97u:case 18u:case 98u:case 344u:
-        case 19u:case 99u:case 362u:break;
-        default:return;
-    }
+    if(!msd_retained_class(c,rd<uint32_t>(c,unit+0x128u)))return;
+    msd_retained_count(c,rd<uint32_t>(c,unit+0x128u));
     wr<uint32_t>(c,c.r[13]+8u,50u);
 }
 // Recovered CLZSS::Decode algorithm, verified against the original function.

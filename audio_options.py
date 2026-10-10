@@ -3,19 +3,25 @@ HEADER=0x1ffea000
 MAGIC=0x41554431
 MUSIC=0x3d5c
 EFFECTS=0x3d60
+# 语言编号为原生 app+0x3d64（GetStringTitle 核对）：0 英 1 日 2 韩 3 西 4 葡 5 法 7 意 9 繁中 10 俄；6、8 无原生文字。
 LABELS={
     0:('MUSIC','SOUND EFFECTS','ON','OFF'),
     1:('音楽設定','効果音設定','ON','OFF'),
     2:('음악 설정','효과음 설정','켜짐','꺼짐'),
-    3:('MUSIQUE','EFFETS SONORES','ON','OFF'),
-    4:('MUSICA','EFFETTI SONORI','ON','OFF'),
-    5:('MUSIK','SOUNDEFFEKTE','AN','AUS'),
-    6:('MÚSICA','EFECTOS DE SONIDO','ON','OFF'),
-    7:('MÚSICA','EFEITOS SONOROS','ON','OFF'),
-    8:('МУЗЫКА','ЗВУКОВЫЕ ЭФФЕКТЫ','ВКЛ','ВЫКЛ'),
+    3:('MÚSICA','EFECTOS DE SONIDO','ON','OFF'),
+    4:('MÚSICA','EFEITOS SONOROS','ON','OFF'),
+    5:('MUSIQUE','EFFETS SONORES','ON','OFF'),
+    6:('MUSIK','SOUNDEFFEKTE','AN','AUS'),
+    7:('MUSICA','EFFETTI SONORI','ON','OFF'),
+    8:('MUSIC','SOUND EFFECTS','ON','OFF'),
     9:('音樂設定','音效設定','開','關'),
-    10:('音乐设置','音效设置','开','关'),
+    10:('МУЗЫКА','ЗВУКОВЫЕ ЭФФЕКТЫ','ВКЛ','ВЫКЛ'),
 }
+
+# 标题 OPTION 合并为一行两个按钮时的短文字（开关状态由原生喇叭图标表示）。语言编号同 LABELS。
+TITLE_SHORT={0:('MUSIC','SOUND'),1:('音楽','効果音'),2:('음악','효과음'),3:('MÚSICA','EFECTOS'),4:('MÚSICA','EFEITOS'),
+             5:('MUSIQUE','EFFETS'),6:('MUSIK','EFFEKTE'),7:('MUSICA','EFFETTI'),8:('MUSIC','SOUND'),
+             9:('音樂','音效'),10:('МУЗЫКА','ЗВУКИ')}
 
 class AudioOptions:
     def __init__(self,p):
@@ -93,6 +99,13 @@ class AudioOptions:
             if mode=='title':
                 # 通过原生整页重建流程更新标题控件的文字图集及索引。
                 table=p.word(p.symbols['strTitleTbl']+lang*4)
+                mods=getattr(p,'mod_page',None)
+                if mods is not None and mods.extension:
+                    # 模组 M4：音乐、音效合并为一行两个按钮（短文字），第 6 个面板改为 MOD 设定。
+                    texts=TITLE_SHORT.get(lang,TITLE_SHORT[0])
+                    label=mods.title_label('mod',lang)
+                    if label not in self.strings:self.strings[label]=p.cstr(label)
+                    p.put(table+5*4,self.strings[label])
                 for index,text in enumerate(texts,1):
                     if text not in self.strings:self.strings[text]=p.cstr(text)
                     p.put(table+index*4,self.strings[text])

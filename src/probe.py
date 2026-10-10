@@ -28,7 +28,28 @@ i32 = lambda n: ctypes.c_int32(n).value
 class ProbeCancelled(Exception):
     """A local host requested that the current experiment stop."""
 
+def guest_ram(size):
+    """客体内存。优先以 MEM_WRITE_WATCH 分配（按需清零页，与普通缓冲同为全零初值），
+    联机回滚快照（netplay_state.py）以 GetWriteWatch 取得逐帧改动页；不可用时退回普通缓冲。
+    返回 (地址或缓冲对象, 是否启用写入监视)。"""
+    if os.environ.get('MSD_GUEST_WRITE_WATCH','1')=='0':return ctypes.create_string_buffer(size),False
+    try:
+        kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+        allocate=kernel.VirtualAlloc
+        allocate.restype=ctypes.c_void_p
+        allocate.argtypes=[ctypes.c_void_p,ctypes.c_size_t,ctypes.c_uint32,ctypes.c_uint32]
+        address=allocate(None,size,0x1000|0x2000|0x200000,0x04)   # MEM_COMMIT|MEM_RESERVE|MEM_WRITE_WATCH, PAGE_READWRITE
+        if address:return address,True
+    except (AttributeError,OSError):pass
+    return ctypes.create_string_buffer(size),False
+
 class Probe:
+    # 联机与回放（netplay_session.NetplayMode）：新分配的块清零（calloc 语义），使对象内的填充字节与复用块残留不随进程而异；
+    # virtual_clock 为时钟函数的替代（时间由比赛种子与模拟帧号推导），None 时使用真实时钟。
+    zero_fill = False
+    virtual_clock = None
+    heap_version = 0          # 每次分配或释放递增（联机回滚快照据此判断分配表是否变化）
+
     def __init__(self, guest_root=None, log_name='probe.log', window_handle=None,
                  window_size=(960,640), stop_event=None, on_progress=None,
                  audio_mode='silent', audio_capture=None):
@@ -53,8 +74,8 @@ class Probe:
         self.elf = ELFFile(io.BytesIO(library))
         self.uc = Uc(UC_ARCH_ARM, UC_MODE_ARM)
         self.uc.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_A15)
-        self.ram = ctypes.create_string_buffer(SIZE)
-        self.hostbase = ctypes.addressof(self.ram)
+        self.ram, self.write_watch = guest_ram(SIZE)
+        self.hostbase = self.ram if self.write_watch else ctypes.addressof(self.ram)
         self.uc.mem_map_ptr(BASE, SIZE, UC_PROT_ALL, self.hostbase)
         self.uc.reg_write(UC_ARM_REG_C1_C0_2, 0xf << 20)
         self.uc.reg_write(UC_ARM_REG_FPEXC, 0x40000000)
@@ -136,11 +157,15 @@ class Probe:
                 self.free_blocks.pop(i)
                 if size>n:self.free_blocks.insert(i,(p+n,size-n))
                 self.allocations[p]=n
+                self.heap_version+=1
+                if self.zero_fill:ctypes.memset(self.hostbase+p-BASE,0,n)
                 return p
         p = self.heap
         self.heap += n
         if self.heap >= 0x1e000000: raise MemoryError('Guest heap exhausted')
         self.allocations[p] = n
+        self.heap_version += 1
+        if self.zero_fill:ctypes.memset(self.hostbase+p-BASE,0,n)
         return p
 
     def free(self,p):
@@ -150,6 +175,7 @@ class Probe:
             raise RuntimeError('Decoder worker unexpectedly released a guarded allocation')
         size=self.allocations.pop(p,None)
         if size is None:raise RuntimeError(f'Unknown or duplicate free: {p:08x}')
+        self.heap_version+=1
         # free_blocks stays sorted by address with adjacent blocks merged, so the
         # released block only joins its immediate neighbours (same result as a
         # full sort and merge, without rescanning the whole list).
@@ -704,6 +730,7 @@ class Probe:
         return len(text.encode())
 
     def clock(self,name,a):
+        if self.virtual_clock is not None and name in ('clock_gettime','time','clock'):return self.virtual_clock(name,a)
         if name=='clock_gettime':
             ns=time.monotonic_ns() if a[0] else time.time_ns(); self.write(a[1],struct.pack('<II',ns//10**9 & 0xffffffff,ns%10**9)); return 0
         if name=='time':
@@ -853,7 +880,7 @@ class Probe:
         return self.get_audio().dispatch(name,a)
 
     def initialize(self):
-        registry=ROOT/'community_content/registry.json'
+        registry=ROOT/'community_content/content.json'
         if registry.is_file() and not hasattr(self,'community'):
             from community_content import CommunityContent
             self.community=CommunityContent(self,registry.parent)

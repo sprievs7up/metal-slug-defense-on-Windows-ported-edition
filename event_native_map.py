@@ -11,7 +11,7 @@ HEADER=0x1ffed000
 CLASSIC_WORLD={'halloween_2015':4,'kof_black_noah_2016':5}
 def eventmsd_route(key,controller,first_stage_id=0):
     if key=='battle_cats_2015':return {'mode':4,'world_type':2,'base':40000,'world_offset':1,'world_shift':0}
-    if key=='cooperation_2016_current':return {'mode':6,'world_type':4,'base':60000,'world_offset':1,'world_shift':0}
+    if key=='cooperation_2016_current' or controller=='current_cooperation':return {'mode':6,'world_type':4,'base':60000,'world_offset':1,'world_shift':0}
     if controller=='legacy_survival':
         route={'mode':5,'world_type':3,'base':60000,'world_offset':1,'world_shift':0}
         if key=='treasure_recovery_2015':route['base_position']=(300,200)
@@ -23,6 +23,8 @@ class NativeEventMap:
         self.t=trial;self.p=trial.p;self.tables={};self.active=False
         p=self.p
         manifest=json.loads((trial.root/'historical_events/native_maps.json').read_text(encoding='utf-8'));self.manifest=manifest
+        # 自制 EVENT（event_content.compile_event）的地图清单；区域名按当前语言写入（enable）。
+        manifest['events'].update(getattr(trial,'custom_maps',{}))
         self.routes={};self.view_manifests={};views=[]
         for key,data in manifest['events'].items():
             views.append((key,key,None,data))
@@ -52,10 +54,11 @@ class NativeEventMap:
                             marker_raw=bytes.fromhex(marker['raw_hex'])
                             if len(marker_raw)!=24 or marker['preview_frame']>32:raise ValueError('Invalid Event marker')
                             pointer=trial.blob(marker_raw)
-                            maximum=marker['pow_max'] if area['prisoner_id']>=0 else 0
+                            # 自制 EVENT 的邀请函（无区域奖励的俘虏）同样计入上限，救出数按上限保存（M6b-3）。
+                            maximum=marker['pow_max'] if area['prisoner_id']>=0 or data.get('custom') else 0
                             records.append(struct.pack('<16I',virtual,s['id'],trial.blob(bytes(menu)),0,0,a,slot,index,world,marker['bgm_id'],maximum,0,*([0]*4)))
                             indices.append((a,slot,index));world_indices.append((world,a,slot,index));by_index[index]=marker
-                            names.append(trial.blob((f'{title} / {local_world+1}-{a+1}').encode()+b'\0'))
+                            names.append(trial.blob((f'{title} / {local_world+1}-{a+1}').encode()+b'\0') if 'names' not in area else area['names'])
                         struct.pack_into('<I',raw,20+slot*4,pointer)
                     area_ptrs.append(trial.blob(bytes(raw)))
                 if len(area_ptrs)>16:raise ValueError('Event world exceeds original area capacity')
@@ -66,10 +69,11 @@ class NativeEventMap:
                 for field in ('names','info1','info2'):
                     text_arrays.append(trial.blob(struct.pack('<11I',*[trial.blob(text.encode('utf-8')+b'\0') for text in reward[field]])))
                 prisoners.append(struct.pack('<5I',int(pid),trial.blob(bytes.fromhex(reward['raw_hex'])),*text_arrays))
-            self.tables[table_key]={'worlds':trial.blob(b''.join(worlds)),'world_count':len(worlds),
+            localized=any(isinstance(n,dict) for n in names)
+            self.tables[table_key]={'worlds':trial.blob(b''.join(worlds)),'world_count':len(worlds),'localized_names':names if localized else None,
                               'area_count':len(data['areas']),'records':trial.blob(b''.join(records)),
                               'count':len(records),'indices':indices,'world_indices':world_indices,'by_index':by_index,
-                              'names':trial.blob(struct.pack('<'+'I'*len(names),*names)),
+                              'names':0 if localized else trial.blob(struct.pack('<'+'I'*len(names),*names)),
                               'prisoners':trial.blob(b''.join(prisoners)),'prisoner_count':len(prisoners)}
         table=p.symbols['MenuImageDataTbl'];locale=p.word(p.app_instance()+0x3d64)
         self.cat_descriptor=p.word(table+locale*4)+64*12
@@ -80,8 +84,17 @@ class NativeEventMap:
     def active_manifest(self):
         key=(self.t.selected,self.t.selected_phase) if self.t.selected_phase is not None else self.t.selected
         return self.view_manifests[key]
+    def localized_names(self,table):
+        """自制 EVENT 的区域名（每个小关记录一项，取所在区域的名称）按当前游戏语言建表并缓存。"""
+        import content_locale
+        code=content_locale.current_code(self.p);cache=table.setdefault('names_by_language',{})
+        if code not in cache:
+            texts=[self.t.blob(n[code].encode('utf-8')+b'\0') for n in table['localized_names']]
+            cache[code]=self.t.blob(struct.pack('<'+'I'*len(texts),*texts))
+        return cache[code]
     def enable(self):
         t=self.t;p=self.p;table=self.active_table();state=t.state();self.active=True
+        if table.get('localized_names'):table['names']=self.localized_names(table)
         route=self.routes[t.selected]
         for off,value in ((72,route['world_type']),(76,route['mode']),(84,1),(192,route['world_shift'])):p.put(HEADER+off,value)
         position=route.get('base_position')
@@ -122,6 +135,10 @@ class NativeEventMap:
         p.log('HISTORICAL_NATIVE_MAP',t.selected,self.active_table()['area_count'])
     def update(self):
         t=self.t;p=self.p;app=t.app;pending=p.word(HEADER+112)
+        # 自制地图图层与缩略图（M6b-2，event_content.MapArt）。
+        if not hasattr(self,'art'):
+            import event_content;self.art=event_content.MapArt(t)
+        self.art.update()
         if self.active and not t.active_battle:
             p.put(HEADER+176,int(self.has_prisoners(p.word(app+0xc624)-self.routes[t.selected]['world_shift'] if p.word(HEADER+84) else p.word(app+0xb1ec))))
             if p.word(HEADER+180):

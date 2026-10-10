@@ -86,8 +86,11 @@ class EventTrial:
                                                r['native_maximum'],0,r['type'],r['unit_id'],*([0]*9)))
                 self.shop_tables[key]={'catalog':self.blob(struct.pack('<'+'I'*len(products),*[r['id'] for r in products])),
                                        'records':self.blob(b''.join(records)),'count':len(products)}
+        # 自制 EVENT（M6b）：本体 community_content/events/ 与已载入模组的 EVENT 编译为同一结构（event_content.py）。
+        import event_content
+        self.custom_events=event_content.install(self)
         medal=json.loads((self.root/'historical_events/medal_shop.json').read_text(encoding='utf-8'))
-        self.medal_catalog=[r for r in medal['rows'] if r['event_key'] in self.data]
+        self.medal_catalog=[r for r in medal['rows'] if r['event_key'] in self.data]+self.custom_medal_rows
         self.medal_table=None;self.shop_kind='token';self.medal_owned=set()
         # 活动勋章单位的商品号登记为活动专属（src/event_trial_hooks.cpp event_exclusive_sku）。
         skus=sorted({r['menu_shop_id'] for r in self.medal_catalog})[:64]
@@ -218,7 +221,8 @@ class EventTrial:
             for offset,name in ((12,'catalog'),(16,'count'),(20,'records'),(24,'count')):p.put(HEADER+offset,shop[name])
         p.put(HEADER+36,self.app)
         group=d['stages'][0]['group']
-        p.write(self.groups+group*8,struct.pack('<II',t['missions'],t['count']))
+        # 自制 EVENT 的关卡记录只经地图钩子按关卡编号查找（map_mission），不借用原生关卡组。
+        if group is not None:p.write(self.groups+group*8,struct.pack('<II',t['missions'],t['count']))
         if 'ex' in t:p.write(self.db+0x20,struct.pack('<4I',t['ex'],t['ex_count'],t['drops'],t['drop_count']))
         self.state();self.overlay=None;self.page=0;self.revision+=1;p.put(HEADER,MAGIC);p.put(HEADER+4,0)
         p.call('_ZN7AppMain24SetSurvivalPointSaveDataEi',self.app,self.state()['currency'])
@@ -301,7 +305,7 @@ class EventTrial:
         if self.selected and self.last_scene==67 and self.active_battle is None:
             self.p.put(self.app+0xc63c,4);self.p.put(self.app+0xc06c,1)
         # 原生合作流程（模式 6）在原生存档中增减活动积分，回写该活动的独立进度。
-        if self.selected=='cooperation_2016_current' and self.p.word(HEADER+84) and self.p.word(self.app+0xc8c8)==6:
+        if self.selected and self.data[self.selected]['controller']=='current_cooperation' and self.p.word(HEADER+84) and self.p.word(self.app+0xc8c8)==6:
             point=self.p.call('_ZN7AppMain24GetSurvivalPointSaveDataEv',self.app)
             if point!=self.state()['currency']:
                 state=self.state();state['currency']=point;state['score_peak']=max(state.get('score_peak',0),point)
@@ -342,6 +346,7 @@ class EventTrial:
         if native_map:
             rank=self.native_map.save_result(record,won,p.word(battle+0x48))
             if won:self.apply_prisoner_rewards()
+            if won:self.apply_unit_rewards(record['stage'],saved)
         if d['currency']:state['currency']=min(99999999,state['currency']+earned)
         else:p.call('_ZN7AppMain18AddMSPointSaveDataEi',app,earned)
         self.result={'won':won,'earned':earned,'stage_id':record['stage']['id']}
@@ -398,6 +403,16 @@ class EventTrial:
         self.reset_event_context()
         p.call('_ZN7AppMain12SceneEndFuncEi',self.app,p.word(self.app+0x22bc))
         p.call('_ZN7AppMain11ChangeExeSTEi',self.app,27)
+    def apply_unit_rewards(self,stage,saved):
+        """自制 EVENT 小关的首次胜利单位奖励（与扩展世界相同：未拥有时给予 Lv1，开放阶段 20）。"""
+        if not stage.get('reward_units') or saved.get('unit_rewards_claimed'):return
+        p=self.p
+        for uid in stage['reward_units']:
+            if p.call('_ZN7AppMain20GetUnitLevelSaveDataE6UnitID',self.app,uid)==0xffffffff:
+                p.call('_ZN7AppMain20SetUnitLevelSaveDataE6UnitIDi',self.app,uid,0)
+                p.call('_ZN7AppMain24SetUnitLevelOpenSaveDataE6UnitIDi',self.app,uid,20)
+        saved['unit_rewards_claimed']=True
+        p.log('CUSTOM_EVENT_UNIT_REWARD',self.selected,stage['local_stage_key'],stage['reward_units'])
     def apply_prisoner_rewards(self):
         p=self.p;state=self.state();claims=state.setdefault('reward_claims',{})
         event=self.native_map.active_manifest();parts=self.data[self.selected]['controller']=='parts'
@@ -413,9 +428,25 @@ class EventTrial:
             if reward[3]==1 and reward[4]!=0xffffffff:
                 if p.call('_ZN7AppMain20GetUnitLevelSaveDataE6UnitID',self.app,reward[4])==0xffffffff:
                     p.call('_ZN7AppMain20SetUnitLevelSaveDataE6UnitIDi',self.app,reward[4],0)
+                    if self.data[self.selected].get('custom'):p.call('_ZN7AppMain24SetUnitLevelOpenSaveDataE6UnitIDi',self.app,reward[4],20)
             claims[str(pid)]=True
             p.log('HISTORICAL_PRISONER_REWARD',self.selected,pid,reward[4])
-        if parts and all(str(pid) in claims for pid in event['prisoners']):
+        d=self.data[self.selected]
+        if d.get('custom'):
+            # 自制 EVENT（M6b-3）：parts 收齐全部零件、invitation 救出全部邀请函时给予 final_reward_units。
+            stages=d['stages'];markers=[m for a in event['areas'] for m in a['markers']]
+            if d['controller']=='parts':done=bool(event['prisoners']) and all(str(pid) in claims for pid in event['prisoners'])
+            elif d['controller']=='invitation':
+                done=any(m['pow_max'] for m in markers) and all(state['stages'].get(stages[m['index']]['local_stage_key'],{}).get('captures',0)>=m['pow_max'] for m in markers)
+            else:done=False
+            if done and d.get('final_reward_units') and not claims.get('final'):
+                for uid in d['final_reward_units']:
+                    if p.call('_ZN7AppMain20GetUnitLevelSaveDataE6UnitID',self.app,uid)==0xffffffff:
+                        p.call('_ZN7AppMain20SetUnitLevelSaveDataE6UnitIDi',self.app,uid,0)
+                        p.call('_ZN7AppMain24SetUnitLevelOpenSaveDataE6UnitIDi',self.app,uid,20)
+                claims['final']=True
+                p.log('CUSTOM_EVENT_FINAL_REWARD',self.selected,d['final_reward_units'])
+        elif parts and all(str(pid) in claims for pid in event['prisoners']):
             if p.call('_ZN7AppMain20GetUnitLevelSaveDataE6UnitID',self.app,285)==0xffffffff:
                 p.call('_ZN7AppMain20SetUnitLevelSaveDataE6UnitIDi',self.app,285,0)
     def open(self,page):
@@ -442,10 +473,12 @@ class EventTrial:
     def prepare_item_hud(self):
         p=self.p
         atlas=frames=0
-        if self.selected in ('melty_christmas_2015','treasure_recovery_2015') and (self.root/'historical_events/assets'/self.HUD_ATLAS).is_file():
+        # 自制 legacy_survival（M6b-4）沿用模板活动的图标样式（data['hud']：coin 或 star）。
+        style=self.data[self.selected].get('hud') or {'melty_christmas_2015':'star','treasure_recovery_2015':'coin'}.get(self.selected)
+        if style and (self.root/'historical_events/assets'/self.HUD_ATLAS).is_file():
             if not getattr(self,'hud_atlas_name',0):self.hud_atlas_name=p.cstr(self.HUD_ATLAS)
             atlas=self.hud_atlas_name
-            if self.selected=='treasure_recovery_2015':
+            if style=='coin':
                 if not getattr(self,'hud_coin_frames',0):
                     self.hud_coin_frames=p.alloc(len(self.HUD_COIN));p.write(self.hud_coin_frames,self.HUD_COIN)
                 frames=self.hud_coin_frames
@@ -599,7 +632,7 @@ class EventTrial:
                       ('open','medal_shop' if self.has_medal_shop() else 'shop')),
                      (0x3400,'panel',panel and 400<=xx<=655 and 430<=yy<=505,
                       ('open','shop' if self.has_shop() else 'medal_shop')),
-                     (0x3378,'panel',self.selected!='cooperation_2016_current' and 400<=xx<=655 and 350<=yy<=425,
+                     (0x3378,'panel',self.data[self.selected]['controller']!='current_cooperation' and 400<=xx<=655 and 350<=yy<=425,
                       ('open','cooperation'))]
             if self.host_button(action,x,y,buttons):return True
             if 770<=xx<=915 and 218<=yy<=258:command=('open','events')

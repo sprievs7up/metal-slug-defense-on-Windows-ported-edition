@@ -59,6 +59,7 @@ TEXT = {
     'random': ('隨機', '随机', 'ランダム', 'RANDOM'),
     'clear': ('清空', '清空', 'クリア', 'CLEAR'),
     'empty': ('空', '空', '空き', 'EMPTY'),
+    'unit_unavailable': ('未啟用', '未启用', '無効', 'N/A'),
     'battle_settings': ('戰鬥設定', '战斗设定', 'バトル設定', 'BATTLE'),
     'player_base': ('我方據點等級', '我方据点等级', '自軍拠点レベル', 'YOUR BASE LV'),
     'enemy_base': ('敵方據點等級', '敌方据点等级', '敵軍拠点レベル', 'ENEMY BASE LV'),
@@ -423,9 +424,13 @@ class Skin:
             import struct
             import probe
             from PIL import Image
-            community = Path(self.lab.root) / 'community_content' / name
-            path = community if community.is_file() else Path(probe.RESOURCE_ROOT) / probe.PKG / name
-            raw = path.read_bytes()
+            loaded = getattr(getattr(self.lab.p, 'community', None), 'assets', {})
+            if name in loaded:
+                raw = loaded[name]          # 社区内容加载器已读入的图集（含图标页）
+            else:
+                community = Path(self.lab.root) / 'community_content' / name
+                path = community if community.is_file() else Path(probe.RESOURCE_ROOT) / probe.PKG / name
+                raw = path.read_bytes()
             w, h = struct.unpack_from('<HH', raw, 4)
             if raw[:4] == b'OI\x01\x20':
                 self.atlases[name] = Image.frombytes('RGBA', (w, h), raw[8:8 + w * h * 4])
@@ -513,7 +518,8 @@ class Skin:
             for unit in (community.units if community is not None else []):
                 icon = unit.get('icon')
                 if icon:
-                    icons[unit['id']] = (ICON_PAGES[icon.get('page', 1)], tuple(icon['rect']))
+                    # 页 2 起为社区图标页图集（icon.atlas）。
+                    icons[unit['id']] = (icon.get('atlas') or ICON_PAGES[icon.get('page', 1)], tuple(icon['rect']))
             self.icons = icons
         return self.icons
 

@@ -1,0 +1,108 @@
+{
+  "key": "s1xlv.di_cokka_mk2",
+  "base_id": 3,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 30,
+  "available_from_start": false,
+  "shop_unlock_reference_id": 64,
+  "ap": 110,
+  "hp_multiplier": [
+    19,
+    21
+  ],
+  "knockback_threshold_multiplier": [
+    19,
+    21
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    3,
+    2
+  ],
+  "move_speed_multiplier": [
+    5,
+    4
+  ],
+  "production_reference_id": 3,
+  "production_interval_multiplier": [
+    4,
+    5
+  ],
+  "attack_range_multiplier": [
+    6,
+    5
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "texture": "di_cokka_yellow.obm",
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      192,
+      40,
+      39
+    ],
+    "anchor": [
+      -5,
+      -6
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "DI-COKKA MK.II",
+      "description": "STAND. ATK : H-Cannon   SPEC. ATK : 3-Shot H-Cannon\nA Di-Cokka tank designed for desert operations. Its\nlightweight armor provides greater speed and\nfirepower."
+    },
+    "JP": {
+      "name": "ジィ・コッカ MK.II",
+      "description": "通常攻撃：水平キャノン     特殊攻撃：水平キャノン3連射\n砂漠での作戦用に設計されたジィ・コッカ。\n軽量化した装甲により、移動速度と攻撃力が向上している。"
+    },
+    "KR": {
+      "name": "디-코카 MK.II",
+      "description": "일반 공격: 수평 캐논   특수 공격: 수평 캐논 3연사 \n사막 작전용으로 설계된 디-코카 전차. 경량 장갑으로 이동 속도와 공격력이 향상되었다."
+    },
+    "ES": {
+      "name": "DI-COKKA MK.II",
+      "description": "ATQ. ESTÁND. : Cañón-H   ATQ ESPEC. : Cañón-H de 3 tiros\nDi-Cokka diseñado para operaciones en el desierto. Su\nblindaje ligero aumenta la velocidad y la potencia de\nfuego."
+    },
+    "PT": {
+      "name": "DI-COKKA MK.II",
+      "description": "ATQ. PADR. : Canhão Horiz.    ATQ. ESPEC. : Canhão H. de 3 Tiros\nDi-Cokka projetado para operações no deserto. A\nblindagem leve aumenta a velocidade e o poder de fogo."
+    },
+    "RU": {
+      "name": "ДИ-КОККА MK.II",
+      "description": "СТАНД. АТАК: Х-Пушка   СПЕЦ. АТАК: 3-Ударная Х-Пушка\nТанк Ди-Кокка для действий в пустыне. Облегчённая\nброня повышает скорость и огневую мощь."
+    },
+    "FR": {
+      "name": "DI-COKKA MK.II",
+      "description": "ATT. STAND : Canon-H   ATT. SPÉ : Canon-H à 3 coups\nDi-Cokka conçu pour les opérations dans le désert. Son\nblindage léger augmente la vitesse et la puissance de\nfeu."
+    },
+    "DE": {
+      "name": "DI-COKKA MK.II",
+      "description": "STAND. ATK : H-Cannon   SPEC. ATK : 3-Shot H-Cannon\nDi-Cokka für Einsätze in der Wüste. Die leichte\nPanzerung erhöht Geschwindigkeit und Feuerkraft."
+    },
+    "IT": {
+      "name": "DI-COKKA MK.II",
+      "description": "ATC STAND.: H-Cannone   ATC SPEC.: Cannone H 3-Colpi\nDi-Cokka progettato per operazioni nel deserto. La\ncorazza leggera aumenta velocità e potenza di fuoco."
+    },
+    "ZT": {
+      "name": "基 · 寇卡坦克 MK.II",
+      "description": "普通攻擊：水平加農砲     特殊攻擊：水平加農砲3連發\n為荒漠地形作戰設計的基 · 寇卡坦克。\n輕量化的裝甲使其速度與攻擊力更高。"
+    },
+    "ZS": {
+      "name": "基 · 寇卡坦克 MK.II",
+      "description": "普通攻击：水平加农炮     特殊攻击：水平加农炮3连发\n为荒漠地形作战设计的基 · 寇卡坦克。\n轻量化的装甲使其速度与攻击力更高。"
+    }
+  }
+}

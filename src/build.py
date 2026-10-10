@@ -14,14 +14,20 @@ def main():
     out=ROOT/'build';out.mkdir(exist_ok=True)
     if not (ROOT/'community_blocks.inc').is_file():
         raise FileNotFoundError('The generated community_blocks.inc snapshot is required')
-    sources=[ROOT/'aot_runtime.cpp',ROOT/'native_imports.cpp',ROOT/'native_audio.cpp',ROOT/'generated/dispatch.cpp',*sorted((ROOT/'generated').glob('blocks_*.cpp')),ROOT/'community_content.cpp',ROOT/'event_trial_hooks.cpp',ROOT/'audio_options.cpp',ROOT/'lab_hooks.cpp']
+    # 行为库清单（模组 M2）：behavior_library.json 原文嵌入核心，由 msd_behavior_manifest 导出供加载器核对。
+    library=(ROOT/'behavior_library.json').read_text(encoding='utf-8')
+    json.loads(library)
+    if ')MSD"' in library:raise ValueError('behavior_library.json contains the raw-string delimiter')
+    manifest_inc=ROOT/'behavior_manifest.inc';generated='static const char BEHAVIOR_MANIFEST[]=R"MSD('+library+')MSD";\n'
+    if not manifest_inc.is_file() or manifest_inc.read_text(encoding='utf-8')!=generated:manifest_inc.write_text(generated,encoding='utf-8')
+    sources=[ROOT/'aot_runtime.cpp',ROOT/'native_imports.cpp',ROOT/'native_audio.cpp',ROOT/'generated/dispatch.cpp',*sorted((ROOT/'generated').glob('blocks_*.cpp')),ROOT/'community_content.cpp',ROOT/'event_trial_hooks.cpp',ROOT/'audio_options.cpp',ROOT/'lab_hooks.cpp',ROOT/'netplay.cpp']
     started=time.perf_counter()
     def compile_one(src):
         obj=out/(src.stem+'.o');log=out/(src.stem+'.log')
         dependencies=[src,ROOT/'aot_runtime.h']
-        if src.parent==ROOT:dependencies.append(ROOT/'native_imports.h')
+        if src.parent==ROOT:dependencies.extend([ROOT/'native_imports.h',ROOT/'netplay.h'])
         if src.name=='native_audio.cpp':dependencies.append(ROOT/'third_party/stb_vorbis.c')
-        if src.name=='community_content.cpp':dependencies.extend([ROOT/'community_blocks.inc',ROOT/'unit_level_rules.inc'])
+        if src.name=='community_content.cpp':dependencies.extend([ROOT/'community_blocks.inc',ROOT/'unit_level_rules.inc',ROOT/'behavior_manifest.inc'])
         if obj.exists() and obj.stat().st_mtime>max(p.stat().st_mtime for p in dependencies):return obj
         command=[str(COMPILER),'-std=c++17','-O2','-Wa,-mbig-obj','-fno-strict-aliasing','-ffp-contract=off','-fno-exceptions','-fno-rtti','-c',str(src),'-o',str(obj)]
         result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)

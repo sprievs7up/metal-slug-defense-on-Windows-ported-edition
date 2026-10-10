@@ -1,6 +1,7 @@
 """像素素材的无损导入与运行格式核验。"""
 from pathlib import Path
-import struct, hashlib
+import struct
+from content_digest import blake2
 
 def decode_obm(raw):
     if len(raw)<8 or raw[:4]!=b'OI\x01\x08':
@@ -44,4 +45,4 @@ def import_png(source,destination):
     if size!=(tw,th) or restored!=pixels:raise RuntimeError('图集像素往返核验失败')
     destination.parent.mkdir(parents=True,exist_ok=True)
     temp=destination.with_suffix('.obm.tmp');temp.write_bytes(raw);temp.replace(destination)
-    return {'file':destination.name,'sha256':hashlib.sha256(raw).hexdigest(),'size':[tw,th],'source_size':[w,h],'colors':len(palette)}
+    return {'file':destination.name,'blake2b':blake2(raw),'size':[tw,th],'source_size':[w,h],'colors':len(palette)}

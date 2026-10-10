@@ -1,0 +1,91 @@
+{
+  "key": "s1xlv.pf_mortar_child",
+  "base_id": 164,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 15,
+  "available_from_start": true,
+  "ap": 50,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 164,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      768,
+      37,
+      26
+    ],
+    "anchor": [
+      -10,
+      -19
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY MORTAR",
+      "description": "STAND. ATK : Trench Mortar     SPEC. ATK : Trench Mortar\nInfantry from Regular Army who operate mid-range artillery fire. \nThey carry out combat support from strategic spots."
+    },
+    "JP": {
+      "name": "正規軍迫撃砲兵",
+      "description": "通常攻撃：迫撃砲    特殊攻撃：迫撃砲\n中型の砲を扱う正規軍の歩兵。要所での戦闘補助を行う。"
+    },
+    "KR": {
+      "name": "정규군 박격포병",
+      "description": "일반 공격: 박격포          특수 공격: 박격포\n중형 포탄을 다루는 정규군 보병. 중요 지역의 전투를 보조한다."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR MORTERO",
+      "description": "ATQ ESTÁND. : Mortero trinchera   ATQ ESPEC. : Mortero trinchera\nInfantería de la Ejército Regular que maneja fuego de artillería\nde rango medio. Sirven de apoyo en combate desde puntos estratégicos. "
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR MORTEIRO",
+      "description": "ATQ. PADR.: Morteiro de Trincheira  ATQ. ESPEC.:Morteiro de Trincheira\nInfantaria do Exército Regular que opera artilharia de médio alcance. \nEles oferecem suporte ao combate a partir de pontos estratégicos."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ МОРТИРА",
+      "description": "СТАНД. АТАК: Окопные миномет   СПЕЦ. АТАК: Окопный миномет\nПехота регулярной армии, которая упраляет минаметным огнем. \nОни несут поддержку в бою с господствующих высот."
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE MORTIER",
+      "description": "ATT. STAND : Mortier de tranchée 　ATK SPEC. : Mortier de tranchée\nInfanterie de l'Armée Régulière qui utilise une artillerie de moyenne \nportée.Ils assurent les renforts du combat à partir de points stratégiques."
+    },
+    "DE": {
+      "name": "REGULAR ARMY MORTAR",
+      "description": "STAND. ATK : Trench Mortar     SPEC. ATK : Trench Mortar\nInfantry from Regular Army who operate mid-range artillery fire. \nThey carry out combat support from strategic spots."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE MORTAIO",
+      "description": "ATC STAND.: Mortaio da trincea   ATC SPEC.: Mortaio da trincea\nFanteria dall'Esercito Regolare che spara colpi a medio raggio.\nSi occupano di dare supporto da posizioni strategiche."
+    },
+    "ZT": {
+      "name": "正規軍迫擊砲兵",
+      "description": "普通攻擊：迫擊砲    特殊攻擊：迫擊砲\n使用中型砲的正規軍步兵。能輔助軍事要地的戰鬥。"
+    },
+    "ZS": {
+      "name": "正规军迫击炮兵",
+      "description": "普通攻击：迫击炮    特殊攻击：迫击炮\n使用中型炮的正规军步兵。能辅助军事要地的战斗。"
+    }
+  },
+  "textures": [
+    "pf_mortar_0.obm"
+  ],
+  "menu_reference_id": 163,
+  "internal_only": true
+}

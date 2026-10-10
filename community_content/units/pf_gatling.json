@@ -1,0 +1,89 @@
+{
+  "key": "s1xlv.pf_gatling",
+  "base_id": 48,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 15,
+  "available_from_start": true,
+  "ap": 45,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 48,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      576,
+      46,
+      42
+    ],
+    "anchor": [
+      -5,
+      -3
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY GATLING SOLDIER",
+      "description": "STAND. ATK : Gatling Gun     SPEC. ATK : Rapid-Fire Gatling\nSlow-moving but capable of powerful Gatling gun rapid-fire."
+    },
+    "JP": {
+      "name": "正規軍ガトリング兵",
+      "description": "通常攻撃：ガトリング     特殊攻撃：ガトリング連射\n威力の高いガトリングを連射可能だが動きが遅い。"
+    },
+    "KR": {
+      "name": "정규군 개틀링병",
+      "description": "일반 공격: 개틀링     특수 공격: 개틀링 연사\n위력이 높은 개틀링을 발사할 수 있으나 움직임이 느리다."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR CAÑONERO",
+      "description": "ATQ ESTÁND. : Arma repeti.   ATQ ESPEC. : Arma repeti. disparo rápido\nLento movimiento pero veloz y poderoso disparo de repetición."
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR SOLDADO C/ GATLING",
+      "description": "ATQ. PADR. : Met. Giratória   ATQ. ESPEC. : M.Giratória de Tiro Rápido\nMove-se devagar, mas cria poderoso fogo rápido com a metralhadora."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ С МНОГОЦИЛИНДР.",
+      "description": "СТАНД. АТАК: Многоцилиндр. СПЕЦ. АТАК: Быстростр.Многоцилиндр\nМедленный, но способен к мощной быстрой \nстрельбе из Многоцилиндровика."
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE SOLDAT GATLING",
+      "description": "ATT. STAND : Gatling   ATT. SPÉ : Gatling à tir rapide\nLente mais capable du puissant tir rapide de la Gatling."
+    },
+    "DE": {
+      "name": "REGULAR ARMY GATLING SOLDIER",
+      "description": "STAND. ATK : Gatling Gun     SPEC. ATK : Rapid-Fire Gatling\nSlow-moving but capable of powerful Gatling gun rapid-fire."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE SOLDATO GATLING",
+      "description": "ATC STAND.: Mitragliatrice Gatling   ATC SPEC.: Gatling a Fuoco Rapido\nLento ma capace di sparare come un Gatling a fuoco rapido."
+    },
+    "ZT": {
+      "name": "正規軍加特林機槍兵",
+      "description": "普通攻擊：加特林機槍     特殊攻擊：加特林機槍連擊\n雖然能用威力強大的加特林機槍連擊，但動作很遲鈍。"
+    },
+    "ZS": {
+      "name": "正规军加特林机枪兵",
+      "description": "普通攻击：加特林机枪     特殊攻击：加特林机枪连击\n虽然能用威力强大的加特林机枪连击，但动作很迟钝。"
+    }
+  },
+  "textures": [
+    "pf_gatling_0.obm"
+  ]
+}

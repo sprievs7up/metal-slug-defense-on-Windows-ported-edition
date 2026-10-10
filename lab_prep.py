@@ -101,32 +101,13 @@ class LabPrep:
         """全部可选单位：原版 1–399 与社区可选单位。原生名称带括号或为“-”的条目是内部子单位
         （投放体、箱体、弹头车攻击等，如“(沙包)”“(伞兵)”），与社区 internal_only 一样排除。
         名称取 GetMenuUnitName(uid, 游戏语言)。(uid, 名称, 阵营, 是否社区)
-        列表按当前游戏语言（app+0x3d64）缓存，语言切换后重新取名。"""
+        条目来自单位目录 unit_catalog（按当前游戏语言 app+0x3d64 缓存，语言切换后重新取名）。"""
         p, app = self.lab.p, self.lab.app()
         current = p.word(app + 0x3d64)
         if self.units is None or self.units_language != current:
             self.units_language = current
-            def name(uid):
-                for language in (current, FALLBACK_LANGUAGE):
-                    try:
-                        text = p.string(p.call('_Z15GetMenuUnitName6UnitIDi', uid, language))
-                    except Exception:
-                        text = ''
-                    if text and text != '-':
-                        return text
-                return f'UID {uid}'
-            units = []
-            for uid in range(1, 400):
-                label = name(uid)
-                if label.startswith('(') or label == '-':
-                    continue
-                units.append((uid, label, p.call('_ZN7AppMain18GetUnitAffiliationE6UnitID', app, uid), False))
-            community = getattr(p, 'community', None)
-            for entry in (community.units if community is not None else []):
-                if not entry.get('internal_only'):
-                    uid = entry['id']
-                    units.append((uid, name(uid), p.call('_ZN7AppMain18GetUnitAffiliationE6UnitID', app, uid), True))
-            self.units = units
+            from unit_catalog import catalog
+            self.units = [(e['uid'], e['name'], e['faction'], e['source'] != 'original') for e in catalog(p).index()]
         return self.units
 
     def random_pool(self):
@@ -262,8 +243,11 @@ class LabPrep:
 
     def hold_bgm(self):
         """准备界面打开期间保持 MISSION BGM。战斗结束后 LAB 回到原生主菜单场景（27→28），
-        SC_MainMenuLoop 状态 0 在闸门结束时请求一次主菜单 BGM 101，此处在其后改回 135。"""
+        SC_MainMenuLoop 状态 0 在闸门结束时请求一次主菜单 BGM 101，此处在其后改回 135。
+        只在主菜单场景（27/28，准备界面所覆盖的场景）中保持，其他场景的 BGM 由其自身流程决定。"""
         p = self.lab.p
+        if p.word(self.lab.app() + 0x22bc) not in (SCENE_MAIN_MENU, SCENE_MAIN_MENU_INIT):
+            return
         if current_bgm(p) != BGM_MISSION:
             play_bgm(p, BGM_MISSION)
             self.lab.record('prep_bgm_restore')
@@ -576,10 +560,15 @@ class LabPrep:
             for slot, entry in enumerate(self.deck(side)):
                 x, y = DECK_X + slot * (CELL + CELL_GAP), top + 30
                 uid = None if entry is None else self.uid(entry[0])
-                self.cell((x, y, CELL), uid, side, str(slot + 1))
+                unavailable = entry is not None and (uid is None or (uid >= 1024 and uid not in names))
+                self.cell((x, y, CELL), None if unavailable else uid, side, str(slot + 1))
                 c.hitboxes.append(((x, y, CELL, CELL), ('slot', side, slot)))
                 if entry is None:
                     c.text((x + CELL // 2, y + CELL // 2), T(p, 'empty'), 18, GRAY, 'mm', 2, CELL - 10)
+                    continue
+                if unavailable:
+                    # 设定中的模组单位当前未载入：显示“未启用”，开战时按空格处理。
+                    c.text((x + CELL // 2, y + CELL // 2), T(p, 'unit_unavailable'), 15, GRAY, 'mm', 2, CELL - 10)
                     continue
                 c.text((x + CELL // 2, y + CELL - 11), names.get(uid, str(uid)), 13, WHITE, 'mm', 2, CELL - 8)
                 c.button((x, y + CELL + 4, 28, 24), '-', ('level', side, slot, -1))

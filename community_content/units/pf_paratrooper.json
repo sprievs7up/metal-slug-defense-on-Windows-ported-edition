@@ -1,0 +1,98 @@
+{
+  "key": "s1xlv.pf_paratrooper",
+  "base_id": 159,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 45,
+  "available_from_start": true,
+  "ap": 45,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 159,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      640,
+      46,
+      40
+    ],
+    "anchor": [
+      -5,
+      -5
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY PARATROOPER",
+      "description": "STAND. ATK : Bazooka     SPEC. ATK : Rapid-Fire Bazooka\nThe Regular Army’s special forces Bazooka Soldier unit.Different from \nthe regular Bazooka Soldiers, this squad can attack in mid-air."
+    },
+    "JP": {
+      "name": "正規軍パラシュート兵",
+      "description": "通常攻撃：バズーカ    特殊攻撃：バズーカ連射\n正規軍のバズーカ兵特殊部隊。\n通常のバズーカ兵とは違い、空中でも攻撃を行う。"
+    },
+    "KR": {
+      "name": "정규군 낙하산병",
+      "description": "일반 공격: 바주카포          특수 공격: 바주카포 연사\n정규군의 바주카병 특수부대.\n일반 바주카병과는 달리 공중에서도 공격한다."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR PARACAIDISTA",
+      "description": "ATQ ESTÁND. : Bazuca   ATQ ESPEC. : Bazuca disparo rápido\nUnidad de soldado bazuca de la Ejército Regular. A diferencia de los\nsoldados bazuca estándar, este esquadrón puede atacar en pleno vuelo.  "
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR SOLDADO PARAQUEDISTA",
+      "description": "ATQ. PADR. : Bazuca     ATQ. ESPEC. : Bazuca de Tiro Rápido\nSoldado com bazuca das forças especiais do Exército Regular.\nDiferente dos soldados com bazuca normais, podem atacar no ar."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ ПАРАШЮТИСТ",
+      "description": "СТАНД. АТАК: Базука   СПЕЦ. АТАК: Быстрострельная Базука\nСпециальный юнит регулярной армии. Отличается от обычных \nсолдат с базукой тем, что может атаковать воздушные цели. "
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE PARACHUTISTE",
+      "description": "ATT. STAND : Bazooka 　ATK SPEC. : Bazooka à tir rapide\nUnité des soldats bazooka, forces spéciales de l'Armée Régulière. \nDifférents des soldats bazooka réguliers, ils peuvent attaquer en plein ciel."
+    },
+    "DE": {
+      "name": "REGULAR ARMY PARATROOPER",
+      "description": "STAND. ATK : Bazooka     SPEC. ATK : Rapid-Fire Bazooka\nThe Regular Army’s special forces Bazooka Soldier unit.Different from \nthe regular Bazooka Soldiers, this squad can attack in mid-air."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE PARACADUTISTA",
+      "description": "ATC STAND.: Bazooka   ATC SPEC.: Bazooka a Fuoco Rapido\nUnità speciale Soldati Bazooka delle forze speciali dell'Esercito Regolare. \nDiversi dai normali Soldati Bazooka, questa squadra può attaccare in volo."
+    },
+    "ZT": {
+      "name": "正規軍傘兵",
+      "description": "普通攻擊：巴祖卡火箭筒    特殊攻擊：巴祖卡火箭筒連擊\n正規軍的反坦克兵特殊部隊。\n和一般的反坦克兵不一樣，從空中也能發動攻擊。"
+    },
+    "ZS": {
+      "name": "正规军伞兵",
+      "description": "普通攻击：巴祖卡火箭筒    特殊攻击：巴祖卡火箭筒连击\n正规军的反坦克兵特殊部队。\n和一般的反坦克兵不一样，从空中也能发动攻击。"
+    }
+  },
+  "textures": [
+    "pf_paratrooper_0.obm"
+  ],
+  "behaviors": [
+    {
+      "name": "spawn_child_unit",
+      "version": 1,
+      "params": {
+        "unit": "s1xlv.pf_paratrooper_child"
+      }
+    }
+  ]
+}

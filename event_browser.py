@@ -37,6 +37,9 @@ LABELS = {'ZT': ('開始', '細則', '上一個', '下一個'), 'ZS': ('开始',
 DETAIL = {'ZT': ('發行商', '發行日期', '擴充', '合作'), 'ZS': ('发行商', '发行日期', '扩展', '合作'),
           'JP': ('発行', '配信日', '追加配信', 'コラボ'), 'KR': ('발행사', '배포일', '추가 배포', '콜라보'),
           'EN': ('Publisher', 'Release', 'Expansion', 'Partner')}
+# 自制 EVENT 细则：作者（发行者）与来源（模组 id）分别显示，官方历史活动沿用 SNK PLAYMORE CORPORATION。
+CUSTOM_DETAIL = {'ZT': ('作者', '模組'), 'ZS': ('作者', '模组'), 'JP': ('作者', 'MOD'), 'KR': ('제작자', '모드'),
+                 'EN': ('Author', 'Mod')}
 VS_LABELS = {'對戰', '対戦', '대전', 'VERSUS', 'ВЕРСУС', 'Wi-Fi對戰', 'Wi-Fi対戦', 'Wi-Fi 대전', 'Wi-Fi VS', 'Wi-Fi V/S', 'Wi-Fi ВЕР'}
 
 
@@ -57,6 +60,12 @@ class EventBrowser:
         known = {e['event_key'] for e in trial.catalog}
         self.meta = meta
         self.events = [e for e in meta['events'] if e['event_key'] in known]
+        # 自制 EVENT（M6b）按日期并入循环序列：插在日期不晚于它的最后一项之后（同日按 order）。
+        for event in sorted(getattr(trial, 'custom_browse', []), key=lambda e: (e['date'], e['order'])):
+            position = len(self.events)
+            while position > 0 and self.events[position - 1]['date'] > event['date']:
+                position -= 1
+            self.events.insert(position, event)
         self.image_dir = root / 'historical_events/assets/browse'
         self.pref_path = self.p.saves / 'historical_event_browse.json'
         self.active = False
@@ -93,7 +102,13 @@ class EventBrowser:
 
     def name(self, event):
         names = event['names']
+        if event.get('publisher'):
+            return names[self.locale()]                 # 自制 EVENT：11 种语言已补全
         return names.get(self.lang(), names['EN'])
+
+    def locale(self):
+        import content_locale
+        return content_locale.current_code(self.p)
 
     def rename(self, a):
         """主菜单文字批次光栅化前调用；返回需要在光栅化后恢复的 (对象, 原字符串)。"""
@@ -143,7 +158,10 @@ class EventBrowser:
         if key in self.native_images:
             return self.native_images[key]
         name = event.get('localized_images', {}).get(lang) or event.get('image')
-        if name:
+        if event.get('image_path'):
+            name = event['image_path']
+            image = Image.open(name).convert('RGBA')
+        elif name:
             image = Image.open(self.image_dir / name).convert('RGBA')
         else:
             # 无存档原图的活动：黑底标题卡（文字以游戏当前语言字体绘制）。
@@ -291,19 +309,30 @@ class EventBrowser:
     def details(self):
         from lab_ui import play_se, SE_DECIDE
         event = self.events[self.index]
-        lang = self.lang()
-        publisher, release, expansion, partner = DETAIL[lang]
-        when = f"{event['date']} ({event['platform']})" if event.get('platform') else event['date']
-        lines = [f"{publisher}: {self.meta['publisher']}", f"{release}: {when}"]
-        if event.get('extension_date'):
-            lines.append(f"{expansion}: {event['extension_date']}")
-        if event.get('partner'):
-            lines.append(f"{partner}: {event['partner']}")
+        lines = self.detail_lines(event)
         p = self.p
         play_se(p, SE_DECIDE)
         # 原生调用约定（UpdateScrollPrisoner 0x2128ac）：正文、标题、回调、290、30、-256、0。
         p.call('_ZN7AppMain10SetPopupOKEPcS0_PFvvEiiii', p.app_instance(), p.cstr('\n'.join(lines)),
                p.cstr(self.name(event)), 0, 290, 30, -256, 0)
+
+    def detail_lines(self, event):
+        lang = self.lang()
+        publisher, release, expansion, partner = DETAIL[lang]
+        when = f"{event['date']} ({event['platform']})" if event.get('platform') else event['date']
+        lines = [f"{publisher}: {self.meta['publisher']}", f"{release}: {when}"]
+        if event.get('publisher'):
+            author, mod = CUSTOM_DETAIL[lang]
+            lines = [f"{author}: {event['publisher']}", f"{release}: {when}"]
+            if event.get('source', 'body') != 'body':
+                lines.append(f"{mod}: {event['source']}")
+            if event.get('details'):
+                lines += ['', event['details'][self.locale()]]
+        if event.get('extension_date'):
+            lines.append(f"{expansion}: {event['extension_date']}")
+        if event.get('partner'):
+            lines.append(f"{partner}: {event['partner']}")
+        return lines
 
     def start(self):
         from lab_ui import play_se, SE_DECIDE

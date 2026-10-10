@@ -1,0 +1,89 @@
+{
+  "key": "s1xlv.pf_rifle",
+  "base_id": 42,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 15,
+  "available_from_start": true,
+  "ap": 40,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 42,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      448,
+      39,
+      37
+    ],
+    "anchor": [
+      -10,
+      -8
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY RIFLEMAN",
+      "description": "STAND. ATK : Rifle     SPEC. ATK : Rifle\nWeak, but can support from the rear with a long-range rifle."
+    },
+    "JP": {
+      "name": "正規軍ライフル兵",
+      "description": "通常攻撃：ライフル     特殊攻撃：ライフル\n射程が長いライフルで後方から射撃可能だが、弱い。"
+    },
+    "KR": {
+      "name": "정규군 소총병",
+      "description": "일반 공격: 소총     특수 공격: 소총\n사정 거리가 긴 소총으로 후방에서 사격이 가능하나, 약하다."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR FUSILERO REBELDE",
+      "description": "ATQ ESTÁND. : Rifle     ATQ ESPEC. : Rifle\nDébil, pero puede ayudar desde la retaguardia con un rifle de\nlargo alcance."
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR FUZILEIRO REBELDE",
+      "description": "ATQ. PADR. : Rifle   ATQ. ESPEC. : Rifle\nFraco, mas pode dar suporte desde a retaguarda com um rifle de \nlongo alcance."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ С ВИНТОВКОЙ",
+      "description": "СТАНД. АТАК: Винтовка   СПЕЦ. АТАК: Винтовка\nСлабая, но может поддерживать с тыла \nпри помощи винтовки дальнего боя."
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE FUSILIER REBELLE",
+      "description": "ATT. STAND : Fusil   ATT. SPÉ : Fusil\nFaible mais peut aider à l'arrière avec un fusil à longue portée."
+    },
+    "DE": {
+      "name": "REGULAR ARMY RIFLEMAN",
+      "description": "STAND. ATK : Rifle     SPEC. ATK : Rifle\nWeak, but can support from the rear with a long-range rifle."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE FUCILIERE RIBELLE",
+      "description": "ATC STAND.: Carabina   ATC SPEC.: Carabina\nDebole, ma aiuta dalle retrovie con una carabina a lungo raggio."
+    },
+    "ZT": {
+      "name": "正規軍步槍兵",
+      "description": "普通攻擊：步槍     特殊攻擊：步槍\n雖然能用射程長的步槍從後方射擊，但威力很弱。"
+    },
+    "ZS": {
+      "name": "正规军步枪兵",
+      "description": "普通攻击：步枪     特殊攻击：步枪\n虽然能用射程长的步枪从後方射击，但威力很弱。"
+    }
+  },
+  "textures": [
+    "pf_rifle_0.obm"
+  ]
+}

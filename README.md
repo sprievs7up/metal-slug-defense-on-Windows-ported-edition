@@ -8,6 +8,10 @@ This edition adds keyboard controls and a **16:9 layout**. Expanded backgrounds 
 
 **Stamina regenerates at 1 point per second.** The original Android version regenerates 1 point per minute.
 
+**Update 26.10.1**
+
+- The version number changes to 26.10.1, separating this edition from the official version numbering. The naming follows the year-based scheme Minecraft adopted in 2026, and later versions use the same scheme.
+
 **Update 1.47.3**
 
 - Now you can play all EVENTS just like decade ago
@@ -111,6 +115,10 @@ The self-hosted room and transport preparation is described in [ONLINE_INTERFACE
 本版本新增键盘操控系统，并将画面调整为 **16:9 布局**。通过扩展背景与调整界面位置，保持角色及素材的原有比例，并保留原画面的可见内容。默认采用无边框全屏模式。
 
 **体力每秒恢复 1 点。** 安卓原版的恢复速率为每分钟 1 点。
+
+**26.10.1 更新**
+
+- 版本号改为 26.10.1，与原版官方的版本体系区分；命名方式参照 Minecraft 于 2026 年启用的新命名方式，后续版本沿用。
 
 **1.47.3 更新**
 

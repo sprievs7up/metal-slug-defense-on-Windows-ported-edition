@@ -57,7 +57,7 @@ def create_player(self_test=False, *, guest_root=None, fullscreen=None):
     default = ROOT / ('verification/all_unlocked_max_level_self_test' if self_test else PROFILE)
     profile = initialize_profile(default if guest_root is None else guest_root)
     session = event_trial_launcher.create_player(self_test, fullscreen=fullscreen)
-    player.TITLE = 'MSD WINDOWS S1XLV · 1.47.3 · 全解锁满级'
+    player.TITLE = 'MSD WINDOWS S1XLV · 26.10.1 · 全解锁满级'
     session.guest_root = profile
     session.status_file = ROOT / 'all_unlocked_max_level_status.json'
     session.log_name = 'all_unlocked_max_level_player.log'

@@ -1,5 +1,6 @@
 // Native host imports retain the game's soft-float ABI and pointer checks.
 #include "native_imports.h"
+#include "netplay.h"
 #include <memory>
 #include <unordered_map>
 struct Import {uint32_t kind=0;void* function=nullptr;};
@@ -50,10 +51,11 @@ bool msd_native_import(Context& c,uint32_t address,NativeImports* host){
     host->calls[kind]++;
     uint32_t a=c.r[0],b=c.r[1],d=c.r[2],e=c.r[3];void* fn=entry.function;
     switch(kind){
-        case 1:return_double(c,std::sin(dbl(a,b)));break;
-        case 2:return_double(c,std::cos(dbl(a,b)));break;
-        case 3:c.r[0]=bits(float(std::sin(double(real(a)))));break;
-        case 4:c.r[0]=bits(float(std::cos(double(real(a)))));break;
+        // 联机与回放（netplay.cpp 位 1）改用与 CPU 无关的软件实现；本地游戏保持原绑定。
+        case 1:return_double(c,(msd_netplay_flags&NETPLAY_DETERMINISTIC_MATH)?msd_det_sin(dbl(a,b)):std::sin(dbl(a,b)));break;
+        case 2:return_double(c,(msd_netplay_flags&NETPLAY_DETERMINISTIC_MATH)?msd_det_cos(dbl(a,b)):std::cos(dbl(a,b)));break;
+        case 3:c.r[0]=bits(float((msd_netplay_flags&NETPLAY_DETERMINISTIC_MATH)?msd_det_sin(double(real(a))):std::sin(double(real(a)))));break;
+        case 4:c.r[0]=bits(float((msd_netplay_flags&NETPLAY_DETERMINISTIC_MATH)?msd_det_cos(double(real(a))):std::cos(double(real(a)))));break;
         case 5:{auto dst=pointer(c,a,d);if(!c.error)std::memset(dst,b,d);c.r[0]=a;break;}
         case 6:case 7:{auto dst=pointer(c,a,d),src=pointer(c,b,d);if(!c.error)std::memmove(dst,src,d);c.r[0]=a;break;}
         case 8:c.r[0]=0;break; // Existing mutex/attribute host contracts.
@@ -66,9 +68,10 @@ bool msd_native_import(Context& c,uint32_t address,NativeImports* host){
             if(a==0x8892u)host->array_buffer=b;if(a==0x8893u)host->element_buffer=b;
             reinterpret_cast<void(*)(uint32_t,uint32_t)>(fn)(a,b);break;
         case 43:reinterpret_cast<void(*)(uint8_t)>(fn)(uint8_t(a));break;
-        case 44:reinterpret_cast<void(*)(uint32_t,int32_t,int32_t)>(fn)(a,int32_t(b),int32_t(d));break;
+        // 联机重模拟帧（netplay.cpp 位 0）只跳过绘制调用；状态、纹理与缓冲调用照常，GL 状态与客体缓存保持一致。
+        case 44:if(!(msd_netplay_flags&NETPLAY_SUPPRESS_DRAW))reinterpret_cast<void(*)(uint32_t,int32_t,int32_t)>(fn)(a,int32_t(b),int32_t(d));break;
         case 45:{void* p=host->element_buffer?reinterpret_cast<void*>(uintptr_t(e)):e?pointer(c,e,1):nullptr;
-            if(!c.error)reinterpret_cast<void(*)(uint32_t,int32_t,uint32_t,const void*)>(fn)(a,int32_t(b),d,p);break;}
+            if(!c.error&&!(msd_netplay_flags&NETPLAY_SUPPRESS_DRAW))reinterpret_cast<void(*)(uint32_t,int32_t,uint32_t,const void*)>(fn)(a,int32_t(b),d,p);break;}
         case 46:{auto offset=arg(c,5);void* p=host->array_buffer?reinterpret_cast<void*>(uintptr_t(offset)):offset?pointer(c,offset,1):nullptr;
             if(!c.error)reinterpret_cast<void(*)(uint32_t,int32_t,uint32_t,uint8_t,int32_t,const void*)>(fn)(a,int32_t(b),d,uint8_t(e),int32_t(arg(c,4)),p);break;}
         case 47:case 48:{auto p=pointer(c,d,uint64_t(b)*(kind==47?16u:12u));

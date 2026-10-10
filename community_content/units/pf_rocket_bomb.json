@@ -1,0 +1,89 @@
+{
+  "key": "s1xlv.pf_rocket_bomb",
+  "base_id": 162,
+  "faction": 0,
+  "identity": "Regular Army (PF)",
+  "shop_price": 55,
+  "available_from_start": true,
+  "ap": 40,
+  "hp_multiplier": [
+    10,
+    9
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    9
+  ],
+  "production_reference_id": 162,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1024,
+      704,
+      39,
+      37
+    ],
+    "anchor": [
+      -5,
+      -8
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "REGULAR ARMY ROCKET BOMB SOLDIER",
+      "description": "STAND. ATK : Rocket Bomb     SPEC. ATK : Rocket Bomb\nInfantry from Regular Army who throw pencil-type missile bombshells."
+    },
+    "JP": {
+      "name": "正規軍ロケット爆弾兵",
+      "description": "通常攻撃：ロケット爆弾    特殊攻撃：ロケット爆弾\nペンシルロケット型の爆弾を投げる正規軍の歩兵。"
+    },
+    "KR": {
+      "name": "정규군 로켓 폭탄병",
+      "description": "일반 공격: 로켓 폭탄          특수 공격: 로켓 폭탄\n펜슬 미사일형 폭탄을 투척하는 정규군 보병."
+    },
+    "ES": {
+      "name": "EJÉRCITO REGULAR SOLDADO CON MISIL",
+      "description": "ATQ ESTÁND. : Misil   ATQ ESPEC. : Misil\nLa infantería de la Ejército Regular que\nlanza misiles explosivos con forma de lápiz. "
+    },
+    "PT": {
+      "name": "EXÉRCITO REGULAR SOLDADO C/ FOGUETE",
+      "description": "ATQ. PADR. : Bomba-Foguete   ATQ. ESPEC. : Bomba Foguete\n Infantaria do Exército Regular que atira mísseis em forma de lápis."
+    },
+    "RU": {
+      "name": "РЕГУЛЯРНАЯ АРМИЯ СОЛДАТ РАКЕТНАЯ БОМБА",
+      "description": "СТАНД. АТАК: Ракетная бомба   СПЕЦ. АТАК: Ракетная бомба\nПехота регулярной армии, \nкоторая запускает ракетные бомбы карандашного типа."
+    },
+    "FR": {
+      "name": "ARMÉE RÉGULIÈRE SOLDAT ROQUETTE",
+      "description": "ATT. STAND : Fusée roquette ATK SPEC. : Fusée roquette\nInfanterie de l'Armée Régulière qui lance des missiles.\n"
+    },
+    "DE": {
+      "name": "REGULAR ARMY ROCKET BOMB SOLDIER",
+      "description": "STAND. ATK : Rocket Bomb     SPEC. ATK : Rocket Bomb\nInfantry from Regular Army who throw pencil-type missile bombshells."
+    },
+    "IT": {
+      "name": "ESERCITO REGOLARE SOLDATO BOMBA MISSILE",
+      "description": "ATC STAND.: Bomba Missile   ATC SPEC.: Bomba Missile\nFanteria dell'Esercito Regolare, lanciano missili a forma di matita."
+    },
+    "ZT": {
+      "name": "正規軍沖天火箭彈兵",
+      "description": "普通攻擊：火箭炸彈    特殊攻擊：火箭炸彈\n會擲出沖天炮型的炸彈的正規軍步兵。"
+    },
+    "ZS": {
+      "name": "正规军冲天火箭弹兵",
+      "description": "普通攻击：火箭炸弹    特殊攻击：火箭炸弹\n会掷出冲天炮型的炸弹的正规军步兵。"
+    }
+  },
+  "textures": [
+    "pf_rocket_bomb_0.obm"
+  ]
+}
