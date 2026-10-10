@@ -22,8 +22,8 @@ Double-click `local_pair.bat` and pick a number; host and joiner run as two sepa
 | 会合服务器 Rendezvous（服务器 S 上先运行 `rendezvous_server.bat`） | `remote_host.bat <S>:47632`（显示房间码） | `remote_join.bat <S>:47632 <房间码>` |
 | 单机参照 Reference（无法联网时比较确定性） | `reference.bat` | `reference.bat`，再 `compare.bat <A 的 result.json> <B 的 result.json>` |
 
-首次运行时 Windows 防火墙会询问是否允许 `python.exe` 通信：请允许（专用网络）。
-On first run Windows Firewall asks whether to allow `python.exe`; allow it (private networks).
+首次运行时 Windows 防火墙会询问是否允许 `python.exe` 通信：请同时勾选“专用网络”和“公用网络”。
+On first run Windows Firewall asks whether to allow `python.exe`; allow it on both private and public networks.
 
 命令行完整参数：`windows_runtime\python.exe tools\netplay_check\netplay_check.py --help`。
 断线测试 Outage tests：`--outage-at 600 --outage 4`（应恢复 / should recover）、`--outage-at 600 --outage 20 --expect-end disconnected`（应体面结束 / should end gracefully）。

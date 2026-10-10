@@ -68,10 +68,10 @@ TEXT = {
     'room_code': ('房間碼 {}', '房间码 {}', '部屋コード {}', 'Room code {}'),
     'address': ('本機位址（對手可按 IP 連接）：', '本机地址（对手可按 IP 连接）：', 'このPCのアドレス（IP 接続用）：',
                 'This PC (for connecting by IP):'),
-    'firewall': ('首次建立房間時 Windows 防火牆可能詢問是否允許網路存取，請允許「私人網路」。',
-                 '首次建立房间时 Windows 防火墙可能询问是否允许网络访问，请允许“专用网络”。',
-                 '初回は Windows ファイアウォールの確認が出ることがあります。「プライベート ネットワーク」を許可してください。',
-                 'Windows Firewall may ask for network access the first time: allow Private networks.'),
+    'firewall': ('首次建立房間時 Windows 防火牆可能詢問是否允許網路存取，請同時勾選「私人網路」與「公用網路」。',
+                 '首次建立房间时 Windows 防火墙可能询问是否允许网络访问，请同时勾选“专用网络”和“公用网络”。',
+                 '初回は Windows ファイアウォールの確認が出ます。「プライベート」と「パブリック」の両方を許可してください。',
+                 'Windows Firewall may ask for network access the first time: allow both Private and Public networks.'),
     'port_busy': ('連接埠 {} 已被占用，改用 {}。', '端口 {} 已被占用，改用 {}。', 'ポート {} は使用中のため {} を使います。',
                   'Port {} is in use; using {}.'),
     'searching': ('正在搜尋區域網路中的房間…', '正在搜索局域网中的房间…', 'LAN の部屋を探しています…', 'Searching the LAN for rooms…'),
@@ -95,14 +95,14 @@ TEXT = {
     'addr_lan': ('區域網路 / 虛擬區域網路', '局域网 / 虚拟局域网', 'LAN / 仮想 LAN', 'LAN / virtual LAN'),
     'upnp_trying': ('正在請求路由器開放連接埠（UPnP）…', '正在请求路由器开放端口（UPnP）…', 'ルーターにポート開放を要求しています（UPnP）…',
                     'Asking the router to open the port (UPnP)…'),
-    'upnp_failed': ('路由器沒有自動開放連接埠（UPnP 不可用）。對手在其他網路時：請在路由器上把 UDP {} 轉發到本機，並在瀏覽器中查詢本機的公網 IP 告訴對手；'
+    'upnp_failed': ('路由器沒有自動開放連接埠（UPnP 不可用）。對手在其他網路時：請在路由器上把 UDP {} 轉發到本機，並把路由器狀態頁顯示的 WAN（外網）IP 告訴對手；'
                     '或使用 IPv6、虛擬區域網路，或改由對手建立房間。',
-                    '路由器没有自动开放端口（UPnP 不可用）。对手在其他网络时：请在路由器上把 UDP {} 转发到本机，并在浏览器中查询本机的公网 IP 告诉对手；'
+                    '路由器没有自动开放端口（UPnP 不可用）。对手在其他网络时：请在路由器上把 UDP {} 转发到本机，并把路由器状态页显示的 WAN（外网）IP 告诉对手；'
                     '或使用 IPv6、虚拟局域网，或改由对手建立房间。',
-                    'ルーターがポートを自動で開放しませんでした（UPnP 不可）。相手が別のネットワークの場合：ルーターで UDP {} をこの PC に転送し、'
-                    'ブラウザで調べたグローバル IP を相手に伝えてください。IPv6、仮想 LAN、または相手が部屋を作る方法もあります。',
+                    'ルーターがポートを開放しませんでした（UPnP 不可）。別ネットワークの相手とは：ルーターで UDP {} をこの PC に転送し、'
+                    '状態ページの WAN IP を伝えてください。IPv6、仮想 LAN、相手が部屋を作る方法もあります。',
                     'The router did not open the port (UPnP unavailable). For players on other networks: forward UDP {} to this PC on your '
-                    'router and look up your public IP in a browser; or use IPv6, a virtual LAN, or let the opponent create the room.'),
+                    'router and give the opponent the WAN IP shown on the router\'s status page; or use IPv6, a virtual LAN, or let the opponent create the room.'),
     'upnp_cgnat': ('路由器的外網位址 {} 屬於電信業者的內部網路（CGNAT），其他網路的玩家無法直接連接本機。請使用 IPv6、虛擬區域網路，或改由對手建立房間。',
                    '路由器的外网地址 {} 属于运营商的内部网络（CGNAT），其他网络的玩家无法直接连接本机。请使用 IPv6、虚拟局域网，或改由对手建立房间。',
                    'ルーターの外側アドレス {} は通信事業者の内部ネットワーク（CGNAT）のため、他のネットワークから直接接続できません。'
@@ -1602,7 +1602,7 @@ class NetplayLobby:
         notes.append((tr(p, 'firewall'), GRAY))
         line = max(line + 8, y + (330 if remote else 300))
         for text, color in notes:
-            for part in wrap(text, 52 if lang(p) != 'EN' else 96):
+            for part in wrap(text, 64 if lang(p) != 'EN' else 125):
                 if line > y + h - 84:
                     break
                 c.text((x + 30, line), part, 14, color, 'la', 2, w - 60)

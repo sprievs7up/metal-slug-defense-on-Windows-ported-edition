@@ -105,7 +105,7 @@ This entry shares the current formal core and preserves its independent progress
 
 ### Online play
 
-Open VERSUS from the main menu and choose LAN (players on the same network) or ONLINE (remote play). Both modes use your current deck and unit levels. For ONLINE, the host creates a room and gives the other player one of the addresses shown together with the room code; the other player enters both. No server is involved, so the host must be reachable from the other player's network: router UPnP (tried automatically), a forwarded UDP port (47631 by default, changeable in the host window), IPv6, or a virtual LAN tool such as Radmin VPN, Hamachi or ZeroTier. If the host's internet provider uses carrier-grade NAT, swap roles or use one of the other options. On first use, Windows Firewall may ask for permission; allow access on private networks.
+Open VERSUS from the main menu and choose LAN (players on the same network) or ONLINE (remote play). Both modes use your current deck and unit levels. For ONLINE, the host creates a room and gives the other player one of the addresses shown together with the room code; the other player enters both. No server is involved, so the host must be reachable from the other player's network: router UPnP (tried automatically), a forwarded UDP port (47631 by default, changeable in the host window; give the other player the WAN IP shown on your router's status page), IPv6, or a virtual LAN tool such as Radmin VPN, Hamachi or ZeroTier. If the host's internet provider uses carrier-grade NAT, swap roles or use one of the other options. On first use, Windows Firewall may ask for permission; allow access on both private and public networks.
 
 ### Content authoring
 
@@ -216,7 +216,7 @@ Esta entrada comparte el núcleo oficial actual y conserva su progreso independi
 
 ### Juego en línea
 
-Abre VERSUS desde el menú principal y elige LAN (jugadores en la misma red) u ONLINE (juego remoto). Ambos modos usan tu mazo actual y los niveles de tus unidades. En ONLINE, el anfitrión crea una sala y le pasa al otro jugador una de las direcciones que aparecen junto con el código de la sala; el otro jugador escribe ambos datos. No se usa ningún servidor, así que el anfitrión debe ser accesible desde la red del otro jugador: UPnP del router (se intenta automáticamente), un puerto UDP redirigido (47631 por defecto, se puede cambiar en la ventana del anfitrión), IPv6 o una herramienta de red local virtual como Radmin VPN, Hamachi o ZeroTier. Si el proveedor de internet del anfitrión usa CGNAT, intercambien los papeles o usen otra de estas opciones. La primera vez, el Firewall de Windows puede pedir permiso; permite el acceso en redes privadas.
+Abre VERSUS desde el menú principal y elige LAN (jugadores en la misma red) u ONLINE (juego remoto). Ambos modos usan tu mazo actual y los niveles de tus unidades. En ONLINE, el anfitrión crea una sala y le pasa al otro jugador una de las direcciones que aparecen junto con el código de la sala; el otro jugador escribe ambos datos. No se usa ningún servidor, así que el anfitrión debe ser accesible desde la red del otro jugador: UPnP del router (se intenta automáticamente), un puerto UDP redirigido (47631 por defecto, se puede cambiar en la ventana del anfitrión; pásale al otro jugador la IP WAN que muestra la página de estado del router), IPv6 o una herramienta de red local virtual como Radmin VPN, Hamachi o ZeroTier. Si el proveedor de internet del anfitrión usa CGNAT, intercambien los papeles o usen otra de estas opciones. La primera vez, el Firewall de Windows puede pedir permiso; permite el acceso en redes privadas y públicas.
 
 ### Creación de contenido
 
@@ -327,7 +327,7 @@ LAB 功能说明：[LAB 修复记录](docs/LAB_BUGFIX_2026.10.07.md)、[LAB 菜�
 
 ### 联机对战
 
-在主菜单打开「對戰」，选择 LAN（同一网络的玩家）或 ONLINE（远程联机）。两种模式都使用当前编队与单位等级。远程联机时，房主建立房间后，把窗口中显示的其中一个地址与房间码告诉对方，对方输入这两项即可连接。联机不经过服务器，房主必须能被对方的网络直接访问：路由器 UPnP（游戏会自动尝试）、转发 UDP 端口（默认 47631，可在房主窗口中更改）、IPv6，或 Radmin VPN、Hamachi、ZeroTier 等虚拟局域网工具。房主的网络若为运营商级 NAT，可以交换房主，或使用上述其他方式。首次使用时 Windows 防火墙可能询问是否允许网络访问，请允许“专用网络”。
+在主菜单打开「對戰」，选择 LAN（同一网络的玩家）或 ONLINE（远程联机）。两种模式都使用当前编队与单位等级。远程联机时，房主建立房间后，把窗口中显示的其中一个地址与房间码告诉对方，对方输入这两项即可连接。联机不经过服务器，房主必须能被对方的网络直接访问：路由器 UPnP（游戏会自动尝试）、转发 UDP 端口（默认 47631，可在房主窗口中更改；把路由器状态页显示的 WAN（外网）IP 告诉对方）、IPv6，或 Radmin VPN、Hamachi、ZeroTier 等虚拟局域网工具。房主的网络若为运营商级 NAT，可以交换房主，或使用上述其他方式。首次使用时 Windows 防火墙可能询问是否允许网络访问，请同时勾选“专用网络”和“公用网络”。
 
 ### 内容制作
 
