@@ -13,6 +13,7 @@ UC_ARM_REG_C1_C0_2=111;UC_ARM_REG_FPEXC=4;UC_ARM_REG_FPSCR=6
 class Context(C.Structure):
     _fields_=[('r',C.c_uint32*16),('d',C.c_uint64*32),('n',C.c_uint32),('z',C.c_uint32),('c',C.c_uint32),('v',C.c_uint32),('fpscr',C.c_uint32),('pc',C.c_uint32),('error',C.c_uint32),('error_address',C.c_uint32),('memory',C.c_void_p),('blocks',C.c_uint64)]
 class Uc:
+    nested_error=None   # host exception from nested_import; class default also covers subclasses with their own __init__
     def __init__(self,*args):
         self.ctx=Context();self.callbacks={}
         root=Path(__file__).resolve().parent
@@ -65,6 +66,7 @@ class Uc:
         while True:
             budget=min(1000000,max(1,count-(c.blocks-began_blocks))) if count else 1000000
             result=self.lib.msd_run(C.byref(c),budget)
+            if self.nested_error is not None:error,self.nested_error=self.nested_error,None;raise error
             if result==0:return
             if result==1:
                 target=c.pc&~1;c.pc=target+4
@@ -74,3 +76,11 @@ class Uc:
                 if (deadline is not None and time.monotonic()>deadline) or (count and c.blocks-began_blocks>=count):return
             else:
                 raise RuntimeError(f'AOT stopped: reason={result} address=0x{c.error_address:08x} pc=0x{c.pc:08x} lr=0x{c.r[14]:08x}; no fallback engine')
+    def nested_import(self,address):
+        # Host import reached inside a core-side nested guest call (msd_bind_nested_host): handled exactly as
+        # emu_start handles result 1 (pc = import + 4 for the thunk lookup); the core then returns to lr.
+        # A host exception fails the import (reason 5) and is raised by the outer emu_start.
+        try:
+            self.ctx.pc=address+4;self.callbacks[UC_HOOK_INTR](self,2,None);return 1
+        except BaseException as error:
+            self.nested_error=error;return 0

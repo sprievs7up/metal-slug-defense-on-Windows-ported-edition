@@ -4,6 +4,8 @@
     "op19": 56,
     "offsets": 429,
     "dropped": 181,
+    "op14_dropped": 28,
+    "plate_fixed": 24,
     "op7_scaled": 45,
     "op7_body_kept": 2,
     "sounds": {

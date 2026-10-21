@@ -16,8 +16,25 @@ GRAPHICS={'glEnable':32,'glDisable':33,'glActiveTexture':34,'glUseProgram':35,
           'glGetUniformLocation':55,'glGetAttribLocation':55,
           # 每帧固定调用，宿主无附加状态：沿用既有的单整数参数与四浮点参数调用类型。
           'glClear':32,'glDepthFunc':32,'glClearColor':53}
+# 核心内嵌套调用（钩子中的同步客体调用）遇到这些宿主导入时，经回调由宿主执行（与主循环同一分配器，核心 r77+；
+# 此前中止并以当时的 r0 为结果）。属于正确性，不受 MSD_NATIVE_IMPORTS 影响。游戏库导入 malloc / free / realloc，无导入的名称跳过。
+NESTED_HOST=('malloc','free','realloc','calloc')
+
+def bind_nested_host(p):
+    if not hasattr(p.uc.lib,'msd_bind_nested_host'):return
+    fn=p.uc.lib.msd_bind_nested_host
+    fn.argtypes=[C.POINTER(Context),C.c_uint32,C.c_void_p];fn.restype=C.c_uint32
+    p._nested_host_callback=C.CFUNCTYPE(C.c_uint32,C.c_uint32)(p.uc.nested_import)
+    count=0
+    for name in NESTED_HOST:
+        address=p.thunks.get(name)
+        if address is None:continue
+        if not fn(C.byref(p.uc.ctx),address,C.cast(p._nested_host_callback,C.c_void_p)):raise RuntimeError('Nested host import binding failed: '+name)
+        count+=1
+    p.log('NESTED_HOST_IMPORTS', count)
 
 def bind(p, graphics=None):
+    if graphics is None:bind_nested_host(p)
     if os.environ.get('MSD_NATIVE_IMPORTS','1')=='0':return
     if not hasattr(p.uc.lib,'msd_bind_import'):return
     fn=p.uc.lib.msd_bind_import
@@ -41,3 +58,4 @@ def release(p):
         fn=p.uc.lib.msd_release_imports;fn.argtypes=[C.POINTER(Context)];fn.restype=None
         fn(C.byref(p.uc.ctx))
     if hasattr(p,'_native_clock_callback'):del p._native_clock_callback
+    if hasattr(p,'_nested_host_callback'):del p._nested_host_callback

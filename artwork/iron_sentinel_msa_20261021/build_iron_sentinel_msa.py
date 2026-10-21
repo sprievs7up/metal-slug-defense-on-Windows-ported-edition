@@ -16,7 +16,14 @@ docs/ms6/IRON_SENTINEL_MSA_PORT_PLAN_2026-10-21.md，数值 docs/ms6/IRON_SENTIN
   R2（用户 2026-10-21）：第一形态生命 60000（总计 80000）、AP 950、移速 ×4/5（4.0 → 3.2）、第一形态受击后退距离 ×1/2；
   第二形态保留免击退；绝招可发动时的蓝光按本体大小（special_effect_size，原生 394 / 395 为 0，按空帧绘制成小光点）。
   R3：本体槽下移 DROP（8）。R4（AGENTS 第 188 节）：菜单槽 0–2 挂 40% 的部件副本（编队页等菜单显示）；头像改为 MSA 原格 46×46、
-  锚点 −5,1（msa_icons.py 写入图集）。
+  锚点 −5,1（msa_icons.py 写入图集）。R5（用户 2026-10-22）：第一形态生命 40000、第二形态 50000（合计 90000）、AP 999，其余不变。
+  R6（用户 2026-10-22）：第二形态巨型导弹每次命中 8000 → 16000（damage_multiplier [32, 3]），其余不变。
+  R7（用户 2026-10-22）：第二形态顶盖切图带着的徽记圆环一段清除（clean_lid），消除 X 徽记上方多出的一截。
+  R8（用户 2026-10-22）：R7 清除后顶盖下的阴影带成 U 形缺口；改为圆环色补成阴影带、延续下缘线，只清除下缘以下（4 个顶盖切图）。
+  R9（用户 2026-10-22：R8 的阴影盖掉徽记上部、下缘折一下，要求徽记完整、阴影成一条线、阴影下的徽记为阴影色）：撤回 R7 / R8 的
+  顶盖修图，图集恢复 MSA 原样；含 op14 的本体部件（顶盖等）的 op14 y 补上 R3 漏加的 DROP；正面板（部件 30 / 94）各槽的 op11 y
+  加 PLATE_FIX（3）。顶盖、正面板与车身的相对位置因此同《合金弹头6》合成图，顶盖原画中阴影里的徽记上部与正面板的徽记对齐。
+  R11（用户 2026-10-22：16000 毁灭性太强）：第二形态巨型导弹每次命中 16000 → 8000（damage_multiplier [16, 3]），其余不变。
 运行：E:\\anaconda3\\python.exe -I artwork/iron_sentinel_msa_20261021/build_iron_sentinel_msa.py [--preview]
 （--preview 只写 out/；否则写入 community_content/：两张图集、描述符、两个单位文件、音效与 content.json）。
 """
@@ -54,6 +61,16 @@ BODY_SLOTS = {0, 1, 2, 6, 7, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21}   # 单位�
 # R3（用户 2026-10-21：悬空较多，向下 8 像素）：本体槽中 op11（部件）、op12 / op22（生成点）的 y 加 DROP，部件与其生成的弹体
 # 一同下移；本体受击框上沿下移 DROP（下沿仍在地面）。弹体与效果脚本不变。
 DROP = 8
+# R9（verification/iron_sentinel_msa_20261021/plate_fix/）：
+# - 部件脚本的 op14 设定该部件相对父层的位置，取代 op11 的偏移（实测第二形态顶盖 75、部件 76 画在 op14 位置）。R3 只改了 op11，
+#   本体槽的直接部件中含 op14 的（67 / 68 形态转换，75 / 76 第二形态，97 / 98 第二形态损毁）比车身高 DROP；其 op14 y 同样加 DROP。
+#   这些部件也被未使用的非本体槽 22 / 65 / 78 / 79 以偏移 0 挂载，那几个槽中它们比其余部件低 DROP（原生动作类不播放这些槽）。
+# - 正面板（部件 30，第二形态损毁中为 94）在 MSA 中比《合金弹头6》合成图（MS6 素材表 REFERENCES）偏上：以车身 29 为准，第二形态
+#   顶盖 75 与第一形态顶部 37 和 MS6 相差不到 1 像素，正面板差 (1.4, −2.4)。顶盖切图下沿画有 MS6 原画中落在阴影里的徽记圆环上部，
+#   正面板偏上时与其自身的徽记错开（R7 所见多出的一截）。各槽放置正面板的 op11 y 加 PLATE_FIX 后，正面板与车身、两种顶部的偏差
+#   均在 1 精灵像素以内。菜单槽的 40% 副本（脚本 143）未改。
+PLATE_FIX = 3
+PLATE_SCRIPTS = (30, 94)
 MSA_ONLY = range(24, 73)
 SOUND_KEYS = {491: 's1xlv.isentinel_walk', 688: 's1xlv.isentinel_knockback'}
 SOUND_FILES = {'s1xlv.isentinel_walk': ('cata2.msa', 'isentinel_walk.msdf', 35),
@@ -70,9 +87,9 @@ MENU_SCALE = (8, 15)
 SPECIAL_EFFECT_SIZE = [380, 120]    # 本体宽约 800、高约 476（动作演示图像范围单位）；蓝光宽 2×380+31，高 (2×120+49)×0.64
 
 FIRST = {
-    'base_id': 394, 'ap': 950, 'shop_price': 500, 'upgrade_cost_base': 1800,
-    'hp_multiplier': [6, 5],                      # 394：10000…50000 → 12000…60000（Lv1…Lv40，R2）
-    'knockback_threshold_multiplier': [32, 5],    # 25 → 160（用户指定，R2 生命修改后保持）
+    'base_id': 394, 'ap': 999, 'shop_price': 500, 'upgrade_cost_base': 1800,
+    'hp_multiplier': [4, 5],                      # 394：10000…50000 → 8000…40000（Lv1…Lv40，R5；R2 为 [6, 5]）
+    'knockback_threshold_multiplier': [32, 5],    # 25 → 160（用户指定，R2、R5 生命修改后保持）
     'knockback_distance_multiplier': [1, 2],      # 受击后退距离减半（R2）
     'production_reference_id': 394, 'production_interval_multiplier': [6, 7],   # 6300 → 5400 tick（180 秒）
     'damage_multiplier': [2, 5],                  # 远程 500…1500 → 200…600
@@ -83,14 +100,14 @@ FIRST = {
     'status_float_values': {'16': 1, '18': 0, '23': 1, '25': 20, '30': 20, '32': 10},
 }
 SECOND = {
-    'base_id': 395, 'ap': 950, 'shop_price': 500, 'upgrade_cost_base': 1800,
-    'hp_multiplier': [2, 5],                      # 395：10000…50000 → 4000…20000
+    'base_id': 395, 'ap': 999, 'shop_price': 500, 'upgrade_cost_base': 1800,
+    'hp_multiplier': [1, 1],                      # 395：10000…50000（Lv1…Lv40，R5；此前为 [2, 5] 即 4000…20000）
     'knockback_threshold_multiplier': [32, 5],
     'knockback_distance_multiplier': [1, 1],      # 出场后免击退（原生与 MSA 动作类），保持原值
     'production_reference_id': 395, 'production_interval_multiplier': [6, 7],
-    'damage_multiplier': [16, 3],                 # 远程 500…1500 → 2666…8000（巨型导弹）
-    'special_damage_multiplier': [1, 2],          # 绝招 1000…3000 → ×1/2×16/3 = 2666…8000
-    'near_damage_multiplier': [3, 10],            # 近距 1000…5000 → ×3/10×16/3 = 1600…8000
+    'damage_multiplier': [16, 3],                 # 远程 500…1500 → 2666…8000（巨型导弹；R11 由 R6 的 [32, 3] 即 16000 改回）
+    'special_damage_multiplier': [1, 2],          # 绝招 1000…3000 → ×1/2×16/3 = 2666…8000（只影响 STATUS 显示）
+    'near_damage_multiplier': [3, 10],            # 近距 1000…5000 → ×3/10×16/3 = 1600…8000（只影响 STATUS 显示）
     'move_speed_multiplier': [16, 17],
     'status_word_values': {'6': 0, '7': 300, '20': 70, '26': 600, '27': 70, '33': 600, '34': 70, '35': 500, '36': 500},
     'status_float_values': {'16': 10, '18': 10, '23': 10, '25': 10, '30': 10, '32': 10},
@@ -104,7 +121,11 @@ def scaled(v):
 
 def transform(record):
     """MSA 脚本 → 本体动画（编号不变）。返回 (动画字典, 统计)。"""
-    stats = {'removed_msa_only': 0, 'op19': 0, 'offsets': 0, 'dropped': 0, 'op7_scaled': 0, 'op7_body_kept': 0, 'sounds': {}}
+    stats = {'removed_msa_only': 0, 'op19': 0, 'offsets': 0, 'dropped': 0, 'op14_dropped': 0, 'plate_fixed': 0,
+             'op7_scaled': 0, 'op7_body_kept': 0, 'sounds': {}}
+    scripts = record['scripts']
+    placed = {c[1] for slot in BODY_SLOTS for c in scripts[slot] or [] if c[0] == 11}
+    op14_parts = {s for s in placed if any(c[0] == 14 for c in scripts[s] or [])}
     animations = {}
     for slot, cmds in enumerate(record['scripts']):
         out = []
@@ -121,9 +142,15 @@ def transform(record):
                 if slot in BODY_SLOTS:
                     v[3] += DROP
                     stats['dropped'] += 1
+                if op == 11 and v[0] in PLATE_SCRIPTS:
+                    v[3] += PLATE_FIX
+                    stats['plate_fixed'] += 1
                 stats['offsets'] += 1
             elif op == 14:
                 v = [scaled(v[0]), scaled(v[1])]
+                if slot in op14_parts:
+                    v[1] += DROP
+                    stats['op14_dropped'] += 1
                 stats['offsets'] += 1
             elif op == 7:
                 if slot in BODY_SLOTS:

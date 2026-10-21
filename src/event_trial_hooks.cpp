@@ -248,7 +248,7 @@ static bool cat_draw_neighbor(Context& c,uint32_t task){
         uint32_t address=c.pc&~1u;
         if(address==sentinel){ok=true;break;}
         if(address>=0x1f000000u&&address<0x1f010000u){
-            if(!msd_native_import(c,address,host))break;
+            if(!msd_native_import(c,address,host)&&!msd_nested_host_import(c,address,host))break;
             c.blocks++;if(c.error)break;continue;
         }
         if(uint32_t thunk=msd_decoder_thunk(host,c.pc)){c.pc=thunk;continue;}

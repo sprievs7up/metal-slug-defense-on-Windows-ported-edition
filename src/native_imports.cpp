@@ -8,6 +8,7 @@ struct NativeImports {
     Import entries[8192];uint64_t calls[128]={};
     uint32_t array_buffer=0,element_buffer=0;
     uint32_t decoder_plus=0,decoder_sync=0;
+    uint8_t nested_host[8192]={};uint32_t (*host_import)(uint32_t)=nullptr;
 };
 static std::unordered_map<Context*,std::unique_ptr<NativeImports>> bindings;
 NativeImports* msd_imports(Context* c){auto i=bindings.find(c);return i==bindings.end()?nullptr:i->second.get();}
@@ -17,6 +18,20 @@ extern "C" __declspec(dllexport) uint32_t msd_bind_import(Context* c,uint32_t ad
     p->entries[(address-0x1f000000u)/8u]={kind,function};return 1;
 }
 extern "C" __declspec(dllexport) void msd_release_imports(Context* c){bindings.erase(c);}
+// 主循环（msd_run）遇到宿主导入时返回 Python 处理；钩子内的嵌套调用不能让出，遇到时原先放弃并以当时的 r0 作结果
+// （2026-10-22：AnimationStatus 空闲链表扩容的 malloc 使 lob_blast 与 IRON SLIDER 的弹体指针为 0x54）。
+// 登记的导入（宿主堆 malloc / free / realloc）在嵌套调用中改由回调执行：回调按主循环相同的方式处理（pc 为导入地址 + 4），
+// 返回 0 表示宿主出错（异常留给外层 emu_start 抛出）。
+extern "C" __declspec(dllexport) uint32_t msd_bind_nested_host(Context* c,uint32_t address,void* callback){
+    if(address<0x1f000000u||address>=0x1f010000u||(address&7u)||!callback)return 0;
+    auto& p=bindings[c];if(!p)p=std::make_unique<NativeImports>();
+    p->nested_host[(address-0x1f000000u)/8u]=1;p->host_import=reinterpret_cast<uint32_t(*)(uint32_t)>(callback);return 1;
+}
+bool msd_nested_host_import(Context& c,uint32_t address,NativeImports* host){
+    if(!host||!host->host_import||!host->nested_host[(address-0x1f000000u)/8u])return false;
+    if(!host->host_import(address)){c.error=5;c.error_address=address;return false;}
+    c.pc=c.r[14];return true;
+}
 extern "C" __declspec(dllexport) void msd_bind_decoder(Context* c,uint32_t plus,uint32_t sync){
     auto& p=bindings[c];if(!p)p=std::make_unique<NativeImports>();
     p->decoder_plus=plus;p->decoder_sync=sync;

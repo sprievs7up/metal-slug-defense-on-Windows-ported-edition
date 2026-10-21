@@ -428,6 +428,24 @@
         1.597823,
         81.597778
       ]
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m3",
+      "file": "bgm_ms6_m3.msdf",
+      "type": "bgm",
+      "loop": [
+        10.512834,
+        97.792789
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m3_boss",
+      "file": "bgm_ms6_m3_boss.msdf",
+      "type": "bgm",
+      "loop": [
+        3.884263,
+        94.588957
+      ]
     }
   ]
 }

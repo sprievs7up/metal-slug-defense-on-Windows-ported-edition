@@ -583,8 +583,9 @@ static bool l_shot(Context& c){
  if(!count||slot<first||slot>=first+count)return false;
  uint32_t sp=c.r[13],bullet=0u;
  const uint32_t stack[4]={rd<uint32_t>(c,sp+4u),slot,rd<uint32_t>(c,L_ACTION_GOT),0u};
- msd_guest_call_stack(c,L_NOT_AIM,c.r[0],obj,c.r[3],rd<uint32_t>(c,sp),stack,4u,&bullet);
- if(bullet){
+ // 嵌套调用未完成时 bullet 为中止时的 r0（不是弹体），不写入（2026-10-22 r77）。
+ bool done=msd_guest_call_stack(c,L_NOT_AIM,c.r[0],obj,c.r[3],rd<uint32_t>(c,sp),stack,4u,&bullet);
+ if(done&&bullet){
   uint32_t st=obj+0x128u+0xecu*rd<uint32_t>(c,obj+0x300u);
   int64_t range=int32_t(rd<uint32_t>(c,st+33u*4u));
   wr<uint32_t>(c,bullet+0x34u,uint32_t(int32_t(range*int64_t(slot-first+1u)/int64_t(count))));
@@ -758,8 +759,8 @@ static bool is_create1(Context& c){
  }
  if(bullet_action){
   const uint32_t stack[4]={z,id,bullet_action,param};uint32_t bullet=0u;
-  msd_guest_call_stack(c,IS_NOT_AIM,act,obj,x,y,stack,4u,&bullet);
-  if(bullet&&id==60u){
+  bool done=msd_guest_call_stack(c,IS_NOT_AIM,act,obj,x,y,stack,4u,&bullet);   // 未完成时 bullet 不是弹体（同 l_shot）
+  if(done&&bullet&&id==60u){
    int32_t ux=int32_t(rd<float>(c,obj+0x8cu)),half=int32_t(is_call(c,IS_WIDTH,obj));
    int32_t reach=half+int32_t(is_status(c,obj,7u)),dir=rd<uint32_t>(c,obj+0x78u)==0x5au?1:-1;
    wr<int32_t>(c,bullet+0x1cu,ux);wr<int32_t>(c,bullet+0x20u,int32_t(is_status(c,obj,26u)));wr<int32_t>(c,bullet+0x24u,ux+dir*reach);
@@ -1188,6 +1189,86 @@ void msd_retained_count(Context& c,uint32_t uid){
  uint32_t field=H+(uid>=U?140u:144u);wr<uint32_t>(c,field,rd<uint32_t>(c,field)+1u);
 }
 extern "C" __declspec(dllexport) uint32_t msd_community_retained_weapon_version(){return 1u;}
+// ---------- 自制场景的水花与子弹墙（2026-10-22，MS6 任务 3；核心 r76）----------
+// 头部 +184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（宿主 install_scene_fx），无此类场景时为 0。记录 20 个字：
+//  0 标记（位 0 水花，位 1 子弹墙）；1–4 水花左界、右界、起水高度、画线；5–8 水花颜色 r、g、b 与染色强度（float）；
+//  9 已建立 WaterFunc 的场景对象；10–17 WaterFunc 存储（0x20 字节）；18 子弹墙多边形数；19 多边形数据（每个：点数 n，再 n 对 x、y）。
+// 水花：原生水面场景（BattleStage1_3、2_4、3_1、5_1_2 等）在构造时建 WaterFunc（共用效果 402 的精灵），setup 中 waterSetup(2.0, 左界, 右界,
+// 起水高度, 画线)，drawFront 末尾 waterDraw(镜头 x, 帧)：按每个地面单位的 x 画 7 帧水花（宽单位画多处），只画 y 不小于起水高度的单位，纵向
+// 位置固定为画线。自制场景为通用 BattleStageBase（update 0x1e13c2，drawFront 0x1e14c4，析构 0x1e1398）。setup 时 BattleSpriteFactory
+// 尚不能分配精灵（create 返回 0，waterDraw 不检查而访问空指针），因此在场景第一次 update（对战模拟的一部分，联机双方与回滚重算都会执行）
+// 建 WaterFunc 并 waterSetup；在 drawFront 收尾块（0x1e1552）以 GraphicsOpt::setSpriteFog（原生受击闪光所用的精灵染色）把水花染成
+// 场景指定的颜色后调用 waterDraw（精灵为 0 时不画），绘制后 resetFog；析构时释放精灵。只改绘制。
+// 子弹墙：原生 BattleBullet::update（0x1dd16c）在子弹的待定 y 低于所在 x 的地形时调用弹体动作的 hitGround（虚表 +0x18，参数为地形高度）：
+// 多数弹体进入命中 / 落地状态（60 / 61，播放命中或爆炸动画后移除）并停止移动。attackFailed（+0x10）有的弹体为空函数（例：ZombieBrain
+// 系的抛射弹），不能用作统一的拦截。带子弹墙的自制场景中，子弹当前位置（+0x8c / +0x90）在墙外而本帧的待定位置（+0x94 / +0x98）进入
+// 任一多边形时，同样调用 hitGround，高度取待定 y（子弹停在墙面处）；从墙内发射的子弹不拦截；已移除的子弹（存活标记 +0x64 为 0）跳过。
+// 墙不改地形，地面、空降、飞行与产兵单位的移动不受影响；双方子弹同样处理。
+static constexpr uint32_t FX_WATER_CTOR=0x101e1708u,FX_WATER_SETUP=0x101e1730u,FX_WATER_DRAW=0x101e1748u,FX_WATER_DTOR=0x101e1580u;
+static constexpr uint32_t FX_SET_FOG=0x10137750u,FX_RESET_FOG=0x10137768u;
+static uint32_t scene_fx_hooks=0u;
+static uint32_t scene_fx(Context& c,uint32_t stage){
+ if(!active(c)||!stage||!head(c,184u))return 0u;
+ uint32_t id=rd<uint32_t>(c,stage+8u);
+ if(id<138u||id>=138u+head(c,68))return 0u;
+ return rd<uint32_t>(c,head(c,184u)+4u*(id-138u));
+}
+static void fx_water_release(Context& c,uint32_t r){
+ if(rd<uint32_t>(c,r+36u)){msd_guest_call(c,FX_WATER_DTOR,r+40u,0u,0u,0u,nullptr);wr<uint32_t>(c,r+36u,0u);}
+}
+static void fx_update_begin(Context& c){
+ uint32_t st=c.r[0],r=scene_fx(c,st);
+ if(!r||!(rd<uint32_t>(c,r)&1u)||(rd<uint32_t>(c,r+36u)==st&&rd<uint32_t>(c,r+44u)))return;
+ if(rd<uint32_t>(c,r+36u)==st)fx_water_release(c,r);    // 同一场景对象而精灵未建成（工厂分配失败）时重试；他局遗留的指针不释放
+ msd_guest_call(c,FX_WATER_CTOR,r+40u,0u,0u,0u,nullptr);
+ const uint32_t stack[2]={rd<uint32_t>(c,r+12u),rd<uint32_t>(c,r+16u)};
+ msd_guest_call_stack(c,FX_WATER_SETUP,r+40u,0x40000000u,rd<uint32_t>(c,r+4u),rd<uint32_t>(c,r+8u),stack,2u,nullptr);
+ wr<uint32_t>(c,r+36u,st);
+}
+static Block old_fx_update;static void fx_update(Context& c){fx_update_begin(c);old_fx_update(c);}
+static void fx_draw_end(Context& c){
+ uint32_t st=c.r[4],g=c.r[7],r=scene_fx(c,st);
+ if(!r||!(rd<uint32_t>(c,r)&1u)||rd<uint32_t>(c,r+36u)!=st||!rd<uint32_t>(c,r+44u)||!g)return;
+ // 收尾块中 sb = −(镜头 x + 2 × [场景 +0x14])（0x1e14ee、0x1e14f8），由此还原 drawFront 的参数
+ uint32_t cam=uint32_t(-int32_t(c.r[9])-int32_t(rd<uint32_t>(c,st+0x14u)<<1));
+ const uint32_t alpha[1]={rd<uint32_t>(c,r+32u)};
+ msd_guest_call_stack(c,FX_SET_FOG,g,rd<uint32_t>(c,r+20u),rd<uint32_t>(c,r+24u),rd<uint32_t>(c,r+28u),alpha,1u,nullptr);
+ msd_guest_call(c,FX_WATER_DRAW,r+40u,cam,rd<uint32_t>(c,st+0x1cu),0u,nullptr);
+ msd_guest_call(c,FX_RESET_FOG,g,0u,0u,0u,nullptr);
+}
+static Block old_fx_draw;static void fx_draw(Context& c){fx_draw_end(c);old_fx_draw(c);}
+static void fx_dtor_begin(Context& c){
+ uint32_t st=c.r[0],r=scene_fx(c,st);
+ if(r&&rd<uint32_t>(c,r+36u)==st)fx_water_release(c,r);
+}
+static Block old_fx_dtor;static void fx_dtor(Context& c){fx_dtor_begin(c);old_fx_dtor(c);}
+static bool fx_inside(Context& c,uint32_t q,uint32_t n,float x,float y){
+ bool in=false;
+ for(uint32_t i=0,j=n-1u;i<n;j=i++){
+  float xi=float(rd<int32_t>(c,q+8u*i)),yi=float(rd<int32_t>(c,q+8u*i+4u)),xj=float(rd<int32_t>(c,q+8u*j)),yj=float(rd<int32_t>(c,q+8u*j+4u));
+  if((yi>y)!=(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)in=!in;
+ }
+ return in;
+}
+static void fx_bullet_begin(Context& c){
+ uint32_t b=c.r[0];
+ if(!rd<uint8_t>(c,b+0x64u))return;
+ uint32_t r=scene_fx(c,rd<uint32_t>(c,BATTLE_STAGE+0xcu));
+ if(!r||!(rd<uint32_t>(c,r)&2u))return;
+ float x=rd<float>(c,b+0x94u),y=rd<float>(c,b+0x98u),x0=rd<float>(c,b+0x8cu),y0=rd<float>(c,b+0x90u);
+ uint32_t q=rd<uint32_t>(c,r+76u);
+ for(uint32_t k=0,count=rd<uint32_t>(c,r+72u);k<count;++k){
+  uint32_t n=rd<uint32_t>(c,q);
+  if(fx_inside(c,q+4u,n,x,y)&&!fx_inside(c,q+4u,n,x0,y0)){
+   uint32_t act=rd<uint32_t>(c,b+0x58u);
+   if(act)msd_guest_call(c,rd<uint32_t>(c,rd<uint32_t>(c,act)+0x18u),act,b,0u,uint32_t(int32_t(y)),nullptr);
+   return;
+  }
+  q+=4u+8u*n;
+ }
+}
+static Block old_fx_bullet;static void fx_bullet(Context& c){fx_bullet_begin(c);old_fx_bullet(c);}
+extern "C" __declspec(dllexport) uint32_t msd_community_scene_fx_version(){return scene_fx_hooks==4u?1u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

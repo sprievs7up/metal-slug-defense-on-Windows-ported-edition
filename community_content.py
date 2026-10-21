@@ -855,10 +855,36 @@ class CommunityContent:
         else:fields+=(0,)
         # 头部偏移 176/180：按生命计算的修筑类单位表（每项 UnitID、百分比、下限）与项数；无此类单位时为 0。
         fields+=self.install_engineer_hp(action_rows,units)
+        # 头部偏移 184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（水花 water、子弹墙 bullet_walls）；无此类场景时为 0。
+        fields+=(self.install_scene_fx(stage_rows),)
         p.write(HEADER,struct.pack('<%dI'%len(fields),*fields));self.ready=True
         self.map_initial_choices_applied=not (self.manifest.get('missions') or self.manifest.get('campaign_choices'))
         assert p.read(p.word(db+4),400*0x390)==bytes(rows[:400*0x390])
         p.log('COMMUNITY_REGISTERED',n,'unit IDs',[u['id'] for u in self.units])
+
+    def install_scene_fx(self,stage_rows):
+        """场景效果记录（src/community_content.cpp 的 scene_fx 钩子），每个 20 个字：0 标记（位 0 水花，位 1 子弹墙）；
+        1–4 水花左界、右界、起水高度、画线（同原生 WaterFunc::waterSetup 的四个整数，逻辑坐标）；5–8 水花颜色 r、g、b 与染色强度（float，0–1，
+        GraphicsOpt::setSpriteFog）；9 已建立 WaterFunc 的场景对象（核心写入）；10–17 WaterFunc 存储（核心使用）；18 子弹墙多边形数；
+        19 多边形数据（每个多边形：点数 n，再 n 对 x、y，int32）。"""
+        p=self.p
+        if not any('water' in s or 'bullet_walls' in s for s in stage_rows):return 0
+        if not hasattr(p.uc.lib,'msd_community_scene_fx_version') or p.uc.lib.msd_community_scene_fx_version()!=1:
+            raise RuntimeError('Native core lacks scene water / bullet wall hooks (scene_fx)')
+        f32=lambda v:struct.unpack('<I',struct.pack('<f',v))[0]
+        pointers=[]
+        for s in stage_rows:
+            water,walls=s.get('water'),s.get('bullet_walls')
+            if not water and not walls:pointers.append(0);continue
+            words=[0]*20
+            if water:
+                words[0]|=1;words[1:5]=[*water['range'],water['min_y'],water['draw_y']]
+                words[5:9]=[f32(v/255) for v in (*water['color'],water.get('strength',230))]
+            if walls:
+                words[0]|=2;words[18]=len(walls)
+                words[19]=self.alloc(b''.join(struct.pack('<I',len(poly))+b''.join(struct.pack('<ii',x,y) for x,y in poly) for poly in walls))
+            pointers.append(self.alloc(struct.pack('<20I',*(w&0xffffffff for w in words))))
+        return self.alloc(struct.pack('<%dI'%len(pointers),*pointers))
 
     def install_engineer_hp(self,action_rows,units):
         p=self.p;default=self.manifest.get('engineer_hp');stock=(default or {}).get('units',{})

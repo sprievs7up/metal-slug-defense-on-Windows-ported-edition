@@ -149,7 +149,8 @@ bool guest_call(Context& c,uint32_t fn,uint32_t a0,uint32_t a1=0,uint32_t a2=0,u
         uint32_t a=c.pc&~1u;
         if(a==RETURN_SENTINEL){ok=true;break;}
         if(a>=0x1f000000u&&a<0x1f010000u){
-            if(!msd_native_import(c,a,host))break;        // 需要宿主处理的导入：嵌套调用无法让出，放弃
+            // 需要宿主处理的导入：嵌套调用无法让出；登记的宿主堆导入经回调执行，其余放弃
+            if(!msd_native_import(c,a,host)&&!msd_nested_host_import(c,a,host))break;
             c.blocks++;if(c.error)break;continue;
         }
         if(uint32_t thunk=msd_decoder_thunk(host,c.pc)){c.pc=thunk;continue;}

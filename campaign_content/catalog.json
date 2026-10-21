@@ -12,17 +12,29 @@
     "ms6_m2_outpost.webp": "88c93458d665e0d16f915a0ce3fdcbedc9a1402a26eb4b3ef90a7e58464307c9",
     "ms6_m2_village1.webp": "61be8bed522a8cd295c7af95e287565b58aab39f3905b8b461f1b3b147b80744",
     "ms6_m2_village2.webp": "bd54c90592441218e0ab0bf0dd2f1526fcb54afede9f64552a6130a87e3cdf8f",
-    "ms6_thumb_m1_s1.png": "9886a6d447dcce12921c5da96c079bd1f39eea399037107546289913edb782c9",
-    "ms6_thumb_m1_s2.png": "6de60bef0df2a1ded192cf4038e694274142dff7e4d5c104893976b3b43ad6c6",
-    "ms6_thumb_m1_s3.png": "bf6020d31e1d9f8f69971c15220a1d680376eda92c4daea091d13de1921c0a17",
-    "ms6_thumb_m1_s4.png": "808b3404c32bd4d58d5a362c3550fd63391d3cf1ecbaf6f10bdc8dbf868422aa",
-    "ms6_thumb_m1_s5.png": "43c9481f70f92be704ee69b45d77d8d223efb29790f67cf0ef34949092639f54",
-    "ms6_thumb_m1_s6.png": "10690600a15c8956534ef14b1a99fa937b7081d612fcff29880155499a3cef96",
-    "ms6_thumb_m2_s1.png": "aea6cf0fabcb5dc8e052e060512ee1bbf650f5fc3e579d83bf5d0613b7f4ef47",
-    "ms6_thumb_m2_s2.png": "b1bbb44020654d8a82045d25f19f445b43fae459f887e3b6a781cc4ebbecbd20",
-    "ms6_thumb_m2_s3.png": "e050ebfe13a5772c183b07ed43aa632d2ba0d65f9a75925418d47e9fbe07835d",
-    "ms6_thumb_m2_s4.png": "abbf085b91285dec19fbfd4354b96fc010ce83cc2937e89bcf6bf592f3f3e7cd",
-    "ms6_thumb_m2_s5.png": "ca6daa39f637c9833d5de5db4796e0c9b764ea05df76c526723c5e76fd1429a4",
+    "ms6_m3_crossing.webp": "e78780a314dd08016ce433b0a74824f7abbafe3d48ecc9c9fce0301185d2a188",
+    "ms6_m3_factory.webp": "292ddcd7995a7097f02de9edfacf9f9cdc89e0a5819920a57c5177e01a0375f5",
+    "ms6_m3_gate.webp": "c810027b70110d52b56cbb9b4977f786eefd886636a60fcd0442625df7cabb60",
+    "ms6_m3_scaffold.webp": "4e68731b87eb5ea62fc4eac7e1b26c303f5f06eed1d906ff0a9eea0c0e836c8b",
+    "ms6_m3_sewer.webp": "a791d501fdedf5f8da9db43811906baf81bc7d0c33ffb839cc9bbcb5cc39957b",
+    "ms6_m3_street.webp": "d132753e40d54cc56549029e61fe3d811cb38fa6137caba472d730bbd7610442",
+    "ms6_thumb_m1_s1.png": "000abef9ba59a112e633d884e85e3ed44a5f8867e7fe6d73e7a44282b2246df6",
+    "ms6_thumb_m1_s2.png": "7856720dbe5cfe7d0157f93b4a21640a212ec43fe3bdb51285044ad4974d64ea",
+    "ms6_thumb_m1_s3.png": "bdf78067f1072d9de87a3fa34916773b92d347afd038892f729bc330deb5ffad",
+    "ms6_thumb_m1_s4.png": "02da9082214ece66d0af68f24ede139f129dfc242caa7bc949747e48ecbd2d50",
+    "ms6_thumb_m1_s5.png": "13bb8ed3ef9a42ff743e5ad61d7e9276aaa00aa1c29b2da4cf9dafb751025ef2",
+    "ms6_thumb_m1_s6.png": "8b84e18abdd6d0eb2d0d30b109c0f2ef02f90ce943ad54c47d3cfdedfeb0051d",
+    "ms6_thumb_m2_s1.png": "5ddb1e486601f92122ae1e801a85cf7572a3b05f87f483800df45ac7284a98c9",
+    "ms6_thumb_m2_s2.png": "46f33119f2d5baad93f765d58d78d18e8e41c19119393d2353c0c4a7dec4ac38",
+    "ms6_thumb_m2_s3.png": "bdcca3c68e2b00ed2597cd35fd1dcf675785c8b8e21eeaf6fed01a5ce17fddcb",
+    "ms6_thumb_m2_s4.png": "da645a669523766c79283bff319d2c805d09d2de66611cec4892d007f5aab82a",
+    "ms6_thumb_m2_s5.png": "b8138857376f56d36720a57ec25bd2711ed847991d04c6dd13b91f079eca0e17",
+    "ms6_thumb_m3_s1.png": "7fc85f3a43fb9593e77a3064771769df8d42894a72176ece64ca336f1bd93cf8",
+    "ms6_thumb_m3_s2.png": "a2ca587bb7535220a317df2ef1ed1d5724f8cd4f36df9e2b0ef4e7697071c75b",
+    "ms6_thumb_m3_s3.png": "3351571d1c636cbd0382e8c9c5fbaaf8286832d5bc15e2e84ac419dd0b04272b",
+    "ms6_thumb_m3_s4.png": "7f0f33ef10049a71087239b026ff9cce02a39d65092756333b42421bf35e1493",
+    "ms6_thumb_m3_s5.png": "91f82cc060d358b2683d332951c5f8e01d95fb1ec3ceac20a067feda961a2eae",
+    "ms6_thumb_m3_s6.png": "f69e3c40079705e42491aa42c5873e8424a2be9b87ac133440d681ecf3b596af",
     "ms6_ura4_grid.png": "cd81b571003843a6414589a4c61fc1e19e2e016f0de0b453063ca10a4b537af0"
   },
   "scenes": [
@@ -1996,6 +2008,1130 @@
         ],
         "front": []
       }
+    },
+    {
+      "key": "s1xlv.ms6_m3_crossing",
+      "base_id": 0,
+      "texture": "ms6_m3_crossing.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        680
+      ],
+      "terrain": [
+        [
+          0,
+          419
+        ],
+        [
+          220,
+          419
+        ],
+        [
+          280,
+          386
+        ],
+        [
+          340,
+          374
+        ],
+        [
+          1360,
+          374
+        ]
+      ],
+      "bases": [
+        68,
+        633
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            342,
+            393,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1369,
+            1,
+            479,
+            117,
+            -541,
+            -331,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            342,
+            115,
+            -1018,
+            -333,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": [
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m3_scaffold",
+      "base_id": 0,
+      "texture": "ms6_m3_scaffold.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        740
+      ],
+      "terrain": [
+        [
+          0,
+          429
+        ],
+        [
+          1480,
+          429
+        ]
+      ],
+      "bases": [
+        68,
+        693
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            462,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m3_gate",
+      "base_id": 0,
+      "texture": "ms6_m3_gate.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        795
+      ],
+      "terrain": [
+        [
+          0,
+          445
+        ],
+        [
+          1192,
+          445
+        ],
+        [
+          1450,
+          309
+        ],
+        [
+          1590,
+          309
+        ]
+      ],
+      "bases": [
+        68,
+        730
+      ],
+      "graphics": {
+        "rects": [
+          [
+            576,
+            1,
+            1020,
+            425,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            572,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            1020,
+            120,
+            0,
+            -328,
+            0,
+            0
+          ],
+          [
+            1024,
+            452,
+            496,
+            68,
+            -1018,
+            -380,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": [
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m3_street",
+      "base_id": 0,
+      "texture": "ms6_m3_street.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1477
+      ],
+      "terrain": [
+        [
+          0,
+          430
+        ],
+        [
+          2954,
+          430
+        ]
+      ],
+      "bases": [
+        68,
+        1430
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            420,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            420,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            424,
+            918,
+            392,
+            -2036,
+            0,
+            0,
+            0
+          ],
+          [
+            922,
+            424,
+            1020,
+            91,
+            0,
+            -357,
+            0,
+            0
+          ],
+          [
+            1,
+            819,
+            1020,
+            91,
+            -1018,
+            -357,
+            0,
+            0
+          ],
+          [
+            1024,
+            819,
+            918,
+            89,
+            -2036,
+            -359,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": [
+          [
+            3
+          ],
+          [
+            4
+          ],
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m3_factory",
+      "base_id": 0,
+      "texture": "ms6_m3_factory.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        672
+      ],
+      "terrain": [
+        [
+          0,
+          292
+        ],
+        [
+          204,
+          292
+        ],
+        [
+          524,
+          450
+        ],
+        [
+          1344,
+          450
+        ]
+      ],
+      "bases": [
+        68,
+        625
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            326,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": []
+      },
+      "bullet_walls": [
+        [
+          [
+            61,
+            -300
+          ],
+          [
+            570,
+            -300
+          ],
+          [
+            570,
+            283
+          ],
+          [
+            491,
+            283
+          ],
+          [
+            351,
+            201
+          ],
+          [
+            231,
+            141
+          ],
+          [
+            171,
+            121
+          ],
+          [
+            100,
+            117
+          ],
+          [
+            61,
+            117
+          ]
+        ]
+      ]
+    },
+    {
+      "key": "s1xlv.ms6_m3_sewer",
+      "base_id": 0,
+      "texture": "ms6_m3_sewer.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1280
+      ],
+      "terrain": [
+        [
+          0,
+          430
+        ],
+        [
+          2560,
+          430
+        ]
+      ],
+      "bases": [
+        68,
+        1233
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            346,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            346,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            350,
+            524,
+            346,
+            -2036,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            776,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            776,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            848,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            848,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            920,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            920,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            992,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            992,
+            1020,
+            69,
+            0,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1064,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            1064,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1136,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            1136,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1208,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            1208,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1280,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1024,
+            1280,
+            1020,
+            69,
+            -1018,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1352,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            528,
+            1352,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            1055,
+            1352,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1416,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            528,
+            1416,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            1055,
+            1416,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            1,
+            1480,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            528,
+            1480,
+            524,
+            61,
+            -2036,
+            -346,
+            0,
+            0
+          ],
+          [
+            528,
+            350,
+            1020,
+            74,
+            0,
+            -374,
+            0,
+            0
+          ],
+          [
+            1,
+            699,
+            1020,
+            74,
+            -1018,
+            -374,
+            0,
+            0
+          ],
+          [
+            1024,
+            699,
+            524,
+            73,
+            -2036,
+            -375,
+            0,
+            0
+          ],
+          [
+            1,
+            780,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            780,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            852,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            852,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            924,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            924,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            996,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            996,
+            1020,
+            65,
+            0,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1068,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            1068,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1140,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            1140,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1212,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            1212,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1284,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1024,
+            1284,
+            1020,
+            65,
+            -1018,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1356,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            528,
+            1356,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            1055,
+            1356,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1420,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            528,
+            1420,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            1055,
+            1420,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            1,
+            1484,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ],
+          [
+            528,
+            1484,
+            524,
+            57,
+            -2036,
+            -350,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          [
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ],
+          [
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ]
+        ],
+        "front": [
+          [
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37
+          ],
+          [
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45
+          ],
+          [
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53
+          ],
+          [
+            27
+          ],
+          [
+            28
+          ],
+          [
+            29
+          ]
+        ]
+      },
+      "water": {
+        "range": [
+          0,
+          2560
+        ],
+        "min_y": 402,
+        "draw_y": 432,
+        "color": [
+          205,
+          232,
+          205
+        ],
+        "strength": 140
+      }
     }
   ],
   "music": [],
@@ -3961,6 +5097,787 @@
                 {
                   "enemy": 0,
                   "x": 2400
+                }
+              ],
+              "stamina": 60
+            }
+          ]
+        },
+        {
+          "key": "s1xlv.ura4.m3",
+          "title": "Mission 3",
+          "map_position": [
+            502,
+            308
+          ],
+          "native_name": 28,
+          "stages": [
+            {
+              "key": "s1xlv.ura4.m3.s1",
+              "title": "M3-1 collapsed crossing",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m3_crossing",
+              "music": "s1xlv.bgm_ms6_m3",
+              "map_position": [
+                -118,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m3_s1.png",
+              "enemy_base_hp": 30000,
+              "strength_steps": 2,
+              "difficulty": 2,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.mv280c",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 60,
+                  "enemy": 0
+                },
+                {
+                  "tick": 230,
+                  "enemy": 1
+                },
+                {
+                  "tick": 400,
+                  "enemy": 0
+                },
+                {
+                  "tick": 570,
+                  "enemy": 0
+                },
+                {
+                  "tick": 740,
+                  "enemy": 1
+                },
+                {
+                  "tick": 910,
+                  "enemy": 0
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 450,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 430,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 0
+                }
+              ],
+              "rank_times": [
+                90,
+                120,
+                150,
+                180,
+                240
+              ],
+              "stamina": 30
+            },
+            {
+              "key": "s1xlv.ura4.m3.s2",
+              "title": "M3-2 bamboo scaffold",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m3_scaffold",
+              "music": "s1xlv.bgm_ms6_m3",
+              "map_position": [
+                -73,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m3_s2.png",
+              "enemy_base_hp": 40000,
+              "strength_steps": 2,
+              "difficulty": 3,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 180,
+                  "enemy": 2
+                },
+                {
+                  "tick": 330,
+                  "enemy": 1
+                },
+                {
+                  "tick": 480,
+                  "enemy": 0
+                },
+                {
+                  "tick": 630,
+                  "enemy": 2
+                },
+                {
+                  "tick": 780,
+                  "enemy": 1
+                },
+                {
+                  "tick": 930,
+                  "enemy": 0
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 480,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 460,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 2
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 0
+                }
+              ],
+              "rank_times": [
+                90,
+                120,
+                150,
+                180,
+                240
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 1150
+                }
+              ],
+              "stamina": 35
+            },
+            {
+              "key": "s1xlv.ura4.m3.s3",
+              "title": "M3-3 paifang gate",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m3_gate",
+              "music": "s1xlv.bgm_ms6_m3",
+              "map_position": [
+                -28,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m3_s3.png",
+              "enemy_base_hp": 50000,
+              "strength_steps": 3,
+              "difficulty": 3,
+              "reward_msp": 7000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 193,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.mv280c",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 1
+                },
+                {
+                  "tick": 165,
+                  "enemy": 3
+                },
+                {
+                  "tick": 300,
+                  "enemy": 4
+                },
+                {
+                  "tick": 435,
+                  "enemy": 0
+                },
+                {
+                  "tick": 570,
+                  "enemy": 1
+                },
+                {
+                  "tick": 705,
+                  "enemy": 3
+                },
+                {
+                  "tick": 840,
+                  "enemy": 2
+                },
+                {
+                  "tick": 975,
+                  "enemy": 4
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 450,
+                  "spawn": 1
+                },
+                {
+                  "when": "front",
+                  "value": 430,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 4
+                }
+              ],
+              "rank_times": [
+                90,
+                120,
+                150,
+                180,
+                240
+              ],
+              "placed": [
+                {
+                  "enemy": 3,
+                  "x": 1150
+                }
+              ],
+              "stamina": 40
+            },
+            {
+              "key": "s1xlv.ura4.m3.s4",
+              "title": "M3-4 ruined street",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m3_street",
+              "music": "s1xlv.bgm_ms6_m3",
+              "map_position": [
+                17,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m3_s4.png",
+              "enemy_base_hp": 60000,
+              "strength_steps": 4,
+              "difficulty": 4,
+              "reward_msp": 7000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 193,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.mv280c",
+                  "level": 40
+                },
+                {
+                  "unit": 199,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 3
+                },
+                {
+                  "tick": 100,
+                  "enemy": 5
+                },
+                {
+                  "tick": 170,
+                  "enemy": 4
+                },
+                {
+                  "tick": 240,
+                  "enemy": 1
+                },
+                {
+                  "tick": 310,
+                  "enemy": 3
+                },
+                {
+                  "tick": 380,
+                  "enemy": 4
+                },
+                {
+                  "tick": 450,
+                  "enemy": 5
+                },
+                {
+                  "tick": 520,
+                  "enemy": 0
+                },
+                {
+                  "tick": 590,
+                  "enemy": 3
+                },
+                {
+                  "tick": 660,
+                  "enemy": 4
+                },
+                {
+                  "tick": 730,
+                  "enemy": 1
+                },
+                {
+                  "tick": 800,
+                  "enemy": 5
+                },
+                {
+                  "tick": 870,
+                  "enemy": 3
+                },
+                {
+                  "tick": 940,
+                  "enemy": 4
+                },
+                {
+                  "tick": 1010,
+                  "enemy": 2
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 1000,
+                  "spawn": 5
+                },
+                {
+                  "when": "front",
+                  "value": 980,
+                  "spawn": 5
+                },
+                {
+                  "when": "front",
+                  "value": 960,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 30,
+                  "spawn": 1
+                }
+              ],
+              "rank_times": [
+                140,
+                170,
+                200,
+                230,
+                290
+              ],
+              "placed": [
+                {
+                  "enemy": 4,
+                  "x": 2600
+                },
+                {
+                  "enemy": 5,
+                  "x": 2500
+                },
+                {
+                  "enemy": 5,
+                  "x": 2450
+                },
+                {
+                  "enemy": 5,
+                  "x": 2400
+                }
+              ],
+              "stamina": 45
+            },
+            {
+              "key": "s1xlv.ura4.m3.s5",
+              "title": "M3-5 machinery walkway",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m3_factory",
+              "music": "s1xlv.bgm_ms6_m3",
+              "map_position": [
+                62,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m3_s5.png",
+              "enemy_base_hp": 70000,
+              "strength_steps": 3,
+              "difficulty": 4,
+              "reward_msp": 8000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": 199,
+                  "level": 40
+                },
+                {
+                  "unit": 254,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 2
+                },
+                {
+                  "tick": 150,
+                  "enemy": 3
+                },
+                {
+                  "tick": 270,
+                  "enemy": 4
+                },
+                {
+                  "tick": 390,
+                  "enemy": 0
+                },
+                {
+                  "tick": 510,
+                  "enemy": 2
+                },
+                {
+                  "tick": 630,
+                  "enemy": 1
+                },
+                {
+                  "tick": 750,
+                  "enemy": 3
+                },
+                {
+                  "tick": 870,
+                  "enemy": 4
+                },
+                {
+                  "tick": 990,
+                  "enemy": 2
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 450,
+                  "spawn": 3
+                },
+                {
+                  "when": "front",
+                  "value": 430,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                120,
+                150,
+                180,
+                210,
+                270
+              ],
+              "placed": [
+                {
+                  "enemy": 4,
+                  "x": 1000
+                }
+              ],
+              "stamina": 50
+            },
+            {
+              "key": "s1xlv.ura4.m3.s6",
+              "title": "M3-6 sewer (boss)",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m3_sewer",
+              "music": "s1xlv.bgm_ms6_m3_boss",
+              "map_position": [
+                107,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m3_s6.png",
+              "enemy_base_hp": 80000,
+              "strength_steps": 4,
+              "difficulty": 5,
+              "reward_msp": 10000,
+              "enemies": [
+                {
+                  "unit": 195,
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": 254,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 3
+                },
+                {
+                  "tick": 120,
+                  "enemy": 1
+                },
+                {
+                  "tick": 210,
+                  "enemy": 2
+                },
+                {
+                  "tick": 390,
+                  "enemy": 1
+                },
+                {
+                  "tick": 435,
+                  "enemy": 3
+                },
+                {
+                  "tick": 480,
+                  "enemy": 2
+                },
+                {
+                  "tick": 660,
+                  "enemy": 1
+                },
+                {
+                  "tick": 750,
+                  "enemy": 2
+                },
+                {
+                  "tick": 840,
+                  "enemy": 3
+                },
+                {
+                  "tick": 930,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1020,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1200,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1245,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1290,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1470,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1560,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1650,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1740,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1830,
+                  "enemy": 2
+                },
+                {
+                  "tick": 2010,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2055,
+                  "enemy": 3
+                },
+                {
+                  "tick": 2100,
+                  "enemy": 2
+                },
+                {
+                  "tick": 2280,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2370,
+                  "enemy": 2
+                },
+                {
+                  "tick": 2460,
+                  "enemy": 3
+                },
+                {
+                  "tick": 2550,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2640,
+                  "enemy": 2
+                },
+                {
+                  "tick": 2820,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2865,
+                  "enemy": 3
+                },
+                {
+                  "tick": 2910,
+                  "enemy": 2
+                },
+                {
+                  "tick": 3090,
+                  "enemy": 1
+                },
+                {
+                  "tick": 3180,
+                  "enemy": 2
+                }
+              ],
+              "loop": 3240,
+              "triggers": [
+                {
+                  "when": "base_hp",
+                  "value": 100,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                },
+                {
+                  "when": "base_hp",
+                  "value": 30,
+                  "spawn": 3
+                }
+              ],
+              "rank_times": [
+                165,
+                190,
+                215,
+                240,
+                265
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 2150
+                },
+                {
+                  "enemy": 2,
+                  "x": 2300
                 }
               ],
               "stamina": 60

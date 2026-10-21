@@ -118,6 +118,27 @@ class Catalog:
                 if len(bases)!=2:raise ValueError('战场需要两端基地位置')
                 for x in bases:integer(x,0,right-left)
                 if bases[0]>=bases[1]:raise ValueError('基地位置顺序无效')
+                # water：水面上的水花（2026-10-22 起，需核心 scene_fx 钩子）。range 为 [左, 右]（逻辑 x），min_y 为起水高度（单位 y 不小于此值才画），
+                # draw_y 为水花画线（逻辑 y），color 为水花颜色 [r, g, b]（0–255），strength 为染色强度（1–255，缺省 230）。
+                water=scene.get('water')
+                if water is not None:
+                    if not isinstance(water,dict) or set(water)-{'range','min_y','draw_y','color','strength'}:raise ValueError('water 字段无效')
+                    x0,x1=water['range'];integer(x0,0,2*(right-left));integer(x1,x0+1,2*(right-left))
+                    integer(water['min_y'],-1000,1000);integer(water['draw_y'],-1000,1000)
+                    if len(water['color'])!=3:raise ValueError('水花颜色要求 [r, g, b]')
+                    for v in water['color']:integer(v,0,255)
+                    integer(water.get('strength',230),1,255)
+                # bullet_walls：子弹墙（2026-10-22 起，需核心 scene_fx 钩子）。至多 16 个多边形，每个 3–32 个 [x, y] 点（逻辑坐标）；
+                # 子弹进入多边形时按原生未命中处理（弹体动作的 attackFailed），不改地形。
+                walls=scene.get('bullet_walls')
+                if walls is not None:
+                    if not isinstance(walls,list) or not 0<len(walls)<=16:raise ValueError('子弹墙数量超出范围')
+                    for poly in walls:
+                        if not isinstance(poly,list) or not 3<=len(poly)<=32:raise ValueError('子弹墙多边形要求 3–32 个点')
+                        for point in poly:
+                            if len(point)!=2:raise ValueError('子弹墙的点要求 [x, y]')
+                            integer(point[0],-2000,40000);integer(point[1],-2000,2000)
+            elif 'water' in scene or 'bullet_walls' in scene:raise ValueError('水花与子弹墙需要战场边界')
         for music in self.music.values():
             if music.get('file') not in self.assets or not music['file'].endswith('.msdf') or not self.assets[music['file']].startswith(b'OggS'):
                 raise ValueError('音乐要求包含 Vorbis 数据的 .msdf 文件')

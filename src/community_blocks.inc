@@ -1906,4 +1906,8 @@ if((old_iron_slider_missile=find_block(0x1018d3f5u))){register_block(0x1018d3f5u
 if((old_iron_slider_spawn=find_block(0x101bdaddu))){register_block(0x101bdaddu,iron_slider_spawn);++iron_slider_hooks;}
 if((old_iron_slider_handoff=find_block(0x101bddc5u))){register_block(0x101bddc5u,iron_slider_handoff);++iron_slider_hooks;}
 if((old_iron_slider_giant=find_block(0x10177b21u))){register_block(0x10177b21u,iron_slider_giant);++iron_slider_hooks;}
+if((old_fx_update=find_block(0x101e13c3u))){register_block(0x101e13c3u,fx_update);++scene_fx_hooks;}
+if((old_fx_draw=find_block(0x101e1553u))){register_block(0x101e1553u,fx_draw);++scene_fx_hooks;}
+if((old_fx_dtor=find_block(0x101e1399u))){register_block(0x101e1399u,fx_dtor);++scene_fx_hooks;}
+if((old_fx_bullet=find_block(0x101dd16du))){register_block(0x101dd16du,fx_bullet);++scene_fx_hooks;}
 }

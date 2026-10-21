@@ -226,10 +226,20 @@ class UnitCatalog:
             self.displays[uid] = value
         return value
 
+    def second_form_uid(self, uid):
+        """第二形态（行为 iron_slider 的 second_form，内部单位）的 UnitID；没有时为 None。"""
+        if uid < 400:
+            return None
+        units = getattr(getattr(self.p, 'community', None), 'units', None) or ()
+        unit = next((u for u in units if u.get('id') == uid), None)
+        form = unit.get('second_form_key') if unit else None
+        return next((u['id'] for u in units if form and u.get('key') == form), None)
+
     def stats(self, uid, level=40):
         """界面显示的数值（STATUS、LV UP、排序与攻击筛选）。生命、击退门槛、移速、击毁返还与各攻击组取 display_uid
         的单位（实际在战场上作战的单位），AP 与再出击等待取购买的单位本身（原生信息窗口同此）；action_attacks 为单位
-        本身的攻击组，ACTION 的按钮按它决定（原生动作浏览演示的是购买的单位，修筑类先建成再演示）。"""
+        本身的攻击组，ACTION 的按钮按它决定（原生动作浏览演示的是购买的单位，修筑类先建成再演示）。
+        有第二形态的单位（钢铁哨兵）生命为两形态同等级生命之和（用户 2026-10-22）。"""
         cached = self.details.get((uid, level))
         if cached is not None:
             return cached
@@ -241,6 +251,9 @@ class UnitCatalog:
             result = dict(self.unit_stats(display, level), uid=uid, ap=own['ap'],
                           production_interval=own['production_interval'], builder=own['builder'],
                           display_uid=display, action_attacks=own['attacks'])
+        form = self.second_form_uid(uid)
+        if form is not None:
+            result = dict(result, hp=result['hp'] + self.unit_stats(form, level)['hp'])
         self.details[(uid, level)] = result
         return result
 
