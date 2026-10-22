@@ -18,6 +18,17 @@
     "ms6_m3_scaffold.webp": "4e68731b87eb5ea62fc4eac7e1b26c303f5f06eed1d906ff0a9eea0c0e836c8b",
     "ms6_m3_sewer.webp": "a791d501fdedf5f8da9db43811906baf81bc7d0c33ffb839cc9bbcb5cc39957b",
     "ms6_m3_street.webp": "d132753e40d54cc56549029e61fe3d811cb38fa6137caba472d730bbd7610442",
+    "ms6_m4_bridge1.webp": "b5c4b122d6e6c8016ca5df10c77c65552fa1fc9ffcdeddbebaba1062c7edc91d",
+    "ms6_m4_bridge2.webp": "8f9af58afc47ec95bb2437357b4049203cfcf62b683802357ac5441e7550ab4d",
+    "ms6_m4_rocks.webp": "0932201a0fa9d8d8903388198671d1062588638c350f6a9c440a3db65ce92da8",
+    "ms6_m4_sky.webp": "87e075d104b5a0a316802b37e18d4c2148a8ff7fc34e59fb28fa68bb9f2172a9",
+    "ms6_m4_storm.webp": "f2dadc815c290cf2e454bc3083841d3450abe9a8d157df06481cbddea7d233c2",
+    "ms6_m5_canyon1.webp": "22dee3abe9a649ba80b31e6132ed0abd03a92dab01d1bbc51a38d2e7e011a918",
+    "ms6_m5_canyon2.webp": "983f0d260b9c30591c5f1a93b8cc25d88cb2d843e55298fe51df2aaff75b418f",
+    "ms6_m5_castle1.webp": "c78177308941be5b7d8be8af54d9029313c38dfd95c10038e0f521c27c6ae2a6",
+    "ms6_m5_castle2.webp": "59e91169a2b793cf5abaaa0d045c6d89e96a8a3dfeb550506d0e73be06ca98f4",
+    "ms6_m5_hive.webp": "2ed42a095be139638f9552996d5b8cc0019117cb67c16e1daf11458cb7d893ee",
+    "ms6_m5_lair.webp": "b4dbfa47810d64d8dba2d0f528f66a76c246d2029d011fd7cb8d98fd7892e32e",
     "ms6_thumb_m1_s1.png": "000abef9ba59a112e633d884e85e3ed44a5f8867e7fe6d73e7a44282b2246df6",
     "ms6_thumb_m1_s2.png": "7856720dbe5cfe7d0157f93b4a21640a212ec43fe3bdb51285044ad4974d64ea",
     "ms6_thumb_m1_s3.png": "bdf78067f1072d9de87a3fa34916773b92d347afd038892f729bc330deb5ffad",
@@ -35,6 +46,17 @@
     "ms6_thumb_m3_s4.png": "7f0f33ef10049a71087239b026ff9cce02a39d65092756333b42421bf35e1493",
     "ms6_thumb_m3_s5.png": "91f82cc060d358b2683d332951c5f8e01d95fb1ec3ceac20a067feda961a2eae",
     "ms6_thumb_m3_s6.png": "f69e3c40079705e42491aa42c5873e8424a2be9b87ac133440d681ecf3b596af",
+    "ms6_thumb_m4_s1.png": "f25e61cffd120a093a6f15373a4722ffc68b8fc0ef129abefd54ebff863ec2b9",
+    "ms6_thumb_m4_s2.png": "35801704a3254384c6f092a4e7effb2381af79ff9431edc6d32aa1a73d9a5803",
+    "ms6_thumb_m4_s3.png": "4aa5fddfd9531e151336c5240e48c76ad1ae8242e723b2b1b72e5e5c2251fc34",
+    "ms6_thumb_m4_s4.png": "2d33d973d5d853d618cd3260e00c11bd6d7a170af4ee8f5352253d66feb108a5",
+    "ms6_thumb_m4_s5.png": "1463ccafb876920301ce737e3ea2c98ba7b3de123c38ae411f7876ca715d0329",
+    "ms6_thumb_m5_s1.png": "41384409ec54fa73ec3812da4cc385b0f0e5947e9e8ada63e035c1ccc83cbf5a",
+    "ms6_thumb_m5_s2.png": "809ad86f9b4c9868d4ec11d0676c2f39b20aa3a40b90ee51c6c4ac71f052c4d6",
+    "ms6_thumb_m5_s3.png": "b0b00e61b90b60a14cc883bf48a27a1393479e430d330e4ddf5f832d29123fc5",
+    "ms6_thumb_m5_s4.png": "a5e351c7f7cd4d05dbf31d2bf196175983184a712a8eada507e274585b343205",
+    "ms6_thumb_m5_s5.png": "3911e0700564968df852d3fba60614d66b53c20fa2a0b735cdac3bf92817ce59",
+    "ms6_thumb_m5_s6.png": "df5c12681b9c51a51bbccd5a962ec4d3b5ee7dacbad3a06e4f445d61d5c7e78c",
     "ms6_ura4_grid.png": "cd81b571003843a6414589a4c61fc1e19e2e016f0de0b453063ca10a4b537af0"
   },
   "scenes": [
@@ -3132,6 +3154,1044 @@
         ],
         "strength": 140
       }
+    },
+    {
+      "key": "s1xlv.ms6_m4_bridge1",
+      "base_id": 0,
+      "texture": "ms6_m4_bridge1.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        640
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          410,
+          435
+        ],
+        [
+          450,
+          412
+        ],
+        [
+          540,
+          378
+        ],
+        [
+          580,
+          360
+        ],
+        [
+          710,
+          288
+        ],
+        [
+          810,
+          266
+        ],
+        [
+          830,
+          268
+        ],
+        [
+          850,
+          274
+        ],
+        [
+          890,
+          280
+        ],
+        [
+          920,
+          288
+        ],
+        [
+          950,
+          299
+        ],
+        [
+          980,
+          304
+        ],
+        [
+          990,
+          308
+        ],
+        [
+          1060,
+          350
+        ],
+        [
+          1280,
+          350
+        ]
+      ],
+      "bases": [
+        68,
+        593
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            447,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            262,
+            360,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            451,
+            1020,
+            200,
+            0,
+            -248,
+            0,
+            0
+          ],
+          [
+            1024,
+            451,
+            262,
+            156,
+            -1018,
+            -292,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": [
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m4_bridge2",
+      "base_id": 0,
+      "texture": "ms6_m4_bridge2.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        860
+      ],
+      "terrain": [
+        [
+          0,
+          338
+        ],
+        [
+          270,
+          338
+        ],
+        [
+          300,
+          354
+        ],
+        [
+          380,
+          371
+        ],
+        [
+          530,
+          414
+        ],
+        [
+          670,
+          436
+        ],
+        [
+          720,
+          436
+        ],
+        [
+          770,
+          434
+        ],
+        [
+          800,
+          430
+        ],
+        [
+          880,
+          406
+        ],
+        [
+          970,
+          390
+        ],
+        [
+          1040,
+          366
+        ],
+        [
+          1140,
+          343
+        ],
+        [
+          1160,
+          340
+        ],
+        [
+          1320,
+          340
+        ],
+        [
+          1440,
+          336
+        ],
+        [
+          1720,
+          336
+        ]
+      ],
+      "bases": [
+        94,
+        798
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            702,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1729,
+            1,
+            176,
+            40,
+            -612,
+            -408,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m4_sky",
+      "base_id": 0,
+      "texture": "ms6_m4_sky.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1477
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          2954,
+          436
+        ]
+      ],
+      "bases": [
+        68,
+        1430
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            918,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m4_storm",
+      "base_id": 0,
+      "texture": "ms6_m4_storm.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1477
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          2954,
+          436
+        ]
+      ],
+      "bases": [
+        68,
+        1430
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            918,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m4_rocks",
+      "base_id": 0,
+      "texture": "ms6_m4_rocks.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        950
+      ],
+      "terrain": [
+        [
+          0,
+          400
+        ],
+        [
+          1900,
+          400
+        ]
+      ],
+      "bases": [
+        68,
+        903
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            418,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            882,
+            418,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            422,
+            1020,
+            75,
+            0,
+            -373,
+            0,
+            0
+          ],
+          [
+            1024,
+            422,
+            882,
+            75,
+            -1018,
+            -373,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": [
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m5_canyon1",
+      "base_id": 0,
+      "texture": "ms6_m5_canyon1.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1024
+      ],
+      "terrain": [
+        [
+          0,
+          431
+        ],
+        [
+          40,
+          436
+        ],
+        [
+          2048,
+          436
+        ]
+      ],
+      "bases": [
+        70,
+        954
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            12,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m5_canyon2",
+      "base_id": 0,
+      "texture": "ms6_m5_canyon2.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1477
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          1810,
+          436
+        ],
+        [
+          1870,
+          431
+        ],
+        [
+          1960,
+          428
+        ],
+        [
+          2954,
+          428
+        ]
+      ],
+      "bases": [
+        70,
+        1335
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            918,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m5_hive",
+      "base_id": 0,
+      "texture": "ms6_m5_hive.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        800
+      ],
+      "terrain": [
+        [
+          0,
+          429
+        ],
+        [
+          320,
+          434
+        ],
+        [
+          360,
+          407
+        ],
+        [
+          400,
+          388
+        ],
+        [
+          460,
+          369
+        ],
+        [
+          520,
+          378
+        ],
+        [
+          560,
+          417
+        ],
+        [
+          600,
+          432
+        ],
+        [
+          1600,
+          437
+        ]
+      ],
+      "bases": [
+        50,
+        730
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            582,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m5_castle1",
+      "base_id": 0,
+      "texture": "ms6_m5_castle1.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1477
+      ],
+      "terrain": [
+        [
+          0,
+          407
+        ],
+        [
+          360,
+          408
+        ],
+        [
+          420,
+          418
+        ],
+        [
+          577,
+          419
+        ],
+        [
+          597,
+          410
+        ],
+        [
+          607,
+          401
+        ],
+        [
+          617,
+          398
+        ],
+        [
+          627,
+          388
+        ],
+        [
+          637,
+          384
+        ],
+        [
+          662,
+          390
+        ],
+        [
+          692,
+          403
+        ],
+        [
+          747,
+          422
+        ],
+        [
+          900,
+          427
+        ],
+        [
+          980,
+          445
+        ],
+        [
+          1420,
+          447
+        ],
+        [
+          1500,
+          423
+        ],
+        [
+          1940,
+          425
+        ],
+        [
+          2020,
+          447
+        ],
+        [
+          2534,
+          447
+        ],
+        [
+          2594,
+          436
+        ],
+        [
+          2954,
+          436
+        ]
+      ],
+      "bases": [
+        70,
+        1407
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            918,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m5_castle2",
+      "base_id": 0,
+      "texture": "ms6_m5_castle2.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        780
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          360,
+          436
+        ],
+        [
+          420,
+          446
+        ],
+        [
+          1140,
+          445
+        ],
+        [
+          1200,
+          435
+        ],
+        [
+          1560,
+          435
+        ]
+      ],
+      "bases": [
+        70,
+        710
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            542,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms6_m5_lair",
+      "base_id": 0,
+      "texture": "ms6_m5_lair.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1760
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          3520,
+          436
+        ]
+      ],
+      "bases": [
+        160,
+        1600
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            1020,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            452,
+            466,
+            448,
+            -3054,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ],
+        "front": []
+      }
     }
   ],
   "music": [],
@@ -5879,6 +6939,1246 @@
                   "enemy": 2,
                   "x": 2300
                 }
+              ],
+              "stamina": 60
+            }
+          ]
+        },
+        {
+          "key": "s1xlv.ura4.m4",
+          "title": "Mission 4",
+          "map_position": [
+            995,
+            266
+          ],
+          "name": {
+            "EN": "SAN FRANCISCO",
+            "JP": "サンフランシスコ",
+            "KR": "샌프란시스코",
+            "ES": "SAN FRANCISCO",
+            "PT": "SÃO FRANCISCO",
+            "FR": "SAN FRANCISCO",
+            "DE": "SAN FRANCISCO",
+            "IT": "SAN FRANCISCO",
+            "ZS": "旧金山",
+            "ZT": "舊金山",
+            "RU": "САН-ФРАНЦИСКО"
+          },
+          "stages": [
+            {
+              "key": "s1xlv.ura4.m4.s1",
+              "title": "M4-1 broken bridge",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m4_bridge1",
+              "music": "s1xlv.bgm_ms6_m4_1",
+              "map_position": [
+                -96,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m4_s1.png",
+              "enemy_base_hp": 30000,
+              "strength_steps": 2,
+              "difficulty": 2,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": 193,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 165,
+                  "enemy": 1
+                },
+                {
+                  "tick": 300,
+                  "enemy": 0
+                },
+                {
+                  "tick": 435,
+                  "enemy": 2
+                },
+                {
+                  "tick": 570,
+                  "enemy": 0
+                },
+                {
+                  "tick": 705,
+                  "enemy": 1
+                },
+                {
+                  "tick": 840,
+                  "enemy": 0
+                },
+                {
+                  "tick": 975,
+                  "enemy": 2
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 450,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 430,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                90,
+                120,
+                150,
+                180,
+                240
+              ],
+              "stamina": 30
+            },
+            {
+              "key": "s1xlv.ura4.m4.s2",
+              "title": "M4-2 broken bridge",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m4_bridge2",
+              "music": "s1xlv.bgm_ms6_m4_1",
+              "map_position": [
+                -51,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m4_s2.png",
+              "enemy_base_hp": 40000,
+              "strength_steps": 3,
+              "difficulty": 2,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 194,
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": 193,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 150,
+                  "enemy": 1
+                },
+                {
+                  "tick": 270,
+                  "enemy": 2
+                },
+                {
+                  "tick": 390,
+                  "enemy": 0
+                },
+                {
+                  "tick": 510,
+                  "enemy": 1
+                },
+                {
+                  "tick": 630,
+                  "enemy": 3
+                }
+              ],
+              "loop": 720,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 480,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 460,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                90,
+                120,
+                150,
+                180,
+                240
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 1350
+                }
+              ],
+              "stamina": 35
+            },
+            {
+              "key": "s1xlv.ura4.m4.s3",
+              "title": "M4-3 bridge over the bay (sunny)",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m4_sky",
+              "music": "s1xlv.bgm_ms6_m4_2",
+              "map_position": [
+                -6,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m4_s3.png",
+              "enemy_base_hp": 50000,
+              "strength_steps": 3,
+              "difficulty": 3,
+              "reward_msp": 7000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_invader",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_winged_invader",
+                  "level": 40
+                },
+                {
+                  "unit": 254,
+                  "level": 40
+                },
+                {
+                  "unit": 194,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 2
+                },
+                {
+                  "tick": 150,
+                  "enemy": 0
+                },
+                {
+                  "tick": 270,
+                  "enemy": 3
+                },
+                {
+                  "tick": 390,
+                  "enemy": 5
+                },
+                {
+                  "tick": 510,
+                  "enemy": 2
+                },
+                {
+                  "tick": 630,
+                  "enemy": 4
+                },
+                {
+                  "tick": 750,
+                  "enemy": 3
+                },
+                {
+                  "tick": 870,
+                  "enemy": 1
+                },
+                {
+                  "tick": 990,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1110,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1230,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1350,
+                  "enemy": 5
+                },
+                {
+                  "tick": 1470,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1710,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1830,
+                  "enemy": 1
+                }
+              ],
+              "loop": 1920,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 1000,
+                  "spawn": 2
+                },
+                {
+                  "when": "front",
+                  "value": 980,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 5
+                }
+              ],
+              "rank_times": [
+                120,
+                150,
+                180,
+                210,
+                270
+              ],
+              "placed": [
+                {
+                  "enemy": 4,
+                  "x": 2600
+                }
+              ],
+              "stamina": 40
+            },
+            {
+              "key": "s1xlv.ura4.m4.s4",
+              "title": "M4-4 bridge over the bay (overcast)",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m4_storm",
+              "music": "s1xlv.bgm_ms6_m4_2",
+              "map_position": [
+                39,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m4_s4.png",
+              "enemy_base_hp": 60000,
+              "strength_steps": 4,
+              "difficulty": 4,
+              "reward_msp": 8000,
+              "enemies": [
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_invader",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_winged_invader",
+                  "level": 40
+                },
+                {
+                  "unit": 254,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.flying_shell",
+                  "level": 40
+                },
+                {
+                  "unit": 193,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 2
+                },
+                {
+                  "tick": 150,
+                  "enemy": 6
+                },
+                {
+                  "tick": 270,
+                  "enemy": 3
+                },
+                {
+                  "tick": 390,
+                  "enemy": 4
+                },
+                {
+                  "tick": 510,
+                  "enemy": 2
+                },
+                {
+                  "tick": 630,
+                  "enemy": 0
+                },
+                {
+                  "tick": 750,
+                  "enemy": 3
+                },
+                {
+                  "tick": 990,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1110,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1230,
+                  "enemy": 6
+                },
+                {
+                  "tick": 1350,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1590,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1710,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1830,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1950,
+                  "enemy": 5
+                },
+                {
+                  "tick": 2070,
+                  "enemy": 1
+                }
+              ],
+              "loop": 2160,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 1000,
+                  "spawn": 2
+                },
+                {
+                  "when": "front",
+                  "value": 980,
+                  "spawn": 3
+                },
+                {
+                  "when": "front",
+                  "value": 960,
+                  "spawn": 6
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 30,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                170,
+                195,
+                220,
+                245,
+                270
+              ],
+              "placed": [
+                {
+                  "enemy": 5,
+                  "x": 2600
+                }
+              ],
+              "stamina": 50
+            },
+            {
+              "key": "s1xlv.ura4.m4.s5",
+              "title": "M4-5 rocks and battleship",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m4_rocks",
+              "music": "s1xlv.bgm_ms6_m4_boss",
+              "map_position": [
+                84,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m4_s5.png",
+              "enemy_base_hp": 80000,
+              "strength_steps": 3,
+              "difficulty": 5,
+              "reward_msp": 10000,
+              "enemies": [
+                {
+                  "unit": "s1xlv.elder_centipede",
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_invader",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_winged_invader",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 1
+                },
+                {
+                  "tick": 510,
+                  "enemy": 3
+                },
+                {
+                  "tick": 990,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1470,
+                  "enemy": 4
+                },
+                {
+                  "tick": 1950,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2430,
+                  "enemy": 3
+                },
+                {
+                  "tick": 2910,
+                  "enemy": 2
+                },
+                {
+                  "tick": 3390,
+                  "enemy": 4
+                }
+              ],
+              "loop": 3840,
+              "triggers": [
+                {
+                  "when": "base_hp",
+                  "value": 100,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 4
+                }
+              ],
+              "rank_times": [
+                150,
+                180,
+                210,
+                240,
+                300
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 1550
+                }
+              ],
+              "stamina": 60
+            }
+          ]
+        },
+        {
+          "key": "s1xlv.ura4.m5",
+          "title": "Mission 5",
+          "map_position": [
+            150,
+            220
+          ],
+          "name": {
+            "EN": "CENTRAL EUROPE",
+            "JP": "中央ヨーロッパ",
+            "KR": "중앙 유럽",
+            "ES": "EUROPA CENTRAL",
+            "PT": "EUROPA CENTRAL",
+            "FR": "EUROPE CENTRALE",
+            "DE": "MITTELEUROPA",
+            "IT": "EUROPA CENTRALE",
+            "ZS": "中欧",
+            "ZT": "中歐",
+            "RU": "ЦЕНТРАЛЬНАЯ ЕВРОПА"
+          },
+          "stages": [
+            {
+              "key": "s1xlv.ura4.m5.s1",
+              "title": "M5-1 rock canyon",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m5_canyon1",
+              "music": "s1xlv.bgm_ms6_m5",
+              "map_position": [
+                -118,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m5_s1.png",
+              "enemy_base_hp": 30000,
+              "strength_steps": 3,
+              "difficulty": 2,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 188,
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 150,
+                  "enemy": 1
+                },
+                {
+                  "tick": 270,
+                  "enemy": 0
+                },
+                {
+                  "tick": 390,
+                  "enemy": 2
+                },
+                {
+                  "tick": 510,
+                  "enemy": 0
+                }
+              ],
+              "loop": 600,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 900,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 880,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                90,
+                115,
+                140,
+                165,
+                190
+              ],
+              "stamina": 30
+            },
+            {
+              "key": "s1xlv.ura4.m5.s2",
+              "title": "M5-2 rock canyon exit",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m5_canyon2",
+              "music": "s1xlv.bgm_ms6_m5",
+              "map_position": [
+                -73,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m5_s2.png",
+              "enemy_base_hp": 40000,
+              "strength_steps": 3,
+              "difficulty": 2,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 188,
+                  "level": 40
+                },
+                {
+                  "unit": 190,
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 200,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 150,
+                  "enemy": 1
+                },
+                {
+                  "tick": 270,
+                  "enemy": 2
+                },
+                {
+                  "tick": 390,
+                  "enemy": 0
+                },
+                {
+                  "tick": 510,
+                  "enemy": 3
+                },
+                {
+                  "tick": 630,
+                  "enemy": 1
+                },
+                {
+                  "tick": 750,
+                  "enemy": 0
+                }
+              ],
+              "loop": 840,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 1000,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 980,
+                  "spawn": 2
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 0
+                }
+              ],
+              "rank_times": [
+                180,
+                205,
+                230,
+                255,
+                280
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 2420
+                }
+              ],
+              "stamina": 35
+            },
+            {
+              "key": "s1xlv.ura4.m5.s3",
+              "title": "M5-3 alien hive",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m5_hive",
+              "music": "s1xlv.bgm_ms6_m5",
+              "map_position": [
+                -28,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m5_s3.png",
+              "enemy_base_hp": 50000,
+              "strength_steps": 4,
+              "difficulty": 3,
+              "reward_msp": 7000,
+              "enemies": [
+                {
+                  "unit": 194,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_invader",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_winged_invader",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 150,
+                  "enemy": 1
+                },
+                {
+                  "tick": 270,
+                  "enemy": 2
+                },
+                {
+                  "tick": 390,
+                  "enemy": 0
+                },
+                {
+                  "tick": 510,
+                  "enemy": 1
+                },
+                {
+                  "tick": 630,
+                  "enemy": 3
+                }
+              ],
+              "loop": 720,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 600,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 580,
+                  "spawn": 2
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 3
+                }
+              ],
+              "rank_times": [
+                90,
+                115,
+                140,
+                165,
+                190
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 1210
+                },
+                {
+                  "enemy": 0,
+                  "x": 1150
+                }
+              ],
+              "stamina": 40
+            },
+            {
+              "key": "s1xlv.ura4.m5.s4",
+              "title": "M5-4 organic castle (ground floor)",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m5_castle1",
+              "music": "s1xlv.bgm_ms6_m5",
+              "map_position": [
+                17,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m5_s4.png",
+              "enemy_base_hp": 60000,
+              "strength_steps": 4,
+              "difficulty": 3,
+              "reward_msp": 7000,
+              "enemies": [
+                {
+                  "unit": "s1xlv.giant_hunter_walker",
+                  "level": 40
+                },
+                {
+                  "unit": 194,
+                  "level": 40
+                },
+                {
+                  "unit": 190,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 150,
+                  "enemy": 1
+                },
+                {
+                  "tick": 270,
+                  "enemy": 2
+                },
+                {
+                  "tick": 390,
+                  "enemy": 1
+                },
+                {
+                  "tick": 510,
+                  "enemy": 0
+                },
+                {
+                  "tick": 630,
+                  "enemy": 4
+                },
+                {
+                  "tick": 750,
+                  "enemy": 3
+                },
+                {
+                  "tick": 870,
+                  "enemy": 1
+                },
+                {
+                  "tick": 990,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1110,
+                  "enemy": 2
+                }
+              ],
+              "loop": 1200,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 1000,
+                  "spawn": 1
+                },
+                {
+                  "when": "front",
+                  "value": 980,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                210,
+                235,
+                260,
+                285,
+                310
+              ],
+              "placed": [
+                {
+                  "enemy": 1,
+                  "x": 2500
+                },
+                {
+                  "enemy": 1,
+                  "x": 2440
+                },
+                {
+                  "enemy": 2,
+                  "x": 2370
+                }
+              ],
+              "stamina": 45
+            },
+            {
+              "key": "s1xlv.ura4.m5.s5",
+              "title": "M5-5 organic castle (upper floor)",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m5_castle2",
+              "music": "s1xlv.bgm_ms6_m5",
+              "map_position": [
+                62,
+                8
+              ],
+              "thumbnail": "ms6_thumb_m5_s5.png",
+              "enemy_base_hp": 70000,
+              "strength_steps": 3,
+              "difficulty": 4,
+              "reward_msp": 8000,
+              "enemies": [
+                {
+                  "unit": "s1xlv.giant_hunter_walker",
+                  "level": 40
+                },
+                {
+                  "unit": 194,
+                  "level": 40
+                },
+                {
+                  "unit": 190,
+                  "level": 40
+                },
+                {
+                  "unit": 189,
+                  "level": 40
+                },
+                {
+                  "unit": 188,
+                  "level": 40
+                },
+                {
+                  "unit": 101,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 270,
+                  "enemy": 1
+                },
+                {
+                  "tick": 510,
+                  "enemy": 2
+                },
+                {
+                  "tick": 750,
+                  "enemy": 4
+                },
+                {
+                  "tick": 990,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1230,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1470,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1710,
+                  "enemy": 5
+                }
+              ],
+              "loop": 1920,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 600,
+                  "spawn": 4
+                },
+                {
+                  "when": "front",
+                  "value": 580,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 2
+                }
+              ],
+              "rank_times": [
+                150,
+                175,
+                200,
+                225,
+                250
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 1300
+                }
+              ],
+              "stamina": 50
+            },
+            {
+              "key": "s1xlv.ura4.m5.s6",
+              "title": "M5-6 invader lair (boss)",
+              "template": 1011,
+              "scene": "s1xlv.ms6_m5_lair",
+              "music": "s1xlv.bgm_ms6_m5_boss",
+              "map_position": [
+                107,
+                -32
+              ],
+              "thumbnail": "ms6_thumb_m5_s6.png",
+              "enemy_base_hp": 80000,
+              "strength_steps": 4,
+              "difficulty": 5,
+              "reward_msp": 10000,
+              "enemies": [
+                {
+                  "unit": "s1xlv.invader_king",
+                  "level": 40
+                },
+                {
+                  "unit": 192,
+                  "level": 40
+                },
+                {
+                  "unit": 193,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.ravenous_winged_invader",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 1
+                },
+                {
+                  "tick": 510,
+                  "enemy": 2
+                },
+                {
+                  "tick": 990,
+                  "enemy": 3
+                }
+              ],
+              "loop": 1440,
+              "triggers": [
+                {
+                  "when": "time",
+                  "value": 300,
+                  "spawn": 0,
+                  "repeat": false
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 3
+                }
+              ],
+              "rank_times": [
+                150,
+                175,
+                200,
+                225,
+                250
               ],
               "stamina": 60
             }

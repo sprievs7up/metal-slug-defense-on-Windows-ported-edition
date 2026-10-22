@@ -1,0 +1,108 @@
+{
+  "stats": {
+    "removed_msa_noop": {
+      "24": 9,
+      "47": 2,
+      "32": 4,
+      "30": 4,
+      "28": 7,
+      "26": 7,
+      "35": 27,
+      "34": 15,
+      "38": 7
+    },
+    "op36_to_op11": 3,
+    "op45_to_op7": 18,
+    "breath_reopens": 5,
+    "beam_bodies": 7,
+    "sounds": {
+      "2215": 1,
+      "2417": 2,
+      "643": 6,
+      "2382": 1,
+      "2419": 3,
+      "2418": 1,
+      "1391": 1,
+      "2097": 1
+    },
+    "menu_scaled": {
+      "slot": 0,
+      "copies": [
+        90,
+        91
+      ],
+      "scale": 40,
+      "shift": 36
+    }
+  },
+  "colors": [
+    28,
+    108,
+    48,
+    129,
+    40
+  ],
+  "provisional": {
+    "ap": 999,
+    "shop_price": 150,
+    "hp_multiplier": [
+      10,
+      1
+    ],
+    "production_interval_multiplier": [
+      90,
+      11
+    ],
+    "knockback_threshold_multiplier": [
+      99,
+      20
+    ],
+    "damage_multiplier": [
+      1,
+      1
+    ],
+    "special_damage_multiplier": [
+      5,
+      12
+    ],
+    "near_damage_multiplier": [
+      44,
+      15
+    ],
+    "normal_damage_multiplier": [
+      300,
+      53
+    ],
+    "status_word_values": {
+      "6": 100,
+      "7": 1500,
+      "17": 999,
+      "20": 180,
+      "24": 999,
+      "26": 1500,
+      "27": 90,
+      "31": 999,
+      "34": 180,
+      "35": 750,
+      "36": 450
+    },
+    "status_float_values": {
+      "16": 300.0,
+      "23": 300.0,
+      "30": 1.0
+    },
+    "attack_attributes": {
+      "melee": 1,
+      "normal": 0,
+      "special": 2
+    }
+  },
+  "obm_bytes": [
+    4195336,
+    4195336,
+    2098184,
+    4195336,
+    4195336
+  ],
+  "unit_id": 1070
+}

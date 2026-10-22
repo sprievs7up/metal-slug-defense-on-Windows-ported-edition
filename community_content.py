@@ -203,7 +203,8 @@ def check_unit(u):
                 'knockback_distance_multiplier','ballistic_range_multiplier',
                 'knockback_threshold_multiplier','normal_projectile_distance_multiplier',
                 'special_projectile_distance_multiplier','summon_interval_multiplier',
-                'construction_time_multiplier','summon_interval_additional_multiplier','near_damage_multiplier'):
+                'construction_time_multiplier','summon_interval_additional_multiplier','near_damage_multiplier',
+                'normal_damage_multiplier'):
         ratio(u.get(key,[1,1]))
     ratio(u.get('special_cooldown_multiplier',[1,1]))
     # 浮点状态词的绝对值（2026-10-21）：第二参数 16/23/30 与弹速 18/25/32 为浮点数，写入六个等级锚点。
@@ -283,7 +284,8 @@ def check_unit_assets(u,dims,descriptor_path,is_stock):
         if Path(filename).name!=filename or not filename.endswith('.json'):raise ValueError('Invalid sprite descriptor path')
         desc=json.loads(descriptor_path(filename).read_text(encoding='utf-8'))
         rects=desc['rects'];frames=desc['frames'];textures=u.get('textures',[u.get('texture')])
-        if not 1<=len(rects)<=8192 or not 1<=len(frames)<=65536 or not 1<=desc['script_count']<=256:raise ValueError('Invalid sprite descriptor capacity')
+        # 脚本数上限 1024（2026-10-22 蜈蚣长老 284 个；原生描述符中 BrainRobot 为 261 个，原生不按字节存放脚本号）
+        if not 1<=len(rects)<=8192 or not 1<=len(frames)<=65536 or not 1<=desc['script_count']<=1024:raise ValueError('Invalid sprite descriptor capacity')
         for x,y,w,h,ax,ay,flags,page in rects:
             if any(not isinstance(v,int) or not -32768<=v<=32767 for v in (x,y,w,h,ax,ay,flags,page)) or not 0<=page<len(textures):raise ValueError('Invalid sprite rectangle')
             width,height=dims[textures[page]]
@@ -311,6 +313,15 @@ def check_unit_assets(u,dims,descriptor_path,is_stock):
     # 2026-10-18 炸药与按属性的死亡（基准 221）：登记的动作槽须在描述符内；绝招等距落点的弹体槽同样。
     slots=[zombie.get(k) for k in ('blast_slot','fuse_slot','death_explosion','death_fire','death_normal_variant','death_explosion_variant','death_fire_variant') if k in zombie]
     if zombie.get('spread_count'):slots+=[zombie['spread_first']+i for i in range(zombie['spread_count'])]
+    # 2026-10-22 飞行护盾：下落 / 追踪动作与两组陨石弹体槽
+    if zombie.get('shell'):
+        h=zombie['shell'];slots+=[h[1]]+[h[2]+i for i in range(h[3])]+[h[4]+i for i in range(h[5])]
+    # 2026-10-22 蜈蚣长老：各动作、三个尘土槽、飞沫弹体槽
+    if zombie.get('centipede'):
+        e=zombie['centipede'];slots+=[e[i] for i in range(24) if i not in (13,14,17,18)]+[e[13]+i for i in range(3)]+[e[17]+i for i in range(e[18])]
+    # 2026-10-22 侵略者之王：各动作、两组激光弹体槽
+    if zombie.get('king'):
+        k=zombie['king'];slots+=[k[i] for i in range(24) if i not in (18,19,21,22)]+[k[18]+i for i in range(k[19])]+[k[21]+i for i in range(k[22])]
     if slots and (not filename or any(not 0<=v<desc['script_count'] for v in slots)):raise ValueError('Behavior animation outside sprite descriptor')
     if 'recovery_animation' in u:
         value=u['recovery_animation']
@@ -449,6 +460,16 @@ class CommunityContent:
         if any(u['zombie_spec'].get(k) for u in self.units if u.get('zombie_spec') for k in ('death_normal_variant','death_explosion_variant','death_fire_variant')) and p.uc.lib.msd_community_hunter_version()<2:raise RuntimeError('Native core lacks death animation variants')
         # 2026-10-21 效果贴地（ground_hugging_effect，标记 32768）：效果默认绘制与逐分件绘制的 3 个钩子。
         if any(u['zombie_spec']['flags']&32768 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_ground_effect_version') or p.uc.lib.msd_community_ground_effect_version()<1):raise RuntimeError('Native core lacks ground-hugging effects')
+        # 2026-10-22 建筑损毁效果（structure_death_effect，标记 65536）：沙包类损毁后移除前的 1 个钩子。
+        if any(u['zombie_spec']['flags']&65536 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_structure_death_version') or p.uc.lib.msd_community_structure_death_version()<1):raise RuntimeError('Native core lacks structure destruction effects')
+        # 2026-10-22 飞行护盾（flying_shell，标记 131072）：飞行高度、绝招落点、损毁爆炸与陨石的 6 个钩子。
+        if any(u['zombie_spec']['flags']&131072 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_flying_shell_version') or p.uc.lib.msd_community_flying_shell_version()<1):raise RuntimeError('Native core lacks flying shell behavior')
+        # 2026-10-22 蜈蚣长老（elder_centipede，标记 262144）：侵略者类 update / shotBullet、其弹体 update / attackAction、createObject 与按地面裁切绘制的 9 个块。
+        if any(u['zombie_spec']['flags']&262144 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks elder centipede behavior')
+        # 2026-10-22 建筑受击光束（structure_hit_attack，标记 524288）：沙包类受击动作按普攻组结算的 1 个钩子。
+        if any(u['zombie_spec']['flags']&524288 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_structure_hit_attack_version') or p.uc.lib.msd_community_structure_hit_attack_version()<1):raise RuntimeError('Native core lacks structure hit attacks')
+        # 2026-10-22 侵略者之王（invader_king，标记 1048576）：与蜈蚣长老共用侵略者类 update / shotBullet、其弹体 update / attackAction、createObject 的块，另在击退判定中不击退。
+        if any(u['zombie_spec']['flags']&1048576 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_invader_king_version') or p.uc.lib.msd_community_invader_king_version()<1):raise RuntimeError('Native core lacks invader king behavior')
         self.ready=False
 
     def stock_patches(self):
@@ -631,6 +652,9 @@ class CommunityContent:
             # 近距伤害（词 15）的追加倍率（2026-10-21）：与绝招追加倍率相同，作用于数据行锚点并向下取整，再经 damage_multiplier。
             a,b=ratio(u.get('near_damage_multiplier',[1,1]))
             for off in anchor_offsets(15):struct.pack_into('<i',row,off,struct.unpack_from('<i',row,off)[0]*a//b)
+            # 远距伤害（词 22）的追加倍率（2026-10-22）：同近距，作用于数据行锚点并向下取整，再经 damage_multiplier。
+            a,b=ratio(u.get('normal_damage_multiplier',[1,1]))
+            for off in anchor_offsets(22):struct.pack_into('<i',row,off,struct.unpack_from('<i',row,off)[0]*a//b)
             # Native status IDs 24/31 map to status words 27/34.
             # These six anchors match getUnitStatus's level interpolation.
             # Production time and the special-readiness timer remain separate.
@@ -917,7 +941,7 @@ class CommunityContent:
         pointers=[]
         for spec in specs:
             if not spec:pointers.append(0);continue
-            words=[0]*43;words[0]=spec['flags']
+            words=[0]*104;words[0]=spec['flags']
             thresholds=spec.get('thresholds',[]);words[1]=len(thresholds)
             for i,(a,b) in enumerate(thresholds):words[2+i]=a;words[8+i]=b
             words[14]=sum(1<<(i+1) for i,flag in enumerate(spec.get('transitions',[])) if flag)
@@ -945,7 +969,16 @@ class CommunityContent:
             words[41]=spec.get('death_fire_variant',0)
             # 2026-10-21：42 贴地绘制的效果动作号 + 1（ground_hugging_effect，0 为不使用）
             words[42]=spec['hug_animation']+1 if 'hug_animation' in spec else 0
-            pointers.append(self.alloc(struct.pack('<43I',*words)))
+            # 2026-10-22：43–52 飞行护盾（flying_shell）：飞行高度、下落 / 追踪动作、普攻陨石首槽与个数、绝招陨石首槽与个数、
+            # 绝招落下的倒数、陨石存在 tick、陨石生命百分比、每 tick 转向上限
+            for i,v in enumerate(spec.get('shell',[])):words[43+i]=v
+            # 2026-10-22：53–76 蜈蚣长老（elder_centipede）：出土、由地下出土、待机、钻地、地下移动、喷酸与收尾、绝招入地、大前行、受击与其循环、
+            # 击退、损毁、尘土首槽、圆环节数、两种地面攻击、飞沫首槽与个数、溅射、绝招酸块与其命中、绝招泥土、地面尘土（80 字，77–79 保留）
+            for i,v in enumerate(spec.get('centipede',[])):words[53+i]=v
+            # 2026-10-22：77–100 侵略者之王（invader_king）：待机、落下、着地、近距、跃起、绝招开始 / 绝招 / 收尾、击退、损毁、受击与其循环、
+            # 菜单待机 / 远距 / 绝招演示、反击激光与其身体段、反击激光落点爆炸、天空激光首槽 / 个数 / 身体段、地面激光首槽 / 个数、地面落点（104 字）
+            for i,v in enumerate(spec.get('king',[])):words[77+i]=v
+            pointers.append(self.alloc(struct.pack('<104I',*words)))
         return self.alloc(struct.pack('<'+'I'*len(pointers),*pointers))
 
     def grant_world_clear_rewards(self):

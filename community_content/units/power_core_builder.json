@@ -1,0 +1,134 @@
+{
+  "key": "s1xlv.power_core_builder",
+  "base_id": 5,
+  "faction": 3,
+  "identity": "Invader",
+  "shop_price": 50,
+  "available_from_start": true,
+  "ap": 90,
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 5,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "engineer_hp": {
+    "mode": "hp",
+    "percent": 6
+  },
+  "icon": {
+    "page": 1,
+    "rect": [
+      1700,
+      768,
+      40,
+      43
+    ],
+    "anchor": [
+      -5,
+      -2
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "POWER CORE",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nBuilds an Invader energy core at the front line.\nWhen hit, the core burns nearby enemies with energy beams."
+    },
+    "JP": {
+      "name": "パワーコア",
+      "description": "通常攻撃：‐     特殊攻撃：‐\n前線にインベーダーのエネルギーコアを設置する。\nコアは攻撃を受けるとエネルギー光線で周囲の敵を焼く。"
+    },
+    "KR": {
+      "name": "파워 코어",
+      "description": "일반 공격: -     특수 공격: -\n전선에 인베이더의 에너지 코어를 설치한다.\n코어는 공격받으면 에너지 광선으로 주변의 적을 태운다."
+    },
+    "ES": {
+      "name": "NÚCLEO DE ENERGÍA",
+      "description": "ATQ ESTÁND. : -     ATQ ESPEC. : -\nConstruye un núcleo de energía invasor en el frente.\nAl recibir daño, quema a los enemigos cercanos con rayos."
+    },
+    "PT": {
+      "name": "NÚCLEO DE ENERGIA",
+      "description": "ATQ. PADR. : -   ATQ. ESPEC. : -\nConstrói um núcleo de energia invasor na linha de frente.\nAo ser atingido, queima os inimigos próximos com raios."
+    },
+    "RU": {
+      "name": "ЭНЕРГОЯДРО",
+      "description": "СТАНД. АТАК: -   СПЕЦ. АТАК: -\nСтроит энергоядро захватчиков на линии фронта.\nПри попадании ядро сжигает ближайших врагов лучами."
+    },
+    "FR": {
+      "name": "NOYAU D'ÉNERGIE",
+      "description": "ATT. STAND : -   ATT. SPÉ : -\nConstruit un noyau d'énergie envahisseur sur la ligne de front.\nTouché, le noyau brûle les ennemis proches avec des rayons."
+    },
+    "DE": {
+      "name": "ENERGIEKERN",
+      "description": "STD.-ANGR. : -   SPEZ.-ANGR. : -\nErrichtet einen Energiekern der Invasoren an der Front.\nBei Treffern verbrennt der Kern nahe Feinde mit Strahlen."
+    },
+    "IT": {
+      "name": "NUCLEO ENERGETICO",
+      "description": "ATC STAND.: -   ATC SPEC.: -\nCostruisce un nucleo energetico invasore in prima linea.\nSe colpito, il nucleo brucia i nemici vicini con raggi."
+    },
+    "ZT": {
+      "name": "能量核心",
+      "description": "普通攻擊：‐     特殊攻擊：‐\n侵略者所留下的能量核心。\n受到攻擊以能量光束燒灼周圍的敵人。"
+    },
+    "ZS": {
+      "name": "能量核心",
+      "description": "普通攻击：‐     特殊攻击：‐\n侵略者所留下的能量核心。\n受到攻击以能量光束烧灼周围的敌人。"
+    }
+  },
+  "textures": [
+    "donou.obm"
+  ],
+  "tags": [
+    "ms6",
+    "msa"
+  ],
+  "behaviors": [
+    {
+      "name": "build_structure",
+      "version": 1,
+      "params": {
+        "structure": "s1xlv.power_core",
+        "construction_time_multiplier": [
+          1,
+          1
+        ]
+      }
+    }
+  ]
+}

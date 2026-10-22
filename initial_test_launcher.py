@@ -46,7 +46,7 @@ def create_player(self_test=False, *, guest_root=None, fullscreen=None):
     default = ROOT / ('verification/initial_test_self_test' if self_test else PROFILE)
     profile = initialize_profile(default if guest_root is None else guest_root)
     session = event_trial_launcher.create_player(self_test, fullscreen=fullscreen)
-    player.TITLE = 'MSD WINDOWS S1XLV · 26.10.5 · 初始存档测试'
+    player.TITLE = 'MSD WINDOWS S1XLV · 26.10.6 · 初始存档测试'
     session.guest_root = profile
     session.status_file = ROOT / 'initial_test_status.json'
     session.log_name = 'initial_test_player.log'

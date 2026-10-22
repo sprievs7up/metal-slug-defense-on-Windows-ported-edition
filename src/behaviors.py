@@ -253,6 +253,77 @@ def internal_fields(resolved):
     # 2026-10-21 效果贴地（行为库 v11，ZSpec 字 42）：辣椒僵尸的火焰带沿地形绘制
     if 'ground_hugging_effect' in resolved:
         zombie.update(flags=zombie['flags'] | 32768, hug_animation=resolved['ground_hugging_effect']['animation'])
+    # 2026-10-22 建筑损毁效果（行为库 v13，基准 4 沙包类）：能量核心
+    if 'structure_death_effect' in resolved:
+        zombie['flags'] |= 65536
+    # 2026-10-22 飞行护盾（行为库 v14，基准 200 飞行侵略者类，ZSpec 字 43–52）
+    if 'flying_shell' in resolved:
+        v = resolved['flying_shell']
+        zombie.update(flags=zombie['flags'] | 131072, shell=[v['height'], v['homing_animation'], v['arc_first_animation'],
+                                                          v['arc_count'], v['rain_first_animation'], v['rain_count'],
+                                                          v['rain_delay'], v['meteor_lifetime'], v['meteor_hp_percent'],
+                                                          v['turn_rate']])
+    # 2026-10-22 蜈蚣长老（行为库 v15，基准 192 侵略者类，ZSpec 字 53–76）：各动作号、圆环节数与弹体脚本
+    if 'elder_centipede' in resolved:
+        v = resolved['elder_centipede']
+        zombie.update(flags=zombie['flags'] | 262144, centipede=[v[k] for k in (
+            'appear_animation',
+            'emerge_animation',
+            'neutral_animation',
+            'burrow_animation',
+            'underground_animation',
+            'long_attack_animation',
+            'long_attack_end_animation',
+            'dive_animation',
+            'march_animation',
+            'flinch_animation',
+            'flinch_loop_animation',
+            'knockback_animation',
+            'death_animation',
+            'smoke_first_animation',
+            'wheel_parts',
+            'ground_hit_animation',
+            'ground_hit_alt_animation',
+            'droplet_first_animation',
+            'droplet_count',
+            'splash_animation',
+            'march_blob_animation',
+            'march_blob_hit_animation',
+            'march_dirt_animation',
+            'ground_dust_animation',
+        )])
+    # 2026-10-22 侵略者之王（行为库 v17，基准 192 侵略者类，ZSpec 字 77–100）：各动作号与激光弹体脚本
+    if 'invader_king' in resolved:
+        v = resolved['invader_king']
+        zombie.update(flags=zombie['flags'] | 1048576, king=[v[k] for k in (
+            'neutral_animation',
+            'fall_animation',
+            'land_animation',
+            'near_attack_animation',
+            'jump_animation',
+            'special_start_animation',
+            'special_animation',
+            'special_end_animation',
+            'knockback_animation',
+            'death_animation',
+            'flinch_animation',
+            'flinch_loop_animation',
+            'menu_neutral_animation',
+            'menu_long_animation',
+            'menu_special_animation',
+            'counter_laser_animation',
+            'counter_laser_body_animation',
+            'counter_burst_animation',
+            'sky_laser_first_animation',
+            'sky_laser_count',
+            'sky_laser_body_animation',
+            'ground_laser_first_animation',
+            'ground_laser_count',
+            'ground_impact_animation',
+        )])
+    # 2026-10-22 建筑受击光束（行为库 v16，基准 4 沙包类）：能量核心受击动作中的攻击框按普攻组结算
+    if 'structure_hit_attack' in resolved:
+        zombie['flags'] |= 524288
     if zombie['flags']:
         fields['zombie_spec'] = zombie
     return fields

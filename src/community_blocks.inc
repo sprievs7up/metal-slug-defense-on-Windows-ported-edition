@@ -1896,6 +1896,8 @@ if((old_child_right=find_block(0x101de253u))){register_block(0x101de253u,child_r
 if((old_hug_effect_draw=find_block(0x1016f991u))){register_block(0x1016f991u,hug_effect_draw);++hug_effect_hooks;}
 if((old_hug_effect_conv=find_block(0x101dbab7u))){register_block(0x101dbab7u,hug_effect_conv);++hug_effect_hooks;}
 if((old_hug_effect_done=find_block(0x101dbaf3u))){register_block(0x101dbaf3u,hug_effect_done);++hug_effect_hooks;}
+if((old_donou_death_kill=find_block(0x1016d325u))){register_block(0x1016d325u,donou_death_kill);++structure_death_hooks;}
+if((old_donou_hit=find_block(0x1016d301u))){register_block(0x1016d301u,donou_hit);++structure_hit_hooks;}
 if((old_iron_slider_anim=find_block(0x101de017u))){register_block(0x101de017u,iron_slider_anim);++iron_slider_hooks;}
 if((old_iron_slider_create1=find_block(0x10190d95u))){register_block(0x10190d95u,iron_slider_create1);++iron_slider_hooks;}
 if((old_iron_slider_create2=find_block(0x10180f21u))){register_block(0x10180f21u,iron_slider_create2);++iron_slider_hooks;}
@@ -1910,4 +1912,16 @@ if((old_fx_update=find_block(0x101e13c3u))){register_block(0x101e13c3u,fx_update
 if((old_fx_draw=find_block(0x101e1553u))){register_block(0x101e1553u,fx_draw);++scene_fx_hooks;}
 if((old_fx_dtor=find_block(0x101e1399u))){register_block(0x101e1399u,fx_dtor);++scene_fx_hooks;}
 if((old_fx_bullet=find_block(0x101dd16du))){register_block(0x101dd16du,fx_bullet);++scene_fx_hooks;}
+if((old_flying_shell_height=find_block(0x1017d471u))){register_block(0x1017d471u,flying_shell_height);++flying_shell_hooks;}
+if((old_flying_shell_update=find_block(0x1017d433u))){register_block(0x1017d433u,flying_shell_update);++flying_shell_hooks;}
+if((old_flying_shell_shot=find_block(0x10180179u))){register_block(0x10180179u,flying_shell_shot);++flying_shell_hooks;}
+if((old_flying_shell_meteor=find_block(0x1016e31du))){register_block(0x1016e31du,flying_shell_meteor);++flying_shell_hooks;}
+if((old_flying_shell_ground=find_block(0x1016da65u))){register_block(0x1016da65u,flying_shell_ground);++flying_shell_hooks;}
+if((old_flying_shell_damage=find_block(0x101dcd9du))){register_block(0x101dcd9du,flying_shell_damage);++flying_shell_hooks;}
+if((old_elder_update=find_block(0x1019b045u))){register_block(0x1019b045u,elder_update);++elder_centipede_hooks;}
+if((old_elder_shot=find_block(0x1017f74du))){register_block(0x1017f74du,elder_shot);++elder_centipede_hooks;}
+if((old_elder_bullet=find_block(0x1019afc3u))){register_block(0x1019afc3u,elder_bullet);++elder_centipede_hooks;}
+if((old_elder_attack=find_block(0x1017747bu))){register_block(0x1017747bu,elder_attack);++elder_centipede_hooks;}
+if((old_elder_create=find_block(0x10181ec5u))){register_block(0x10181ec5u,elder_create);++elder_centipede_hooks;}
+if((old_elder_draw=find_block(0x1016f891u))&&!find_block(0x1016f89fu)&&!find_block(0x101358c3u)&&!find_block(0x101358c9u)){register_block(0x1016f891u,elder_draw);register_block(0x1016f89fu,elder_draw_v1);register_block(0x101358c3u,elder_draw_v2);register_block(0x101358c9u,elder_draw_v3);elder_centipede_hooks+=4u;}
 }

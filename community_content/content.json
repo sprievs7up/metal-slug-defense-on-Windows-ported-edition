@@ -51,7 +51,14 @@
     "s1xlv.hunter": 1060,
     "s1xlv.iron_cab": 1061,
     "s1xlv.iron_sentinel": 1062,
-    "s1xlv.iron_sentinel_form2": 1063
+    "s1xlv.iron_sentinel_form2": 1063,
+    "s1xlv.power_core_builder": 1064,
+    "s1xlv.power_core": 1065,
+    "s1xlv.ravenous_invader": 1066,
+    "s1xlv.ravenous_winged_invader": 1067,
+    "s1xlv.flying_shell": 1068,
+    "s1xlv.elder_centipede": 1069,
+    "s1xlv.invader_king": 1070
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -101,7 +108,21 @@
     "hunter.obm": "927ae30147a19942a2c543bef9f084c572cc574c30a791fce3722883e28a1adb",
     "iron_cab.obm": "51e35d3b8f56d522cd53944bfcf9f49d18b77dca92ec595734f6ce52957af80c",
     "iron_sentinel_0.obm": "2b67754bf6cdf98978180725c407fe398bb1ca3dc24166dcbf1bb6f6496b238a",
-    "iron_sentinel_1.obm": "f48fa134945c31ec7f3753e6d0bc2df50951dd0a1d1e6017ddc73b10ec905935"
+    "iron_sentinel_1.obm": "f48fa134945c31ec7f3753e6d0bc2df50951dd0a1d1e6017ddc73b10ec905935",
+    "power_core.obm": "23fcefe3301db5285215b8ad5583f538b7d143f4450bd5af3d2e7f4ee7903a25",
+    "ravenous_invader.obm": "9fa272a619ac5d036b037115eadc9c0fdb915846d268fce5ed051e3c75a9c36f",
+    "ravenous_invader_maggot.obm": "cbceabf3c93df03c33187f11a532687d451e6c5689db65040b8e9022f3cc87ad",
+    "ravenous_winged_invader_0.obm": "4804a86b273f097891f3ab43310043c4c44a91cf0946eb4875e31de0987b5ad0",
+    "ravenous_winged_invader_1.obm": "9cb503b5f95eb7b53201a131813f3b901920ed9cd8efbbdd0d5e5a3e77e09216",
+    "ravenous_winged_invader_2.obm": "75613488bfb2dd39fe33c0d2d03376499d507804c234d70012a612d6b1f93234",
+    "flying_shell.obm": "ca674e38aaaf383b16efac28c3cfc050f455122faff282143651af8646cced7d",
+    "elder_centipede_0.obm": "732c6c2c48840ee135111ca4e1a66e490a23e37de36a5620d68a423aca4ba2e5",
+    "elder_centipede_1.obm": "c7f7b4f9934da040847d67116fa99ead8163b640673fc95d60489c546d2c7e43",
+    "invader_king_0.obm": "9a09b274c77818866ca68e80c62ab41e4a2939f3c4819a16517f63a491a14f8e",
+    "invader_king_1.obm": "ad2c1d3bc7719624818cba1e2a0ae30575d485c7d658880cb9b86180e92c3428",
+    "invader_king_2.obm": "92378e57c2f1a90df091506e0b52fd3f33fea4b5bbbb6c7dcf7d4856276d0b7e",
+    "invader_king_3.obm": "1732c0265a22cb7eccc3c7e0cd38141702489ebad7d1f6fe8d889d1a0580b68d",
+    "invader_king_4.obm": "6899fc93e86918023420a3cfe2ad93c9a5088392d4bfa195bb63c1eaaeff0a5c"
   },
   "unit_pack": {
     "key": "s1xlv.pf_infantry_pack",
@@ -445,6 +466,141 @@
       "loop": [
         3.884263,
         94.588957
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m4_1",
+      "file": "bgm_ms6_m4_1.msdf",
+      "type": "bgm",
+      "loop": [
+        2.050612,
+        83.378776
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m4_2",
+      "file": "bgm_ms6_m4_2.msdf",
+      "type": "bgm",
+      "loop": [
+        21.041633,
+        103.327347
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m4_boss",
+      "file": "bgm_ms6_m4_boss.msdf",
+      "type": "bgm",
+      "loop": [
+        3.15356,
+        84.226304
+      ]
+    },
+    {
+      "key": "s1xlv.ecentipede_death",
+      "file": "ecentipede_death.msdf",
+      "type": "se",
+      "volume": 110
+    },
+    {
+      "key": "s1xlv.ecentipede_move1",
+      "file": "ecentipede_move1.msdf",
+      "type": "se",
+      "volume": 110
+    },
+    {
+      "key": "s1xlv.ecentipede_move2",
+      "file": "ecentipede_move2.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.ecentipede_sand_rise",
+      "file": "ecentipede_sand_rise.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.ecentipede_spray1",
+      "file": "ecentipede_spray1.msdf",
+      "type": "se",
+      "volume": 90
+    },
+    {
+      "key": "s1xlv.ecentipede_spray2",
+      "file": "ecentipede_spray2.msdf",
+      "type": "se",
+      "volume": 70
+    },
+    {
+      "key": "s1xlv.ecentipede_spray3",
+      "file": "ecentipede_spray3.msdf",
+      "type": "se",
+      "volume": 60
+    },
+    {
+      "key": "s1xlv.iking_breath",
+      "file": "iking_breath.msdf",
+      "type": "se",
+      "volume": 60
+    },
+    {
+      "key": "s1xlv.iking_death_voice",
+      "file": "iking_death_voice.msdf",
+      "type": "se",
+      "volume": 120
+    },
+    {
+      "key": "s1xlv.iking_death_blast",
+      "file": "iking_death_blast.msdf",
+      "type": "se",
+      "volume": 115
+    },
+    {
+      "key": "s1xlv.iking_stomp",
+      "file": "iking_stomp.msdf",
+      "type": "se",
+      "volume": 110
+    },
+    {
+      "key": "s1xlv.iking_jump",
+      "file": "iking_jump.msdf",
+      "type": "se",
+      "volume": 120
+    },
+    {
+      "key": "s1xlv.iking_land",
+      "file": "iking_land.msdf",
+      "type": "se",
+      "volume": 95
+    },
+    {
+      "key": "s1xlv.iking_laser",
+      "file": "iking_laser.msdf",
+      "type": "se",
+      "volume": 65
+    },
+    {
+      "key": "s1xlv.iking_special",
+      "file": "iking_special.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m5",
+      "file": "bgm_ms6_m5.msdf",
+      "type": "bgm",
+      "loop": [
+        5.661315,
+        86.542812
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms6_m5_boss",
+      "file": "bgm_ms6_m5_boss.msdf",
+      "type": "bgm",
+      "loop": [
+        2.147846,
+        94.147823
       ]
     }
   ]

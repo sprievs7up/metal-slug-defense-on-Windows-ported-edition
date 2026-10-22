@@ -1,6 +1,6 @@
 static const char BEHAVIOR_MANIFEST[]=R"MSD({
   "schema": 1,
-  "library_version": 12,
+  "library_version": 17,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位",
     "rational": "[分子, 分母] 正整数倍率",
@@ -15,7 +15,8 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "name": "build_structure",
       "version": 1,
       "base_classes": [
-        77
+        77,
+        5
       ],
       "params": {
         "structure": {
@@ -331,12 +332,13 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "name": "no_knockback",
       "version": 1,
       "base_classes": [
-        313
+        313,
+        200
       ],
       "params": {},
       "doc": {
-        "ZS": "受击时不进入击退（不检查击退计量），生命归零时照常倒下。",
-        "EN": "The unit is never knocked back by hits (the knockback gauge is not checked); it still dies when HP reaches zero."
+        "ZS": "受击时不进入击退（不检查击退计量），生命归零时照常倒下。基准 200（飞行侵略者类，BattleAction_WingedInvader）同样适用（行为库 v14）。",
+        "EN": "The unit is never knocked back by hits (the knockback gauge is not checked); it still dies when HP reaches zero. Also applies to base 200 (Winged Invader class, BattleAction_WingedInvader; library v14)."
       }
     },
     {
@@ -703,6 +705,426 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "doc": {
         "ZS": "钢铁哨兵第二形态：单位以原生保留的 BattleAction_IronSlider_2 运行（UnitID 395），出场时设为免击退（原生与 MSA 相同）；脚本编号同 MSA（待机 17、行走 18、巨型导弹 19、损毁 21），三种攻击都发射巨型导弹（脚本编号 24）。只用于由 iron_slider 召唤的内部单位。",
         "EN": "Iron Sentinel second form: the unit runs on the native BattleAction_IronSlider_2 (UnitID 395) and is immune to knockback from its first update (as in both the native class and MSA); scripts use the MSA numbering (standby 17, walk 18, giant missile 19, destruction 21) and all three attacks launch the giant missile (script id 24). Only for the internal unit summoned by iron_slider."
+      }
+    },
+    {
+      "name": "structure_death_effect",
+      "version": 1,
+      "base_classes": [
+        4
+      ],
+      "params": {},
+      "doc": {
+        "ZS": "沙包类建筑（基准 4，BattleAction_Donou）：损毁动画（状态 100 / 110 / 120 播放的槽 8）播完、原生移除单位之前，在单位原点放共用爆炸效果 0xff04（同 MSA 能量核心）。损毁动画本身与移除时刻不变。",
+        "EN": "Sandbag-class structures (base 4, BattleAction_Donou): when the destruction animation (slot 8, states 100/110/120) has finished, the shared explosion effect 0xff04 is placed at the unit origin just before the native code removes the unit (as with the MSA energy core). The destruction animation and the removal timing are unchanged."
+      }
+    },
+    {
+      "name": "flying_shell",
+      "version": 1,
+      "base_classes": [
+        200
+      ],
+      "requires_fields": [
+        "sprite_descriptor"
+      ],
+      "params": {
+        "height": {
+          "type": "int",
+          "default": 80,
+          "min": 0,
+          "max": 400
+        },
+        "homing_animation": {
+          "type": "int",
+          "required": true,
+          "min": 0,
+          "max": 255
+        },
+        "arc_first_animation": {
+          "type": "int",
+          "required": true,
+          "min": 0,
+          "max": 255
+        },
+        "arc_count": {
+          "type": "int",
+          "required": true,
+          "min": 1,
+          "max": 16
+        },
+        "rain_first_animation": {
+          "type": "int",
+          "required": true,
+          "min": 0,
+          "max": 255
+        },
+        "rain_count": {
+          "type": "int",
+          "required": true,
+          "min": 1,
+          "max": 16
+        },
+        "rain_delay": {
+          "type": "int",
+          "default": 120,
+          "min": 0,
+          "max": 600
+        },
+        "meteor_lifetime": {
+          "type": "int",
+          "default": 300,
+          "min": 1,
+          "max": 3000
+        },
+        "meteor_hp_percent": {
+          "type": "int",
+          "default": 60,
+          "min": 1,
+          "max": 1000
+        },
+        "turn_rate": {
+          "type": "int",
+          "default": 32,
+          "min": 0,
+          "max": 2048
+        }
+      },
+      "doc": {
+        "ZS": "飞行护盾（MSA 7.13.0 FLYING SHELT 的 BattleAction_FlyingShell 按 MSD 原生飞行侵略者类实现）：飞行高度为地形之上 height；普攻与绝招的弹体由原生 WingedInvader::shotBullet 发射（op22 的第 2 个值须为 0）。普攻的陨石为 arc_first_animation 起 arc_count 个弹体槽：按脚本的弧线飞出，动画播完后换为 homing_animation 并每 tick 向最近的敌方单位转向（每 tick 最多 turn_rate，4096 为一周），速度为弹体速度，水平飞离发射点超过投射距离（字 26）后爆炸。绝招开始时按前方最近的敌方单位（远攻击距离内，字 7）定一个落点，倒数 rain_delay tick；绝招的陨石为 rain_first_animation 起 rain_count 个弹体槽：按脚本升空，倒数结束时换为 homing_animation，从落点后上方 45° 斜落到落点附近。陨石有受击框时可挡下敌方攻击，生命为本单位最大生命的 meteor_hp_percent%（绝招陨石只在下落中受伤），生命耗尽、命中敌人、落地（换为 homing_animation 之后）或存在超过 meteor_lifetime tick 时以共用爆炸 0xff04 消失。损毁时在本单位三处放共用爆炸 0xff04，之后每 tick 在 随机位置放小爆炸 0xff03，直至移除。",
+        "EN": "Flying shell (MSA 7.13.0 FLYING SHELT, BattleAction_FlyingShell, implemented on the native Winged Invader class): the unit flies height above the terrain; normal and special bullets are fired by the native WingedInvader::shotBullet (the second op22 value must be 0). Normal-attack meteors are the arc_count bullet scripts from arc_first_animation: they fly the scripted arc, then switch to homing_animation and turn toward the nearest enemy unit each tick (at most turn_rate per tick, 4096 per full turn) at the bullet speed, exploding once they are farther from the launch point than the projectile distance (word 26). When the special starts, a landing point is taken at the nearest enemy unit ahead within the far attack range (word 7) and a rain_delay-tick countdown starts; special meteors are the rain_count bullet scripts from rain_first_animation: they rise as scripted and, when the countdown ends, switch to homing_animation and fall at 45 degrees from above and behind onto the landing area. Meteors with a hit box block enemy attacks; their HP is meteor_hp_percent% of the unit's maximum HP (special meteors take damage only while falling). A meteor disappears with the shared explosion 0xff04 when its HP runs out, when it hits an enemy, when it touches the ground after switching to homing_animation, or after meteor_lifetime ticks. On destruction the unit places three shared explosions 0xff04 and then one small explosion 0xff03 at a random point every tick until it is removed."
+      }
+    },
+    {
+      "name": "elder_centipede",
+      "version": 1,
+      "base_classes": [
+        192
+      ],
+      "requires_fields": [
+        "sprite_descriptor"
+      ],
+      "params": {
+        "appear_animation": {
+          "type": "int",
+          "default": 7,
+          "min": 0,
+          "max": 1023
+        },
+        "emerge_animation": {
+          "type": "int",
+          "default": 9,
+          "min": 0,
+          "max": 1023
+        },
+        "neutral_animation": {
+          "type": "int",
+          "default": 11,
+          "min": 0,
+          "max": 1023
+        },
+        "burrow_animation": {
+          "type": "int",
+          "default": 16,
+          "min": 0,
+          "max": 1023
+        },
+        "underground_animation": {
+          "type": "int",
+          "default": 23,
+          "min": 0,
+          "max": 1023
+        },
+        "long_attack_animation": {
+          "type": "int",
+          "default": 28,
+          "min": 0,
+          "max": 1023
+        },
+        "long_attack_end_animation": {
+          "type": "int",
+          "default": 32,
+          "min": 0,
+          "max": 1023
+        },
+        "dive_animation": {
+          "type": "int",
+          "default": 44,
+          "min": 0,
+          "max": 1023
+        },
+        "march_animation": {
+          "type": "int",
+          "default": 50,
+          "min": 0,
+          "max": 1023
+        },
+        "flinch_animation": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 1023
+        },
+        "flinch_loop_animation": {
+          "type": "int",
+          "default": 65,
+          "min": 0,
+          "max": 1023
+        },
+        "knockback_animation": {
+          "type": "int",
+          "default": 70,
+          "min": 0,
+          "max": 1023
+        },
+        "death_animation": {
+          "type": "int",
+          "default": 75,
+          "min": 0,
+          "max": 1023
+        },
+        "smoke_first_animation": {
+          "type": "int",
+          "default": 86,
+          "min": 0,
+          "max": 1023
+        },
+        "wheel_parts": {
+          "type": "int",
+          "default": 26,
+          "min": 1,
+          "max": 32
+        },
+        "ground_hit_animation": {
+          "type": "int",
+          "default": 18,
+          "min": 0,
+          "max": 1023
+        },
+        "ground_hit_alt_animation": {
+          "type": "int",
+          "default": 20,
+          "min": 0,
+          "max": 1023
+        },
+        "droplet_first_animation": {
+          "type": "int",
+          "default": 35,
+          "min": 0,
+          "max": 1023
+        },
+        "droplet_count": {
+          "type": "int",
+          "default": 8,
+          "min": 0,
+          "max": 64
+        },
+        "splash_animation": {
+          "type": "int",
+          "default": 43,
+          "min": 0,
+          "max": 1023
+        },
+        "march_blob_animation": {
+          "type": "int",
+          "default": 116,
+          "min": 0,
+          "max": 1023
+        },
+        "march_blob_hit_animation": {
+          "type": "int",
+          "default": 115,
+          "min": 0,
+          "max": 1023
+        },
+        "march_dirt_animation": {
+          "type": "int",
+          "default": 132,
+          "min": 0,
+          "max": 1023
+        },
+        "ground_dust_animation": {
+          "type": "int",
+          "default": 19,
+          "min": 0,
+          "max": 1023
+        }
+      },
+      "doc": {
+        "ZS": "蜈蚣长老（MSA 7.13.0 ELDER CENTIPEDE 的 BattleAction_Eldercentipedo，按 MSD 原生侵略者类实现）：出击后由地下出土（appear_animation），待机为 neutral_animation；移动时钻地（burrow_animation）后在地下移动（underground_animation，高度取地形，无受击框）；远距离攻击时由地下出土（emerge_animation）、喷酸（long_attack_animation，飞沫为 droplet_first_animation 起 droplet_count 个弹体，以普攻组结算，命中或落地时放 splash_animation）、收尾（long_attack_end_animation）；绝招入地（dive_animation）后大前行（march_animation）：身体为该动作脚本前 wheel_parts 条 op11 子层组成的圆环，绕单位前方 280 处转一周，各节越过地面处生成地面攻击弹体（ground_hit_animation），头部在地面以上且未转过半周时单位的攻击框跟随头部，脚本中的 march_dirt_animation 泥土在圆环上生成并同时发射飞向圆环中心的酸块（march_blob_animation，命中动作 march_blob_hit_animation，绝招组结算），转满一周后出土。出土与钻地脚本中的 ground_hit_animation / ground_hit_alt_animation 弹体为贴地的地面攻击（绝招组结算，范围内多个目标）。受击为 flinch_animation、flinch_loop_animation，击退为 knockback_animation，损毁为 death_animation（在地下时先出土）；地面以上每 10 tick 在脚下放 smoke_first_animation 起三个动作轮换的尘土；绘制按地面高度裁切（地面以下的部分不画）。动作切换在客体流程中执行，脚本第一 tick 的音效照常播放。",
+        "EN": "Elder Centipede (MSA 7.13.0 ELDER CENTIPEDE, BattleAction_Eldercentipedo, implemented on the native Invader class): after deployment the unit rises from the ground (appear_animation) and idles with neutral_animation; to move it burrows (burrow_animation) and travels underground (underground_animation, height taken from the terrain, no hit box); for the far attack it rises (emerge_animation), sprays acid (long_attack_animation; the droplets are the droplet_count bullet scripts from droplet_first_animation, settled with the normal attack group, leaving splash_animation when they hit or land) and recovers (long_attack_end_animation); the special dives (dive_animation) and then marches (march_animation): the body is a ring made of the first wheel_parts op11 sub-layers of that script, turning once around a point 280 ahead of the unit; where a segment crosses the ground a ground-hit bullet (ground_hit_animation) is created, the unit attack box follows the head while it is above the ground during the first half turn, every march_dirt_animation dirt burst in the script is placed on the ring together with an acid blob (march_blob_animation, hit animation march_blob_hit_animation, special group) flying toward the ring centre, and the unit rises again after the full turn. Bullets ground_hit_animation / ground_hit_alt_animation fired by the rise and burrow scripts are ground hits at terrain height (special group, several targets). flinch_animation / flinch_loop_animation are the flinch, knockback_animation the knockback and death_animation the death (rising first when underground); above the ground a dust cloud from three animations starting at smoke_first_animation is placed under the unit every 10 ticks; the unit is drawn clipped at the ground line. Animation changes run in the guest flow, so sounds on the first tick of a script play normally."
+      }
+    },
+    {
+      "name": "structure_hit_attack",
+      "version": 1,
+      "base_classes": [
+        4
+      ],
+      "params": {},
+      "doc": {
+        "ZS": "沙包类建筑（基准 4，BattleAction_Donou）：受击动作（状态 60 播放的槽 7）中开启的攻击框按普通攻击组结算（伤害字 22、击退计量字 23、目标数字 24、属性字 28），槽 7 脚本中每次开启攻击框（op4）都重建攻击 ID，框内各目标每次开启各受 1 次伤害（一个周期开启 n 次即至多 n 次伤害）。原生沙包的攻击组为 0，受击动作不造成伤害。受击动作中再次受击不重新开始动作，持续受击时动作逐个周期连续播放。",
+        "EN": "Sandbag-class structures (base 4, BattleAction_Donou): attack boxes opened during the hit reaction (slot 7, played in state 60) are settled with the normal attack group (damage word 22, knockback gauge word 23, target count word 24, attribute word 28); every attack box opening (op4) in the slot 7 script starts a new attack id, so each target inside the box takes damage once per opening (n openings per cycle give at most n hits). The native sandbag has attack group 0 and its hit reaction deals no damage. Hits received during the reaction do not restart it; under continuous attack the reaction plays cycle after cycle."
+      }
+    },
+    {
+      "name": "invader_king",
+      "version": 1,
+      "base_classes": [
+        192
+      ],
+      "requires_fields": [
+        "sprite_descriptor"
+      ],
+      "params": {
+        "neutral_animation": {
+          "type": "int",
+          "default": 6,
+          "min": 0,
+          "max": 1023
+        },
+        "fall_animation": {
+          "type": "int",
+          "default": 7,
+          "min": 0,
+          "max": 1023
+        },
+        "land_animation": {
+          "type": "int",
+          "default": 8,
+          "min": 0,
+          "max": 1023
+        },
+        "near_attack_animation": {
+          "type": "int",
+          "default": 10,
+          "min": 0,
+          "max": 1023
+        },
+        "jump_animation": {
+          "type": "int",
+          "default": 11,
+          "min": 0,
+          "max": 1023
+        },
+        "special_start_animation": {
+          "type": "int",
+          "default": 12,
+          "min": 0,
+          "max": 1023
+        },
+        "special_animation": {
+          "type": "int",
+          "default": 13,
+          "min": 0,
+          "max": 1023
+        },
+        "special_end_animation": {
+          "type": "int",
+          "default": 15,
+          "min": 0,
+          "max": 1023
+        },
+        "knockback_animation": {
+          "type": "int",
+          "default": 16,
+          "min": 0,
+          "max": 1023
+        },
+        "death_animation": {
+          "type": "int",
+          "default": 18,
+          "min": 0,
+          "max": 1023
+        },
+        "flinch_animation": {
+          "type": "int",
+          "default": 19,
+          "min": 0,
+          "max": 1023
+        },
+        "flinch_loop_animation": {
+          "type": "int",
+          "default": 20,
+          "min": 0,
+          "max": 1023
+        },
+        "menu_neutral_animation": {
+          "type": "int",
+          "default": 6,
+          "min": 0,
+          "max": 1023
+        },
+        "menu_long_animation": {
+          "type": "int",
+          "default": 1,
+          "min": 0,
+          "max": 1023
+        },
+        "menu_special_animation": {
+          "type": "int",
+          "default": 2,
+          "min": 0,
+          "max": 1023
+        },
+        "counter_laser_animation": {
+          "type": "int",
+          "default": 34,
+          "min": 0,
+          "max": 1023
+        },
+        "counter_laser_body_animation": {
+          "type": "int",
+          "default": 41,
+          "min": 0,
+          "max": 1023
+        },
+        "counter_burst_animation": {
+          "type": "int",
+          "default": 17,
+          "min": 0,
+          "max": 1023
+        },
+        "sky_laser_first_animation": {
+          "type": "int",
+          "default": 35,
+          "min": 0,
+          "max": 1023
+        },
+        "sky_laser_count": {
+          "type": "int",
+          "default": 6,
+          "min": 1,
+          "max": 16
+        },
+        "sky_laser_body_animation": {
+          "type": "int",
+          "default": 44,
+          "min": 0,
+          "max": 1023
+        },
+        "ground_laser_first_animation": {
+          "type": "int",
+          "default": 49,
+          "min": 0,
+          "max": 1023
+        },
+        "ground_laser_count": {
+          "type": "int",
+          "default": 6,
+          "min": 1,
+          "max": 16
+        },
+        "ground_impact_animation": {
+          "type": "int",
+          "default": 55,
+          "min": 0,
+          "max": 1023
+        }
+      },
+      "doc": {
+        "ZS": "侵略者之王（MSA 7.13.0 INVADER KING 的 BattleAction_InvaderKing，按 MSD 原生侵略者类实现）：不步行。出击后移到敌方最前方单位前缘之后（近攻击距离 − 2）处，关卡预置时在原处，自高处落下（fall_animation），到地面时着地踏击（land_animation，按远距攻击组结算）；待机为 neutral_animation；近距攻击为 near_attack_animation；远距攻击为跃起（jump_animation）离开画面，移到同样的出场位置后落下并着地踏击；绝招为 special_start_animation → special_animation → special_end_animation，其中的天空激光（sky_laser_first_animation 起 sky_laser_count 个弹体脚本，身体段 sky_laser_body_animation）与地面激光（ground_laser_first_animation 起 ground_laser_count 个，落点效果 ground_impact_animation 之后的第二条按落点地面高度建立）以绝招组结算，判定为沿激光方向、半宽 16 的长条；击退为 knockback_animation（后滑，其中的反击激光 counter_laser_animation 射向前方最近的敌方单位所在处的地面，身体段 counter_laser_body_animation，落点放 counter_burst_animation）；受击为 flinch_animation、flinch_loop_animation；损毁为 death_animation，其中的攻击框按远距攻击组、伤害为远距攻击的 2/3、属性爆炸结算。落下、着地、跃起与绝招期间不击退。单位菜单的动作演示使用 menu_neutral_animation、near_attack_animation、menu_long_animation、menu_special_animation。动作切换在客体流程中执行。",
+        "EN": "Invader King (MSA 7.13.0 INVADER KING, BattleAction_InvaderKing, implemented on the native Invader class): the unit does not walk. After deployment it moves behind the front edge of the foremost enemy unit by the near attack range minus 2 (a stage-placed unit stays where it is), drops from above (fall_animation) and stomps on landing (land_animation, settled with the normal attack group); it idles with neutral_animation; the near attack is near_attack_animation; the far attack leaps off screen (jump_animation), moves to the same appearance position, drops and stomps; the special is special_start_animation -> special_animation -> special_end_animation, whose sky lasers (sky_laser_count bullet scripts from sky_laser_first_animation, body segment sky_laser_body_animation) and ground lasers (ground_laser_count scripts from ground_laser_first_animation; the second one after each ground_impact_animation is created at that point's ground height) are settled with the special group and hit along a strip of half width 16 in the beam direction; the knockback is knockback_animation (sliding back; its counter laser counter_laser_animation, body counter_laser_body_animation, aims at the ground under the nearest enemy ahead and leaves counter_burst_animation there); flinch_animation / flinch_loop_animation are the flinch; death_animation is the destruction, whose attack box is settled with the normal group at 2/3 of the normal attack damage as an explosion. The unit is not knocked back while dropping, landing, leaping or using the special. The unit menu action demo uses menu_neutral_animation, near_attack_animation, menu_long_animation and menu_special_animation. Animation changes run in the guest flow."
       }
     }
   ]

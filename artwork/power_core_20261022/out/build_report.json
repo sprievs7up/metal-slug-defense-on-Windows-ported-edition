@@ -1,0 +1,74 @@
+{
+  "stats": {
+    "removed_msa_only": {
+      "26": 1,
+      "24": 1
+    },
+    "sublayer_to_op11": 18,
+    "one_cycle": 1,
+    "sounds": {},
+    "beam_hits": 8
+  },
+  "colors": 16,
+  "obm_bytes": 66568,
+  "hit_bounds": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      -22,
+      -33,
+      41,
+      35,
+      0
+    ]
+  ],
+  "attack_bounds": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      -62,
+      -78,
+      126,
+      89,
+      7
+    ]
+  ],
+  "provisional": {
+    "builder": {
+      "ap": 90,
+      "shop_price": 50,
+      "available_from_start": true,
+      "production_interval_multiplier": [
+        1,
+        1
+      ]
+    },
+    "core": {
+      "hp_multiplier": [
+        1,
+        1
+      ]
+    }
+  },
+  "preview_ticks": {
+    "0": 80,
+    "2": 32,
+    "6": 80,
+    "7": 32,
+    "8": 3
+  },
+  "unit_ids": {
+    "s1xlv.power_core_builder": 1064,
+    "s1xlv.power_core": 1065
+  }
+}
