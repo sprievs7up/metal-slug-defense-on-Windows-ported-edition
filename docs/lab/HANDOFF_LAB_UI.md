@@ -300,3 +300,12 @@
 - 玩家反馈“打任务时卡住后被踢出游戏”。原生 `BattleResultScene` 构造时在游戏类型 1（地图与 EVENT 经典路由）、6（MISSION 模式）、9 把战斗结果 +0x10 写入 +0x130（Twitter 图标）与 +0x179（NEO GEO / More Apps 图标），每个胜利的 MISSION COMPLETE 画面左上都显示两个图标。Twitter 的按下范围为原生 x −40…184、y ≤ 144（1280×720 画布约 x 54–306、y 0–162），按下后 `onTouchEnded` 调用 Java `twitterIsTokenEnable`，本移植未实现，游戏停止。
 - 修复：钩子在写入 +0x179 的两个入口块（0x101d38bc、0x101d38be）先把 +0x130 写 0，并令写入 +0x179 的值为 0。绘制（`BattleResultScene::draw`）与触点只按这两个字节判断，图标不再显示，该区域的点击与画面其他位置相同（推进结算）。LAB（游戏类型 2）原本即为 0。
 - 验证（`verification/crash_report_20261018/`）：r66 下 MISSION 6 点 Twitter 图标与画布 (300,20) 均因 `twitterIsTokenEnable` 停止；r67 下 MISSION 6 与盛夏恐怖夜 1-1 的结算画面无两个图标，点 (180,125)、(300,20)、(180,238) 不停止，结算后分别回到任务列表与活动地图并记入奖励。回归（r67）：VS CPU 21 项、PVZ EVENT 评级 26 项、Hunter 16 项通过。
+
+## 2.26 AI 使用弹头车开关（2026-10-23，核心 r90，钩子版本 25）
+
+- 用户要求：LAB 与 VS CPU 新增选项，控制 AI / CPU 是否使用弹头车按钮。
+- 核心：原生 AUTO（`noukinAutoPlay` 0x1cbfe0）在等待计时之后先检查弹头车（0x1cc018，`isUseMetasuraHou` 成立即发动）。头部 +0x30 新增位 4（我方）/ 5（敌方）：置位时 `auto_slug` 跳过该发动，AI 照常检查绝招与出兵，充能保留。手动按钮、按键与 LAB 敌方弹头车指令经 `actionMetasuraHou`，不受该位影响；支援选项（`slug_action`）在发动时生效，AI 不发动时同样不触发。旧核心忽略该位。
+- 宿主：`lab.py` 新增开关 `player_ai_slug`、`enemy_ai_slug`（LAB，缺省开，计入 SWITCHES 与预设）与 `cpu_ai_slug`（VS CPU，缺省开），`apply_ai` 写入位 4/5；VS CPU 开战时 CPU 一方的 AI 弹头车取 `cpu_ai_slug`，玩家一方随 `vs_cpu.OVERRIDES` 关闭。界面：LAB 准备界面“控制”面板第 6 行“AI 彈頭車”（我方 / 敌方两个按钮，各行整体上移 6 像素，行距不变）；LAB 战斗中菜单在双方自动绝招之后各加一行（LAB 12 行）；VS CPU 准备界面“CPU 等級”下加“CPU 彈頭車”，规则说明下移。
+- 验证（`verification/lab_cpu_slug_20261023/`，隔离存档，墙钟前移，未计算 SHA-256；`driver_slug.py`）：第 100、500、900 帧把 AI 一方充能写为原生满值 100000。开关开启时 LAB 我方 / 敌方 AI 与 VS CPU（玩家 P1 / P2）均于第 135、521、920 帧发动；关闭时 1200–1400 帧内充能保持满值、未发动，AI 出兵 10 个；LAB 第 1300 帧以敌方弹头车指令手动发动正常。准备界面三个新按钮的实际点击（切换、写入设定文件、再点还原）与战斗中菜单切换头部位均通过。
+- 同步（AGENTS 第 2.2、2.3 节，`deploy_slug.py`，记录 `deployment_slug.json`、`sync_slug/`）：两个固定运行目录新增 r90（根 `build/` 与 `src/build/`，旧核心保留），覆盖 `src/lab_hooks.cpp`、两份 `core_runtime.json`、两份 `lab_runtime.py`、`lab.py`、`lab_ui.py`、`lab_prep.py`、`lab_menu.py`、`vs_cpu.py` 与本文件，覆盖前与修改前副本逐字节相同，同步后逐字节一致，保护文件不变，同步时无游戏进程。两目录自身程序（`MSD_VERIFY_ROOT`）LAB 敌方 AI 与 VS CPU（玩家 P2）关闭弹头车两场景通过。
+- 未覆盖：两机联机（常规联机双方 AI 关闭，该位不进入模拟）；实体窗口操作；N1 回滚未重跑（LAB 中开关缺省开启时头部 +0x30 与 r89 相同；VS CPU 中玩家一方的位 4/5 随 AI 关闭置位，该方本就不运行 AI）。

@@ -12,7 +12,8 @@ VERSUS 页第一张卡进入；准备界面与本地双人对战相同的设定�
 - 控制器固定按 P1 / P2 取得（开战时记下），不随底栏绑定改变，准备界面的设定因此对应到正确的一边。
 - 绝招光圈：玩家单位 P1 为原生蓝色、P2 为 LAB 红色渲染器；CPU 单位不显示（原生只为对象管理器的本地队伍 P1 设渲染器，
   玩家在 P2 时逐帧把 CPU 单位的光圈类型清零）。点击绝招就绪的本方单位由原生处理。
-- CPU 一方以所选段位自动出兵与施放绝招；玩家一方的 AI、自动绝招与完全控制关闭；支援选项保留接口，暂不在界面中显示。
+- CPU 一方以所选段位自动出兵与施放绝招，是否使用弹头车按钮由准备界面的开关决定（cpu_ai_slug，钩子版本 ≥ 25）；
+  玩家一方的 AI、自动绝招与完全控制关闭；支援选项保留接口，暂不在界面中显示。
 - 暂停菜单、MISSION COMPLETE / FAILED 演出、闸门与回到准备界面沿用 LAB。
 """
 import struct
@@ -24,7 +25,7 @@ PRESET_DIR = 'lab_presets_cpu'
 SIDES = ('p1', 'p2')
 # VS CPU 战斗期间由模式决定的 LAB 开关（开战时保存、离开战斗时还原，不写入设定文件）。
 OVERRIDES = ('full_control', 'player_ai', 'enemy_ai', 'player_auto_special', 'enemy_auto_special',
-             'player_support', 'enemy_support')
+             'player_ai_slug', 'enemy_ai_slug', 'player_support', 'enemy_support')
 SET_EFFECT = '_ZN10BattleUnit17setEffectRendererEP20BattleEffectRendererNS_18SpAttackEffectTypeE'
 
 

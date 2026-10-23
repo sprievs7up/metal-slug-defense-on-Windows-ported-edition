@@ -3,7 +3,7 @@
 
 内容：我方/敌方牌组（各 10 格，点格子选单位，±调整等级，一括等级、据点初始等级、复制对方、随机编队、清空）、
 地图（原生地图 1–3、里地图 1–3 与里地图扩展页的全部小关，按世界与小关选择，上方为原生缩略图，见 lab_stages.py）、
-完全控制与四个 AI 开关、优势设定（原生关卡强化级数，生命/攻击各 +20%/级）、预设 A/B/C（lab_presets/）
+完全控制与四个 AI 开关、双方 AI 使用弹头车、优势设定（原生关卡强化级数，生命/攻击各 +20%/级）、预设 A/B/C（lab_presets/）
 与战斗履历（lab_presets/history.jsonl）。全部设定保存到 lab_config.json；战斗使用的牌组与等级直接交给
 BattleController::entryUnit，不写存档。界面文字随游戏语言（lab_ui.TEXT）。
 """
@@ -331,6 +331,9 @@ class LabPrep:
         elif name == 'cpu_side':
             lab.config['cpu_side'] = args[0] if args[0] in ('p1', 'p2') else 'p1'
             self.changed()
+        elif name == 'cpu_slug':
+            lab.config['cpu_ai_slug'] = not lab.config.get('cpu_ai_slug', True)
+            self.changed()
         elif name == 'toggle':
             setattr(lab, args[0], not getattr(lab, args[0]))
             lab.config[args[0]] = getattr(lab, args[0])
@@ -633,8 +636,9 @@ class LabPrep:
         return T(p, 'cpu_you_deck' if side == self.human_side() else 'cpu_cpu_deck', slot)
 
     def draw_control(self, box, top, height):
-        """控制：LAB 为完全控制、双方 AI（开/关 + 段位选择器）、双方自动绝招；双人对战显示双方键位与对战规则
-        （完全控制、AI 与自动绝招在对战中关闭，设定保留）。两种模式由入口决定，此处不提供切换。"""
+        """控制：LAB 为完全控制、双方 AI（开/关 + 段位选择器）、双方自动绝招、双方 AI 使用弹头车；VS CPU 为玩家位置、
+        CPU 段位与 CPU 使用弹头车；双人对战显示双方键位与对战规则（完全控制、AI 与自动绝招在对战中关闭，设定保留）。
+        两种模式由入口决定，此处不提供切换。"""
         lab, c, p = self.lab, self.c, self.lab.p
         x, w = box
         c.panel((x, top, w, height), T(p, 'control'))
@@ -648,7 +652,11 @@ class LabPrep:
                          T(p, 'cpu_side_' + value), ('cpu_side', value), 14, 'on' if side == value else 'light')
             c.text((x + 14, top + 102), T(p, 'cpu_tier'), 15, WHITE, 'lm', 2, 90)
             self.tier_selector((x + 110, top + 88, w - 124, 28), 'cpu', True)
-            c.text((x + 14, top + 150), T(p, 'cpu_rules'), 12, GRAY, 'lm', 2, w - 28)
+            on = bool(lab.config.get('cpu_ai_slug', True))
+            c.text((x + 14, top + 146), T(p, 'cpu_slug'), 15, WHITE, 'lm', 2, 90)
+            c.button((x + 110, top + 132, (w - 124) // 2 - 4, 28), T(p, 'on' if on else 'off'), ('cpu_slug',), 16,
+                     'on' if on else 'off')
+            c.text((x + 14, top + 194), T(p, 'cpu_rules'), 12, GRAY, 'lm', 2, w - 28)
             return
         if lab.versus:
             keys = lab.versus_keys()
@@ -659,8 +667,17 @@ class LabPrep:
             c.text((x + 14, y + 134), T(p, 'vs_rules'), 12, GRAY, 'lm', 2, w - 28)
             return
         for index, attr in enumerate(('full_control', 'player_ai', 'player_auto_special', 'enemy_ai',
-                                      'enemy_auto_special')):
-            y = top + 44 + index * 34
+                                      'enemy_auto_special', 'ai_slug')):
+            y = top + 38 + index * 34
+            if attr == 'ai_slug':
+                # AI 是否使用弹头车按钮：我方、敌方各一个开关（排列同 VS CPU 的玩家位置）。
+                c.text((x + 14, y + 14), T(p, 'ai_slug'), 15, WHITE, 'lm', 2, 90)
+                for col, side in enumerate(('player', 'enemy')):
+                    on = getattr(lab, side + '_ai_slug')
+                    c.button((x + 110 + col * ((w - 124) // 2 + 4), y, (w - 124) // 2 - 4, 28),
+                             T(p, 'adv_' + side) + ' ' + T(p, 'on' if on else 'off'), ('toggle', side + '_ai_slug'), 14,
+                             'on' if on else 'off')
+                continue
             on = getattr(lab, attr)
             if attr in ('player_ai', 'enemy_ai'):
                 side = attr[:-3]

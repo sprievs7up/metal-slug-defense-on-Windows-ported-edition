@@ -864,10 +864,12 @@ void scene_base_dead(Context& c){                              // onEventBaseUni
 // 逐个本方单位检查绝招（0x1cc04e isSpAttack，就绪则 0x1cc426 发动）→ 0x1cc070 起为出兵等决策。
 // 宿主在任一开关开启时对该方 startAutoPlay；头部 +0x30 的禁用位决定跳过哪一部分：
 //   位 0/1：我方 自动出兵/自动绝招 关闭；位 2/3：敌方 自动出兵/自动绝招 关闭。“自动出兵”含弹头车与出兵决策。
+//   位 4/5（第 25 版）：我方/敌方 AI 不使用弹头车按钮（自动出兵开启时跳过 0x1cc018 的发动，充能保留，按钮与按键照常可用）。
 constexpr uint32_t FLAG_AUTO_SPLIT=16u,AUTO_DISABLE=H+0x30u;
 uint32_t auto_disabled(Context& c,uint32_t controller){
     uint32_t bits=rd<uint32_t>(c,AUTO_DISABLE);
-    return controller==rd<uint32_t>(c,ENEMY_CONTROLLER)?(bits>>2)&3u:bits&3u;   // 位 0 出兵，位 1 绝招
+    bool enemy=controller==rd<uint32_t>(c,ENEMY_CONTROLLER);
+    return (enemy?(bits>>2)&3u:bits&3u)|((bits>>(enemy?5:4))&1u)<<2;   // 位 0 出兵，位 1 绝招，位 2 弹头车
 }
 // getAutoPlay 的返回值参与底栏的手动出兵许可与格子显示。自动绝招单独开启时，
 // 底层 controller+1052 仍驱动 update 中的 noukinAutoPlay；对手动输入与 UI 返回关闭出兵 AUTO。
@@ -880,7 +882,7 @@ void auto_query(Context& c){                                  // 0x1cba34：r0=�
     old_auto_query(c);
 }
 void auto_slug(Context& c){                                    // 0x1cc018：r0=isUseMetasuraHou，r4=控制器
-    if(enabled(c,FLAG_AUTO_SPLIT) && (auto_disabled(c,c.r[4])&1u)){c.pc=0x101cc02bu;return;}
+    if(enabled(c,FLAG_AUTO_SPLIT) && (auto_disabled(c,c.r[4])&5u)){c.pc=0x101cc02bu;return;}
     old_auto_slug(c);
 }
 void auto_special(Context& c){                                 // 0x1cc04e：r5=单位
@@ -1883,7 +1885,7 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     if(dropped){*dropped=net_action_dropped;net_action_dropped=0;}
     return n;
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 24u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 25u;}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;

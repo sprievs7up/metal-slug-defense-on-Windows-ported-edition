@@ -34,7 +34,8 @@ class LabMenu:
     def rows(self):
         lab, p = self.lab, self.lab.p
         rows = [] if lab.vs_battle() or lab.cpu_battle() else [(T(p, name), getattr(lab, name), ('toggle', name)) for name in
-                ('full_control', 'player_ai', 'player_auto_special', 'enemy_ai', 'enemy_auto_special')]
+                ('full_control', 'player_ai', 'player_auto_special', 'player_ai_slug', 'enemy_ai', 'enemy_auto_special',
+                 'enemy_ai_slug')]
         app = p.app_instance()
         rows += [(T(p, name), bool(p.word(app + offset)), ('audio', offset)) for name, offset in AUDIO_ROWS]
         return rows + [(T(p, 'restart'), None, ('restart',)), (T(p, 'exit_lab'), None, ('exit',)),
@@ -128,7 +129,7 @@ class LabMenu:
 
     @staticmethod
     def panel_h(rows):
-        """面板高度随行数（LAB 10 行、双人对战 5 行）。"""
+        """面板高度随行数（LAB 12 行、双人对战 5 行）。"""
         return ROW_TOP + len(rows) * ROW_H + 40
 
     def render(self, rows):

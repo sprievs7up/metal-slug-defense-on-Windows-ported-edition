@@ -7,7 +7,7 @@
 - F8：完全控制模式开/关（宿主层方案 B：据点满级、AP 每帧补满、出兵冷却每帧清零）。
 - F5：退出 LAB 战斗并返回菜单（联机模式下原生暂停/脱离不可用，正式版并入 LAB 战斗菜单）。
 - F4：敌方 AI 自动出兵 开/关；F3：我方 AI 自动出兵 开/关。自动绝招为独立开关（战斗中菜单，钩子版本 ≥ 4）。
-- Esc：战斗中菜单（lab_menu.py，打开期间暂停战斗）：完全控制、四个 AI 开关、重新开始、退出、继续。
+- Esc：战斗中菜单（lab_menu.py，打开期间暂停战斗）：完全控制、四个 AI 开关与双方 AI 使用弹头车、重新开始、退出、继续。
 - 存档隔离（T9）：LAB 期间原生存档写入改写到内存，离开时还原内存中的主存档映像。
 - 战斗结束或进入结算场景时直接返回主菜单，不进入 Wi-Fi 结算。
 
@@ -37,7 +37,9 @@ DEFAULT_CONFIG = {
     'player_ai': False,            # 我方 AI 自动出兵（含弹头车）
     'enemy_auto_special': False,   # 敌方自动释放绝招
     'player_auto_special': False,  # 我方自动释放绝招
-    'player_support': 0,           # 支援（弹头车按钮效果）：见 SUPPORT_OPTIONS
+    'enemy_ai_slug': True,         # 敌方 AI 使用弹头车按钮（关闭时 AI 照常出兵，不发动弹头车；钩子版本 ≥ 25）
+    'player_ai_slug': True,        # 我方 AI 使用弹头车按钮
+    'player_support': 0,          # 支援（弹头车按钮效果）：见 SUPPORT_OPTIONS
     'enemy_support': 0,
     'player_ai_tier': 'SILVER',    # AI 段位（AI_TIERS 名称），我方与敌方各自独立
     'enemy_ai_tier': 'SILVER',
@@ -47,6 +49,7 @@ DEFAULT_CONFIG = {
     'versus_pad_single': 'p2',     # 只连接一只手柄时分配给的玩家
     'cpu_side': 'p1',              # VS CPU：玩家所在一边（p1 左 / p2 右），CPU 在另一边（vs_cpu.py）
     'cpu_ai_tier': 'SILVER',          # VS CPU：CPU 的 AI 段位
+    'cpu_ai_slug': True,              # VS CPU：CPU 使用弹头车按钮
 }
 # 双人对战默认键位（用户 2026-10-08 修订）：玩家1（P1）为左半区，玩家2（P2）为右半区。
 # 出兵、绝招、AP、弹头车依次为 R T Y U 与 M , . /（同一行相邻四键）。
@@ -71,7 +74,7 @@ LAB_FLAG_ENEMY_GAUGE = 1
 LAB_FLAG_ENEMY_TOUCH = 2         # 点击敌方单位释放绝招（lab_hooks 版本 ≥ 2）
 LAB_FLAG_SPLIT_BAR = 4           # 底栏左右分栏：我方 AP/弹头车/3 格 | 敌方 3 格/弹头车/AP（版本 ≥ 3）
 LAB_FLAG_AUTO_SPLIT = 16         # AI 自动出兵与自动绝招分开控制（版本 ≥ 4）
-LAB_AUTO_DISABLE = 0x30          # 头部偏移：位 0/1 我方 出兵/绝招 关闭，位 2/3 敌方 出兵/绝招 关闭
+LAB_AUTO_DISABLE = 0x30          # 头部偏移：位 0/1 我方 出兵/绝招 关闭，位 2/3 敌方 出兵/绝招 关闭，位 4/5 我方/敌方 AI 不用弹头车（版本 ≥ 25）
 LAB_FLAG_SUPPORT = 32            # 支援：弹头车按钮可换为其他效果（版本 ≥ 5）
 LAB_SUPPORT = 0x34               # 头部偏移：低字节我方、次字节敌方的支援选项
 LAB_SUPPORT_COUNT = 0x38         # 头部偏移：非弹头车支援的发动计数（原生累加）
@@ -120,7 +123,7 @@ AUDIO_WORDS = (0x3d5c, 0x3d60)   # 音乐、音效开关（audio_options.MUSIC /
 AUDIO_HEADER, AUDIO_MAGIC = 0x1ffea000, 0x41554431   # audio_options 共享头：+4 为修订计数
 PRESET_DIR = 'lab_presets'
 SWITCHES = ('full_control', 'enemy_ai', 'player_ai', 'enemy_auto_special', 'player_auto_special',
-            'player_support', 'enemy_support')
+            'enemy_ai_slug', 'player_ai_slug', 'player_support', 'enemy_support')
 # 双人对战与 LAB 互不切换（用户 2026-10-08 要求）：模式只由入口决定（VERSUS 页本地对战为双人对战，LAB 图标与 F7 为 LAB），
 # 不作为开关保存，预设与设定文件不改变模式。
 PB = '_ZN26BattleControllerPlayerBase'
@@ -443,7 +446,8 @@ class Lab:
             self.vs_cursor = [0, 0]
             self.vs_camera.reset()
         if self.cpu:
-            # VS CPU：完全控制、玩家一方 AI 与自动绝招、支援关闭；CPU 一方以所选段位自动出兵与施放绝招。
+            # VS CPU：完全控制、玩家一方 AI 与自动绝招、支援关闭；CPU 一方以所选段位自动出兵与施放绝招，
+            # 是否使用弹头车按钮按准备界面的设定（cpu_ai_slug）。
             import vs_cpu
             self.cpu_saved = {name: getattr(self, name) for name in vs_cpu.OVERRIDES}
             human = vs_cpu.side_index(self.config)
@@ -452,6 +456,7 @@ class Lab:
             cpu_side = ('player', 'enemy')[1 - human]
             setattr(self, cpu_side + '_ai', True)
             setattr(self, cpu_side + '_auto_special', True)
+            setattr(self, cpu_side + '_ai_slug', bool(self.config.get('cpu_ai_slug', True)))
             self.config[cpu_side + '_ai_tier'] = self.config.get('cpu_ai_tier', 'SILVER')
         # 先完成全部校验与查表，确认无误后才改动原生场景状态。
         configured = None
@@ -1232,15 +1237,18 @@ class Lab:
 
     def apply_ai(self, mine, enemy):
         """原生 AUTO 同时负责出兵（含弹头车）与绝招；任一开关开启即启动该方 AUTO，
-        关闭的部分由原生钩子跳过（头部 +0x30，版本 ≥ 4）。旧核心下两项随“自动出兵”一起开关。"""
+        关闭的部分由原生钩子跳过（头部 +0x30，版本 ≥ 4）。旧核心下两项随“自动出兵”一起开关。
+        AI 使用弹头车按钮关闭时置位 4（我方）/ 5（敌方），自动出兵照常（版本 ≥ 25，旧核心忽略该位）。"""
         p = self.p
         split = self.native_hooks >= 4
         disable = 0
-        for shift, controller, deploy, special in ((0, mine, self.player_ai, self.player_auto_special),
-                                                   (2, enemy, self.enemy_ai, self.enemy_auto_special)):
+        for shift, controller, deploy, special, slug in (
+                (0, mine, self.player_ai, self.player_auto_special, self.player_ai_slug),
+                (2, enemy, self.enemy_ai, self.enemy_auto_special, self.enemy_ai_slug)):
             enabled = (deploy or special) if split else deploy
             p.call(PB + ('13startAutoPlayEv' if enabled else '13resetAutoPlayEv'), controller)
             disable |= ((0 if deploy else 1) | (0 if special else 2)) << shift
+            disable |= (0 if slug else 16) << (shift // 2)
         p.put(LAB_HEADER + LAB_AUTO_DISABLE, disable if split else 0)
         self.apply_ai_tiers(mine, enemy)
 
