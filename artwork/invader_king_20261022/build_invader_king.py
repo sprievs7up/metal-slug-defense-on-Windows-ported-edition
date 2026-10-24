@@ -64,6 +64,10 @@ MSA_NOOP = set(range(24, 34)) | set(range(47, 59)) | {34, 35, 38}
 BREATH_SLOT, BREATH_BOX, BREATH_SOUND = 10, 2, 643
 BEAM_BODY = {34: (41, 41)} | {s: (44, 41) for s in range(35, 41)}   # 激光脚本 → (身体段脚本, 头部长度原画像素)
 MENU_SLOT, MENU_BODY, MENU_SCALE, MENU_SHIFT = 0, 22, 40, 36   # 编队页缩小（追加脚本 90：子层 22 的副本，91：槽 0 帧的副本）
+# 受击框（2026-10-23，AGENTS 第 250 节）：MSD BattleObject::setAnimationID_SkipUpdate 切换动作时清除受击框，MSA 沿用上一动作的受击框。
+# 下列战斗动作的 MSA 脚本没有 op3（MSA 中沿用待机 6 的受击框 1），在 MSD 中播放期间本单位打不到；开头补 op3 1。损毁 18 不设（同原生）。
+HIT_RECT_SLOTS = (7, 8, 11, 12, 13, 16, 19, 20)
+HIT_RECT = 1
 SOUNDS = {   # MSA SoundID → (本体音效键, MSA 文件, 音量 m_sound_data)
     643: ('s1xlv.iking_breath', 'cle_attack2.msa', 60),
     1391: ('s1xlv.iking_death_voice', 'shinrya_vo_dth.msa', 120),
@@ -137,6 +141,10 @@ def transform(record):
             at = next(i for i, x in enumerate(out) if x['opcode'] in (0, 1))
             out.insert(at, {'opcode': 11, 'values': [body, 1, 0, head]})
             stats['beam_bodies'] += 1
+        if slot in HIT_RECT_SLOTS:
+            assert not any(x['opcode'] == 3 for x in out), slot
+            out.insert(0, {'opcode': 3, 'values': [HIT_RECT]})
+            stats['hit_rect_added'] = stats.get('hit_rect_added', 0) + 1
         animations[str(slot)] = out
     assert stats['breath_reopens'] == 5 and stats['beam_bodies'] == 7, stats
     # 编队页：菜单待机改为空根层挂两个缩放副本（原槽 0 的帧、子层 22），右移 MENU_SHIFT

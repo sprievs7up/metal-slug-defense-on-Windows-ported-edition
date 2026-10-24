@@ -10,9 +10,9 @@ This edition adds keyboard controls and a **16:9 layout**. Expanded backgrounds 
 
 **Stamina regenerates at 1 point per second.** The original Android version regenerates 1 point per minute.
 
-**Update 26.10.6**
+**Update 26.10.7**
 
-- All Metal Slug 6 missions and units have now been added. Come and play!
+- Improved the frame rate of the animations of the Metal Slug Advance protagonists WALTER RIAN and TYRA ELSON. In-between frames were added to the walking, normal attack, special attack, melee and death animations of WALTER RIAN and to the walking, normal attack, melee and death animations of TYRA ELSON.
 
 Earlier updates are listed in [Update history](#update-history).
 
@@ -72,6 +72,10 @@ Worlds and stages, community units, custom EVENTs, independent scenes and music 
 Mods go in `mods/`, one folder per mod; the format is described in [mods/README.md](mods/README.md). Enable or disable them under MODS in the title-screen OPTION menu; changes take effect after the game restarts. Unit behaviors available to mods are listed in [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md).
 
 ### Update history
+
+**Update 26.10.6**
+
+- All Metal Slug 6 missions and units have now been added. Come and play!
 
 **Update 26.10.5**
 
@@ -154,9 +158,9 @@ Esta edición añade controles de teclado y un **formato 16:9**. Los fondos ampl
 
 **La energía (stamina) se recupera a 1 punto por segundo.** La versión original de Android recupera 1 punto por minuto.
 
-**Actualización 26.10.6**
+**Actualización 26.10.7**
 
-- Ya están disponibles todas las misiones y unidades de Metal Slug 6. ¡Ven a jugarlas!
+- Se mejoró la frecuencia de fotogramas de las animaciones de los protagonistas de Metal Slug Advance, WALTER RIAN y TYRA ELSON. Se añadieron fotogramas intermedios a las animaciones de avance, ataque normal, ataque especial, cuerpo a cuerpo y muerte de WALTER RIAN, y a las de avance, ataque normal, cuerpo a cuerpo y muerte de TYRA ELSON.
 
 Las actualizaciones anteriores se encuentran en [Historial de actualizaciones](#historial-de-actualizaciones).
 
@@ -216,6 +220,10 @@ Los mundos y etapas, las unidades comunitarias, los EVENT propios, y los escenar
 Los mods se colocan en `mods/`, una carpeta por mod; el formato se describe en [mods/README.md](mods/README.md). Actívalos o desactívalos en MODS, dentro del menú OPTION de la pantalla de título; los cambios se aplican al reiniciar el juego. Los comportamientos de unidad disponibles para los mods se enumeran en [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md).
 
 ### Historial de actualizaciones
+
+**Actualización 26.10.6**
+
+- Ya están disponibles todas las misiones y unidades de Metal Slug 6. ¡Ven a jugarlas!
 
 **Actualización 26.10.5**
 
@@ -298,9 +306,9 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 
 **体力每秒恢复 1 点。** 安卓原版的恢复速率为每分钟 1 点。
 
-**26.10.6 更新**
+**26.10.7 更新**
 
-- 现在《合金弹头6》的全部关卡和单位已经更新完毕，快来进行游玩吧
+- 优化了《合金弹头 Advance》中主角（WALTER RIAN、TYRA ELSON）的帧率动画：WALTER RIAN 的前进、普通攻击、绝招、近战与死亡动作，TYRA ELSON 的前进、普通攻击、近战与死亡动作增加了中间帧
 
 此前的更新见[更新记录](#更新记录)。
 
@@ -360,6 +368,10 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 模组放在 `mods/` 下，每个模组一个文件夹，格式见 [mods/README.md](mods/README.md)。在标题画面 OPTION 的「MOD 設定」中启用或停用，重启游戏后生效。模组可调用的单位行为见 [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md)。
 
 ### 更新记录
+
+**26.10.6 更新**
+
+- 现在《合金弹头6》的全部关卡和单位已经更新完毕，快来进行游玩吧
 
 **26.10.5 更新**
 

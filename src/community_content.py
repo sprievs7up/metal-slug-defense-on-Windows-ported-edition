@@ -116,6 +116,20 @@ class AssetDims(dict):
         with (stock_dir()/name).open('rb') as stream:head=stream.read(8)
         self[name]=struct.unpack_from('<HH',head,4);return self[name]
 
+def load_stock_sprites(root,value):
+    """content.json 的 stock_sprites（原版单位外观替换，2026-10-23）：{"原版 UnitID": "替换文件.json"}。
+    替换文件含 textures（原版图集名或本体资源名）、sprite_descriptor（以原版描述符为底本、在后面追加矩形与帧）
+    与 animations（改写的脚本，其余脚本沿用原版）。返回 {UnitID: 替换定义}。"""
+    if not isinstance(value,dict):raise ValueError('Invalid stock sprite table')
+    result={}
+    for key,filename in value.items():
+        if not isinstance(key,str) or not key.isdigit() or not 1<=int(key)<ORIGINAL_UNITS:raise ValueError('Invalid stock sprite unit: '+str(key))
+        if not isinstance(filename,str) or Path(filename).name!=filename or not filename.endswith('.json'):raise ValueError('Invalid stock sprite file: '+str(filename))
+        spec=json.loads((root/filename).read_text(encoding='utf-8'))
+        if not isinstance(spec,dict) or set(spec)!={'textures','sprite_descriptor','animations'} or not isinstance(spec['textures'],list) or not isinstance(spec['sprite_descriptor'],str) or not isinstance(spec['animations'],dict):raise ValueError('Invalid stock sprite definition: '+filename)
+        result[int(key)]=spec
+    return result
+
 def load_manifest(root):
     """读取内容索引 content.json（schema 3）与 units/ 逐单位文件，组装为既有 schema 2 结构的内存清单。
 
@@ -167,6 +181,7 @@ def load_manifest(root):
             if isinstance(value.get('localization'),dict):value=dict(value,localization=content_locale.fill(value['localization'],'pack text'))
             slots=manifest['units'][-1]['id']-UNIT_ID_BASE+1
             value=dict(value,shop_id=LEGACY_PACK_SHOP_ID if slots<=64 else 512+slots)
+        if name=='stock_sprites':value=load_stock_sprites(root,value)
         manifest[name]=value
     return manifest,body,mods
 
@@ -269,6 +284,37 @@ def check_references(u,by_key):
     thrown=u.get('throw_child_key')
     if thrown is not None and (thrown not in by_key or not by_key[thrown].get('internal_only') or by_key[thrown]['base_id']!=160 or thrown==u['key']):raise ValueError('Invalid thrown child reference')
 
+def check_sprite_descriptor(u,dims,descriptor_path):
+    """精灵描述符与动作脚本的检查（社区单位与原版单位外观替换共用）；u 含 textures、sprite_descriptor、animations；无描述符时返回 None。"""
+    filename=u.get('sprite_descriptor')
+    if not filename:return None
+    if Path(filename).name!=filename or not filename.endswith('.json'):raise ValueError('Invalid sprite descriptor path')
+    desc=json.loads(descriptor_path(filename).read_text(encoding='utf-8'))
+    rects=desc['rects'];frames=desc['frames'];textures=u.get('textures',[u.get('texture')])
+    # 脚本数上限 1024（2026-10-22 蜈蚣长老 284 个；原生描述符中 BrainRobot 为 261 个，原生不按字节存放脚本号）
+    if not 1<=len(rects)<=8192 or not 1<=len(frames)<=65536 or not 1<=desc['script_count']<=1024:raise ValueError('Invalid sprite descriptor capacity')
+    for x,y,w,h,ax,ay,flags,page in rects:
+        if any(not isinstance(v,int) or not -32768<=v<=32767 for v in (x,y,w,h,ax,ay,flags,page)) or not 0<=page<len(textures):raise ValueError('Invalid sprite rectangle')
+        width,height=dims[textures[page]]
+        if min(x,y,w,h)<0 or x+w>width or y+h>height:raise ValueError('Sprite rectangle outside its atlas')
+    starts=set();pos=0
+    while pos<len(frames):
+        starts.add(pos);count=frames[pos]
+        if not isinstance(count,int) or not 0<=count<=64 or pos+count>=len(frames) or any(not isinstance(v,int) or not 0<=v<len(rects) for v in frames[pos+1:pos+1+count]):raise ValueError('Invalid sprite frame')
+        pos+=count+1
+    for key,commands in u['animations'].items():
+        if not 0<=int(key)<desc['script_count']:raise ValueError('Animation index outside sprite descriptor')
+        for cmd in commands:
+            op,values=cmd['opcode'],cmd['values']
+            if op==0 and values[0]!=-1 and values[0] not in starts:raise ValueError('Animation references invalid frame')
+            # op12 也可写共用效果编号 0xff00–0xfffe（原生 addEffectImpl：编号 ≥ 0xff00 时取共用效果 UnitID 402，动画为低 8 位；2026-10-20）。
+            if op==12 and 0xff00<=values[0]<=0xfffe:continue
+            if op in (10,11,12,22) and not 0<=values[0]<desc['script_count']:raise ValueError('Animation references invalid child script')
+            if op in (3,4) and not -1<=values[0]<len(desc['hit_bounds' if op==3 else 'attack_bounds']):raise ValueError('Animation references invalid collision rectangle')
+    for field in ('hit_bounds','attack_bounds'):
+        if not 1<=len(desc[field])<=256 or any(len(r)!=5 or any(not isinstance(v,int) or not -2147483648<=v<=2147483647 for v in r) for r in desc[field]):raise ValueError('Invalid sprite collision bounds')
+    return desc
+
 def check_unit_assets(u,dims,descriptor_path,is_stock):
     """纹理、图标矩形与精灵描述符检查。dims：资源名 → (宽, 高)（含引用的原版图集）；descriptor_path：描述符文件名 → 路径；
     is_stock：原版资源文件是否存在。返回精灵描述符（无则 None）。"""
@@ -280,32 +326,7 @@ def check_unit_assets(u,dims,descriptor_path,is_stock):
     width,height=dims[icon_atlas];x,y,w,h=u['icon']['rect']
     if x+w>width or y+h>height:raise ValueError('Icon rectangle outside its atlas')
     filename=u.get('sprite_descriptor')
-    if filename:
-        if Path(filename).name!=filename or not filename.endswith('.json'):raise ValueError('Invalid sprite descriptor path')
-        desc=json.loads(descriptor_path(filename).read_text(encoding='utf-8'))
-        rects=desc['rects'];frames=desc['frames'];textures=u.get('textures',[u.get('texture')])
-        # 脚本数上限 1024（2026-10-22 蜈蚣长老 284 个；原生描述符中 BrainRobot 为 261 个，原生不按字节存放脚本号）
-        if not 1<=len(rects)<=8192 or not 1<=len(frames)<=65536 or not 1<=desc['script_count']<=1024:raise ValueError('Invalid sprite descriptor capacity')
-        for x,y,w,h,ax,ay,flags,page in rects:
-            if any(not isinstance(v,int) or not -32768<=v<=32767 for v in (x,y,w,h,ax,ay,flags,page)) or not 0<=page<len(textures):raise ValueError('Invalid sprite rectangle')
-            width,height=dims[textures[page]]
-            if min(x,y,w,h)<0 or x+w>width or y+h>height:raise ValueError('Sprite rectangle outside its atlas')
-        starts=set();pos=0
-        while pos<len(frames):
-            starts.add(pos);count=frames[pos]
-            if not isinstance(count,int) or not 0<=count<=64 or pos+count>=len(frames) or any(not isinstance(v,int) or not 0<=v<len(rects) for v in frames[pos+1:pos+1+count]):raise ValueError('Invalid sprite frame')
-            pos+=count+1
-        for key,commands in u['animations'].items():
-            if not 0<=int(key)<desc['script_count']:raise ValueError('Animation index outside sprite descriptor')
-            for cmd in commands:
-                op,values=cmd['opcode'],cmd['values']
-                if op==0 and values[0]!=-1 and values[0] not in starts:raise ValueError('Animation references invalid frame')
-                # op12 也可写共用效果编号 0xff00–0xfffe（原生 addEffectImpl：编号 ≥ 0xff00 时取共用效果 UnitID 402，动画为低 8 位；2026-10-20）。
-                if op==12 and 0xff00<=values[0]<=0xfffe:continue
-                if op in (10,11,12,22) and not 0<=values[0]<desc['script_count']:raise ValueError('Animation references invalid child script')
-                if op in (3,4) and not -1<=values[0]<len(desc['hit_bounds' if op==3 else 'attack_bounds']):raise ValueError('Animation references invalid collision rectangle')
-        for field in ('hit_bounds','attack_bounds'):
-            if not 1<=len(desc[field])<=256 or any(len(r)!=5 or any(not isinstance(v,int) or not -2147483648<=v<=2147483647 for v in r) for r in desc[field]):raise ValueError('Invalid sprite collision bounds')
+    desc=check_sprite_descriptor(u,dims,descriptor_path)
     flame=u.get('flame_interrupt')
     if flame and (flame['alternate_knockback_animation']+5>desc['script_count'] or any(v>=desc['script_count'] for v in flame['ending_bullet_animations'])):raise ValueError('Flame interruption animation outside sprite descriptor')
     zombie=u.get('zombie_spec') or {}
@@ -385,6 +406,14 @@ class CommunityContent:
         for u in self.units:
             desc=check_unit_assets(u,self.asset_dimensions,self.descriptor_path,stock_asset_exists)
             if desc:self.sprite_descriptors[u['key']]=desc
+        # 原版单位外观替换（2026-10-23）：图集须为原版资源或本体资源，描述符为必需项。
+        self.stock_sprites={}
+        for uid,spec in self.manifest.get('stock_sprites',{}).items():
+            for name in spec['textures']:
+                if name not in self.asset_dimensions and not stock_asset_exists(name):raise ValueError('Unregistered stock sprite texture: '+str(name))
+            desc=check_sprite_descriptor(spec,self.asset_dimensions,self.descriptor_path)
+            if not desc:raise ValueError('Stock sprite requires a sprite descriptor')
+            self.stock_sprites[uid]=(spec,desc)
         from campaign_catalog import merge_scenes
         merge_scenes(self)
         import community_maps
@@ -558,6 +587,33 @@ class CommunityContent:
         if not hits:raise RuntimeError('Unresolved native global: '+hex(old))
         return hits
 
+    def sprite_header(self,descriptor,textures,desc,animations):
+        """以原生描述符 descriptor 为底本建立精灵描述符头（社区单位与原版单位外观替换共用），返回头地址。
+        desc 为精灵描述符（无则沿用原生矩形、帧与脚本数，textures 须与原生图集数相同）；animations 为改写的脚本。"""
+        p=self.p;header=bytearray(p.read(descriptor,32))
+        image_count=len(textures) if desc else p.word(descriptor)
+        if not 1<=image_count<=16 or len(textures)!=image_count:raise ValueError('Texture bindings must match the unit atlas count')
+        struct.pack_into('<I',header,0,image_count)
+        struct.pack_into('<I',header,4,self.alloc(struct.pack('<'+'I'*image_count,*[p.cstr(t) for t in textures])))
+        count=p.word(descriptor+28);scripts=list(struct.unpack('<'+'I'*count,p.read(p.word(descriptor+24),count*4)))
+        if desc:
+            raw_rects=b''.join(struct.pack('<8h',*r) for r in desc['rects'])
+            # 原生绘制函数按 uint32_t 读取帧条目；矩形描述符仍采用 int16_t。
+            raw_frames=struct.pack('<'+'I'*len(desc['frames']),*desc['frames'])
+            raw_hits=b''.join(struct.pack('<5i',*r) for r in desc['hit_bounds'])
+            raw_attacks=b''.join(struct.pack('<5i',*r) for r in desc['attack_bounds'])
+            blob=self.alloc(raw_rects+raw_frames+raw_hits+raw_attacks)
+            struct.pack_into('<4I',header,8,blob,blob+len(raw_rects),blob+len(raw_rects)+len(raw_frames),blob+len(raw_rects)+len(raw_frames)+len(raw_hits))
+            count=desc['script_count']
+            scripts=(scripts+[self.alloc(struct.pack('<i',5))]*max(0,count-len(scripts)))[:count]
+            struct.pack_into('<I',header,28,count)
+        for key,commands in animations.items():
+            if not 0<=int(key)<count:raise ValueError('Animation index outside base unit descriptor')
+            values=[v for cmd in content_sounds.resolve_animation(commands,self.sound_ids) for v in [cmd['opcode'],*cmd['values']]]
+            scripts[int(key)]=self.alloc(struct.pack('<'+'i'*len(values),*values))
+        struct.pack_into('<I',header,24,self.alloc(struct.pack('<'+'I'*count,*scripts)))
+        return self.alloc(header)
+
     def install(self):
         # n 为槽位数（UnitID 1024 至最大已登记 ID）；原生记录、数据行、描述符与各逐单位表均按槽位定址。
         p=self.p;n=self.slot_count;info=p.call('_ZN10BattleInfo11getInstanceEv');db=p.word(info)
@@ -568,6 +624,9 @@ class CommunityContent:
         for uid,fields in stock_patches.items():
             row=memoryview(rows)[uid*0x390:(uid+1)*0x390];patch_stock_row(row,fields)
         table=0x10922f28;original_images=p.read(table,423*8);images=bytearray(original_images)
+        # 原版单位外观替换（stock_sprites）：以原生描述符为底本追加矩形与帧、改写指定脚本，写入该 UnitID 的图像表项（朝向不变）。
+        for uid,(spec,desc) in self.stock_sprites.items():
+            struct.pack_into('<I',images,uid*8,self.sprite_header(p.word(table+uid*8),spec['textures'],desc,spec['animations']))
         actions_global=0x109373f4;actions=p.word(actions_global);action_rows=bytearray(p.read(actions,400*4))+bytearray((UNIT_ID_BASE-400)*4)
         menu=(p.word(0x101652d0)+0x101652b4+0x818)&0xffffffff
         menu_rows={}
@@ -701,32 +760,9 @@ class CommunityContent:
                 # 原生保留、无原版单位使用的动作类（钢铁哨兵）：动作对象只含虚表指针。
                 action=self.alloc(struct.pack('<I',p.symbols[NATIVE_ACTIONS[u['native_action']]]+8))
             action_rows+=struct.pack('<I',action)
-            descriptor=p.word(table+bid*8);header=bytearray(p.read(descriptor,32))
-            textures=u.get('textures',[u.get('texture')]);image_count=p.word(descriptor)
-            desc=self.sprite_descriptors.get(u['key'])
-            if desc:image_count=len(textures)
-            if not 1<=image_count<=16 or len(textures)!=image_count:raise ValueError('Texture bindings must match the unit atlas count')
-            struct.pack_into('<I',header,0,image_count)
-            struct.pack_into('<I',header,4,self.alloc(struct.pack('<'+'I'*image_count,*[p.cstr(t) for t in textures])))
-            count=p.word(descriptor+28);scripts=list(struct.unpack('<'+'I'*count,p.read(p.word(descriptor+24),count*4)))
-            if desc:
-                raw_rects=b''.join(struct.pack('<8h',*r) for r in desc['rects'])
-                # 原生绘制函数按 uint32_t 读取帧条目；矩形描述符仍采用 int16_t。
-                raw_frames=struct.pack('<'+'I'*len(desc['frames']),*desc['frames'])
-                raw_hits=b''.join(struct.pack('<5i',*r) for r in desc['hit_bounds'])
-                raw_attacks=b''.join(struct.pack('<5i',*r) for r in desc['attack_bounds'])
-                blob=self.alloc(raw_rects+raw_frames+raw_hits+raw_attacks)
-                struct.pack_into('<4I',header,8,blob,blob+len(raw_rects),blob+len(raw_rects)+len(raw_frames),blob+len(raw_rects)+len(raw_frames)+len(raw_hits))
-                count=desc['script_count']
-                scripts=(scripts+[self.alloc(struct.pack('<i',5))]*max(0,count-len(scripts)))[:count]
-                struct.pack_into('<I',header,28,count)
-            for key,commands in u['animations'].items():
-                if not 0<=int(key)<count:raise ValueError('Animation index outside base unit descriptor')
-                values=[v for cmd in content_sounds.resolve_animation(commands,self.sound_ids) for v in [cmd['opcode'],*cmd['values']]]
-                scripts[int(key)]=self.alloc(struct.pack('<'+'i'*len(values),*values))
-            struct.pack_into('<I',header,24,self.alloc(struct.pack('<'+'I'*count,*scripts)))
+            header=self.sprite_header(p.word(table+bid*8),u.get('textures',[u.get('texture')]),self.sprite_descriptors.get(u['key']),u['animations'])
             # 图像表第 2 字为原画朝向（90 朝右、270 朝左，原生按此决定是否镜像）；默认取基准单位，单位文件可用 image_direction 指定。
-            images+=struct.pack('<II',self.alloc(header),u.get('image_direction',p.word(table+bid*8+4)))
+            images+=struct.pack('<II',header,u.get('image_direction',p.word(table+bid*8+4)))
             menu_bid=u.get('menu_reference_id',bid)
             menurow=p.read(menu_rows[menu_bid],20)
             # 原生修筑单位分别登记生产入口与完成箱体的界面预览标识。

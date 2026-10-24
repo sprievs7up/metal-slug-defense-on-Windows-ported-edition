@@ -82,6 +82,10 @@
 
 修筑类单位（工兵，原生动作类 `BattleAction_Kouhei`）的生命方式（2026-10-20 起，核心 r71）：`content.json` 的 `engineer_hp` 为缺省方式，`{"mode": "hp", "percent": 5, "minimum": 300, "units": {}}` 表示工兵生命 = max(300, 修筑对象同等级生命 × 5%)，受击后生命仍大于 0 时继续行进或修筑，耗尽时按原生撤退；`"mode": "hit_and_run"` 为原生的一击即跑（生命 1、受击即撤退）。原版工兵在 `units` 中按 UnitID 单独设定（例如 `"5": {"mode": "hit_and_run"}`），本体与模组单位在单位文件写同格式的 `engineer_hp`（不含 `units`）；单独设定可只写 `percent`（1–100）或 `minimum`（1–1000000），方式沿用缺省。只适用于动作类为 `BattleAction_Kouhei` 的单位（原版 24 个，社区单位按 `base_id`），迫击炮兵类不适用；未写 `engineer_hp` 的内容目录保持原生。详见 `docs/ENGINEER_HP_2026-10-20.md`。
 
+### 原版单位外观替换（stock_sprites）
+
+`content.json` 可写 `"stock_sprites": {"原版 UnitID": "替换文件.json"}`，替换原版单位的动作外观（数据行、动作类与其他单位不变）。替换文件含 `textures`（原版图集名或已在 `assets` 登记的本体图集）、`sprite_descriptor`（以原版描述符为底本：原版矩形与帧原样在前，新增的矩形与帧追加在后，受击框与攻击框取原版）与 `animations`（改写的脚本，其余脚本沿用原版）。改写脚本时，攻击框、发射、音效、弹起等指令须保持原版所在的 tick 与脚本总长。现有用途为 Walter（385）与 Tyra（381）的补帧（`walter_rian_*`、`tyra_elson_*`，生成脚本 `artwork/msadv_frames_20261024/build_stock_sprites.py`）。
+
 ## 4. 新场景、OBM 与 PNG
 
 新增场景可使用独立 OBM 图集。PNG 输入通过统一导入工具转换为原生 OBM：

@@ -7,7 +7,8 @@
     "sublayer_to_op11": 18,
     "one_cycle": 1,
     "sounds": {},
-    "beam_hits": 8
+    "beam_hits": 8,
+    "hit_rect_added": 1
   },
   "colors": 16,
   "obm_bytes": 66568,

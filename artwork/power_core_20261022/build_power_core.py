@@ -58,6 +58,9 @@ HIT_CLOSE, HIT_CYCLE = 31, 32
 HIT_DAMAGE = [50, 75, 100, 125, 150, 175]
 # MSA 槽 8 以 op36 挂上与槽 7 相同的光束子层（op36 只在第一遍执行，MSA 战斗中可见）；False 时槽 7 只保留槽 8 自身的帧（核心发亮）。
 HIT_BEAMS = True     # 用户 2026-10-22 确认保留光束（按 MSA 槽 8 原样）
+# 受击框（2026-10-23，AGENTS 第 250 节）：MSD BattleObject::setAnimationID_SkipUpdate 切换动作时清除受击框，MSA 沿用上一动作的受击框。
+# MSA 槽 8 没有 op3，受击槽 7 播放期间（状态 60）建筑无受击框，自爆摩托等攻击穿过；槽 7 开头补 op3，取待机槽 6 的受击框 1。
+HIT_RECT = {7: 1}
 SUBLAYER_MSA = 36                    # MSA：挂子层（参数同 op11），精灵在菜单标志下跳过
 MSA_ONLY = range(24, 73)
 ICON_CELL = (122, 1289, 40, 43)      # MSA 头像图集中的能量核心
@@ -118,6 +121,9 @@ def transform(record):
         if slot in ONE_CYCLE:
             out = beam_hits(out)
             stats['beam_hits'] = len(HIT_TICKS)
+        if slot in HIT_RECT:
+            out.insert(0, {'opcode': 3, 'values': [HIT_RECT[slot]]})
+            stats['hit_rect_added'] = stats.get('hit_rect_added', 0) + 1
         animations[str(slot)] = out
     return animations, stats
 

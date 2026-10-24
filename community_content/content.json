@@ -122,7 +122,13 @@
     "invader_king_1.obm": "ad2c1d3bc7719624818cba1e2a0ae30575d485c7d658880cb9b86180e92c3428",
     "invader_king_2.obm": "92378e57c2f1a90df091506e0b52fd3f33fea4b5bbbb6c7dcf7d4856276d0b7e",
     "invader_king_3.obm": "1732c0265a22cb7eccc3c7e0cd38141702489ebad7d1f6fe8d889d1a0580b68d",
-    "invader_king_4.obm": "6899fc93e86918023420a3cfe2ad93c9a5088392d4bfa195bb63c1eaaeff0a5c"
+    "invader_king_4.obm": "6899fc93e86918023420a3cfe2ad93c9a5088392d4bfa195bb63c1eaaeff0a5c",
+    "walter_rian_frames.obm": "92b0fdb58eba8f9bcd81c3ca49270db09c8ee5a5b9526d730d37ca2e745e1b1f",
+    "tyra_elson_frames.obm": "594054b87709e73bec2368fbb6d31a0631ee27cdc7304b94d5596cad11a255b0"
+  },
+  "stock_sprites": {
+    "381": "tyra_elson_sprite.json",
+    "385": "walter_rian_sprite.json"
   },
   "unit_pack": {
     "key": "s1xlv.pf_infantry_pack",
