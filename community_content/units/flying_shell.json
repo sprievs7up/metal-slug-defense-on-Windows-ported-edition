@@ -48,9 +48,9 @@
     3
   ],
   "status_word_values": {
-    "7": 600,
+    "7": 450,
     "24": 999,
-    "26": 900,
+    "26": 600,
     "27": 40,
     "31": 999,
     "33": 900,
@@ -14945,7 +14945,9 @@
         "arc_first_animation": 47,
         "arc_count": 2,
         "rain_first_animation": 49,
-        "rain_count": 4
+        "rain_count": 4,
+        "meteor_hp_percent": 25,
+        "meteor_lifetime": 200
       }
     }
   ]

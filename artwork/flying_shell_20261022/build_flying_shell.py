@@ -20,6 +20,10 @@
   （`hp_multiplier` [40, 9]，击退门槛倍率随之联动）。陨石生命随之为 14400。其余数值不变。
 - R3（2026-10-23，用户：MSA 中的移速若与现行不同则 × 2）：MSA 已开放的 858 移速 1.5，现行 0.5 取自未开放的 860，
   故移速改为 1.0（`move_speed_multiplier` [1, 6] → [1, 3]）。
+- R4（2026-10-24，用户指定，削弱挡弹、警戒距离与追踪范围）：陨石生命 60% → 10%（`meteor_hp_percent`，Lv40 14400 → 2400），
+  陨石存在 300 → 200 tick（`meteor_lifetime`；绝招陨石自发射至落地最长约 180 tick），远攻击距离（词 7）600 → 450，
+  普攻投射距离（词 26）900 → 600；转向（32）与绝招投射距离（词 33，绝招陨石不按距离判断）不变。
+  R4 R1（同日，用户：10% 太弱）：陨石生命改为 25%（Lv40 6000）。
 - 头像：MSA unit_icon_02.obme 中本单位的原格（m_unit_misc.pict 674 → (1417,179) 40×40，锚点 [−5, −5]），写在 (1850,768)。
   名称与说明取 MSA 主数据表（简体中文名称为用户用语“飞行护盾”，与 MSA 相同）。
 运行：E:\\anaconda3\\python.exe -I artwork/flying_shell_20261022/build_flying_shell.py [--preview]
@@ -61,14 +65,17 @@ SUBLAYER_OPS = (10, 11, 12, 22)
 MSA_ONLY = range(24, 73)
 SUBLAYER_MSA = 36
 SHELL = {'height': 80, 'homing_animation': 45, 'arc_first_animation': 47, 'arc_count': 2,
-         'rain_first_animation': 49, 'rain_count': 4}
+         'rain_first_animation': 49, 'rain_count': 4,
+         # R4（用户 2026-10-24）：陨石生命 25%（缺省 60；R4 初为 10%，同日 R1 改）、存在 200 tick（缺省 300）
+         'meteor_hp_percent': 25, 'meteor_lifetime': 200}
 ICON_CELL = (1417, 179, 40, 40)      # MSA 头像图集中的飞行护盾（pict 674）
 ICON = {'page': 1, 'rect': [1850, 768, 40, 40], 'anchor': [-5, -5]}
 PROVISIONAL = {   # 生命与每颗陨石伤害为用户指定（R2），AP 650 为用户指定（2026-10-22，原 MSA 800）；其余为 MSA 860 的值或换算（暂定）
     'ap': 650, 'shop_price': 330, 'hp_multiplier': [40, 9], 'damage_multiplier': [1, 8],
     # 移速：R3（用户 2026-10-23：MSA 已开放的 858 为 1.5，与 860 的 0.5 不同，按用户要求 × 2）200 的 3 × 1/3 = 1.0（此前 [1, 6] 即 0.5）
     'move_speed_multiplier': [1, 3], 'production_interval_multiplier': [10, 3],
-    'status_word_values': {'7': 600, '24': 999, '26': 900, '27': 40, '31': 999, '33': 900, '34': 15, '35': 300, '36': 150},
+    # R4（用户 2026-10-24）：远攻击距离 7 为 450（MSA 600）、普攻投射距离 26 为 600（MSA 900）
+    'status_word_values': {'7': 450, '24': 999, '26': 600, '27': 40, '31': 999, '33': 900, '34': 15, '35': 300, '36': 150},
     'status_float_values': {'25': 6, '32': 8},
 }
 ONES = ('special_damage_multiplier', 'attack_wait_multiplier', 'attack_range_multiplier',
