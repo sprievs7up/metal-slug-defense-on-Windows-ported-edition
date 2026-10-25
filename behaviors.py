@@ -324,6 +324,31 @@ def internal_fields(resolved):
     # 2026-10-22 建筑受击光束（行为库 v16，基准 4 沙包类）：能量核心受击动作中的攻击框按普攻组结算
     if 'structure_hit_attack' in resolved:
         zombie['flags'] |= 524288
+    # 2026-10-25 钢铁死亡蠕虫（行为库 v19 / 行为 v2，核心 r92，基准 192 侵略者类，ZSpec 字 104–116）：各动作号、地下行进、
+    # 掘削碎块弹体脚本、损毁碎块脚本（MSA EffectAction_DeadBody，步长 2，落地动作为其后一个）；
+    # R4（行为库 v20 / 行为 v3，核心 r95，字 117–119）：碎块滚动动作首槽、碎块爆炸动作、碎块引信 tick；
+    # R5（行为库 v21 / 行为 v4，核心 r96，字 120）：绝招中的钻出动作（平常的钻出用 emerge_animation）
+    if 'iron_death_worm' in resolved:
+        v = resolved['iron_death_worm']
+        zombie.update(flags=zombie['flags'] | 2097152, worm=[v[k] for k in (
+            'neutral_animation',
+            'burrow_animation',
+            'emerge_animation',
+            'near_attack_animation',
+            'dive_animation',
+            'drill_animation',
+            'death_move_animation',
+            'death_burst_animation',
+            'underground_animation',
+            'debris_first_animation',
+            'debris_count',
+            'dead_body_first_animation',
+            'dead_body_count',
+            'debris_roll_first_animation',
+            'debris_burst_animation',
+            'debris_fuse',
+            'special_emerge_animation',
+        )])
     if zombie['flags']:
         fields['zombie_spec'] = zombie
     return fields

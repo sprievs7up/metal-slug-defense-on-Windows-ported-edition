@@ -24,6 +24,8 @@ docs/ms6/IRON_SENTINEL_MSA_PORT_PLAN_2026-10-21.md，数值 docs/ms6/IRON_SENTIN
   顶盖修图，图集恢复 MSA 原样；含 op14 的本体部件（顶盖等）的 op14 y 补上 R3 漏加的 DROP；正面板（部件 30 / 94）各槽的 op11 y
   加 PLATE_FIX（3）。顶盖、正面板与车身的相对位置因此同《合金弹头6》合成图，顶盖原画中阴影里的徽记上部与正面板的徽记对齐。
   R11（用户 2026-10-22：16000 毁灭性太强）：第二形态巨型导弹每次命中 16000 → 8000（damage_multiplier [16, 3]），其余不变。
+  R12（社区意见，用户 2026-10-25：伤害不削，第二形态在总生命中的占比降低，快速击杀成为对手的奖励；画在其他单位之后）：第一形态
+  生命 60000、第二形态 30000（合计 90000 不变），绘制优先级 −90（同 BIG SHIEE），其余不变。
 运行：E:\\anaconda3\\python.exe -I artwork/iron_sentinel_msa_20261021/build_iron_sentinel_msa.py [--preview]
 （--preview 只写 out/；否则写入 community_content/：两张图集、描述符、两个单位文件、音效与 content.json）。
 """
@@ -85,11 +87,14 @@ ICON = {'page': 1, 'rect': [1650, 768, 46, 46], 'anchor': [-5, 1]}
 MENU_SLOTS = (0, 1, 2)
 MENU_SCALE = (8, 15)
 SPECIAL_EFFECT_SIZE = [380, 120]    # 本体宽约 800、高约 476（动作演示图像范围单位）；蓝光宽 2×380+31，高 (2×120+49)×0.64
+# 绘制优先级（R12，社区意见、用户 2026-10-25：画在其他单位之后）：原生按对象 +0xf0 升序绘制，值取数据行 +0x340；基准 394 / 395 为 0，
+# 原版大型单位为负值（BIG SHIEE −90、REBEL GIGANT −78、JUPITER KING −80），本单位取大杰的 −90。
+DRAW_PRIORITY = -90
 
 FIRST = {
     'base_id': 394, 'ap': 999, 'shop_price': 500, 'upgrade_cost_base': 1800,
-    'hp_multiplier': [4, 5],                      # 394：10000…50000 → 8000…40000（Lv1…Lv40，R5；R2 为 [6, 5]）
-    'knockback_threshold_multiplier': [32, 5],    # 25 → 160（用户指定，R2、R5 生命修改后保持）
+    'hp_multiplier': [6, 5],                      # 394：10000…50000 → 12000…60000（Lv1…Lv40，R12；R5 为 [4, 5]，R2 为 [6, 5]）
+    'knockback_threshold_multiplier': [32, 5],    # 25 → 160（用户指定，R2、R5、R12 生命修改后保持）
     'knockback_distance_multiplier': [1, 2],      # 受击后退距离减半（R2）
     'production_reference_id': 394, 'production_interval_multiplier': [6, 7],   # 6300 → 5400 tick（180 秒）
     'damage_multiplier': [2, 5],                  # 远程 500…1500 → 200…600
@@ -101,7 +106,7 @@ FIRST = {
 }
 SECOND = {
     'base_id': 395, 'ap': 999, 'shop_price': 500, 'upgrade_cost_base': 1800,
-    'hp_multiplier': [1, 1],                      # 395：10000…50000（Lv1…Lv40，R5；此前为 [2, 5] 即 4000…20000）
+    'hp_multiplier': [3, 5],                      # 395：10000…50000 → 6000…30000（Lv1…Lv40，R12；R5 为 [1, 1]，此前为 [2, 5]）
     'knockback_threshold_multiplier': [32, 5],
     'knockback_distance_multiplier': [1, 1],      # 出场后免击退（原生与 MSA 动作类），保持原值
     'production_reference_id': 395, 'production_interval_multiplier': [6, 7],
@@ -264,7 +269,7 @@ def unit_files(animations, current):
               'menu_reference_id': 312,
               # 绝招可发动时的蓝光（BattleUnit::draw，宽、高为两倍值）：主槽不画帧（部件均为 op11 子层），原生按空帧画成小光点。
               # 按原版大型载具（286 等为 [160, 90]：蓝光与本体等宽，高约为本体的 0.4–0.5）由本体图像范围换算。
-              'special_effect_size': SPECIAL_EFFECT_SIZE,
+              'special_effect_size': SPECIAL_EFFECT_SIZE, 'draw_priority': DRAW_PRIORITY,
               # 原画朝向：MSA 287 的图像表为 90（朝右）；基准 394 / 395 在 MSD 中为 270，沿用会使单位镜像。
               'image_direction': 90,
               'icon': ICON, 'textures': TEXTURES, 'sprite_descriptor': DESCRIPTOR, 'animations': animations,

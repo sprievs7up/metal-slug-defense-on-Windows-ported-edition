@@ -242,6 +242,10 @@ def check_unit(u):
     # 为 0 时取当前帧第一个矩形的尺寸）。
     glow=u.get('special_effect_size')
     if glow is not None and (not isinstance(glow,list) or len(glow)!=2 or any(not isinstance(v,int) or isinstance(v,bool) or not 0<=v<=1000 for v in glow)):raise ValueError('Invalid special effect size')
+    # 绘制优先级（数据行 +0x340，即 BattleUnitStatus 字 42；2026-10-25）：BattleObject::initialize 写入对象 +0xf0，BattleObjectManager::draw
+    # 按其升序（相同时按建立次序）绘制，值小者先画、在下层。原版多数单位为 0，大型单位为负值（BIG SHIEE −90、REBEL GIGANT −78）。
+    prio=u.get('draw_priority')
+    if prio is not None and (not isinstance(prio,int) or isinstance(prio,bool) or not -1000<=prio<=1000):raise ValueError('Invalid draw priority')
     flame=u.get('flame_interrupt')
     if flame is not None:
         bullets=flame.get('ending_bullet_animations')
@@ -312,7 +316,8 @@ def check_sprite_descriptor(u,dims,descriptor_path):
             if op in (10,11,12,22) and not 0<=values[0]<desc['script_count']:raise ValueError('Animation references invalid child script')
             if op in (3,4) and not -1<=values[0]<len(desc['hit_bounds' if op==3 else 'attack_bounds']):raise ValueError('Animation references invalid collision rectangle')
     for field in ('hit_bounds','attack_bounds'):
-        if not 1<=len(desc[field])<=256 or any(len(r)!=5 or any(not isinstance(v,int) or not -2147483648<=v<=2147483647 for v in r) for r in desc[field]):raise ValueError('Invalid sprite collision bounds')
+        # 上限 2048（2026-10-25 钢铁死亡蠕虫 R4：受击 / 攻击框之后的部件条目；原生按序号 × 20 字节定址，无数量限制）
+        if not 1<=len(desc[field])<=2048 or any(len(r)!=5 or any(not isinstance(v,int) or not -2147483648<=v<=2147483647 for v in r) for r in desc[field]):raise ValueError('Invalid sprite collision bounds')
     return desc
 
 def check_unit_assets(u,dims,descriptor_path,is_stock):
@@ -343,6 +348,9 @@ def check_unit_assets(u,dims,descriptor_path,is_stock):
     # 2026-10-22 侵略者之王：各动作、两组激光弹体槽
     if zombie.get('king'):
         k=zombie['king'];slots+=[k[i] for i in range(24) if i not in (18,19,21,22)]+[k[18]+i for i in range(k[19])]+[k[21]+i for i in range(k[22])]
+    # 2026-10-25 钢铁死亡蠕虫：各动作与碎块弹体槽
+    if zombie.get('worm'):
+        m=zombie['worm'];slots+=m[:9]+[m[9]+i for i in range(m[10])]+[m[11]+2*i+k for i in range(m[12]) for k in (0,1)]
     if slots and (not filename or any(not 0<=v<desc['script_count'] for v in slots)):raise ValueError('Behavior animation outside sprite descriptor')
     if 'recovery_animation' in u:
         value=u['recovery_animation']
@@ -499,6 +507,9 @@ class CommunityContent:
         if any(u['zombie_spec']['flags']&524288 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_structure_hit_attack_version') or p.uc.lib.msd_community_structure_hit_attack_version()<1):raise RuntimeError('Native core lacks structure hit attacks')
         # 2026-10-22 侵略者之王（invader_king，标记 1048576）：与蜈蚣长老共用侵略者类 update / shotBullet、其弹体 update / attackAction、createObject 的块，另在击退判定中不击退。
         if any(u['zombie_spec']['flags']&1048576 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_invader_king_version') or p.uc.lib.msd_community_invader_king_version()<1):raise RuntimeError('Native core lacks invader king behavior')
+        # 2026-10-25 钢铁死亡蠕虫（iron_death_worm，标记 2097152）：与蜈蚣长老共用侵略者类的块与地面裁切绘制，另加分层绘制的第 4 个延续块（核心 r91）；
+        # 行为 v2（按 MSA 底层代码核对的流程、地下行进、损毁碎块）需核心 r92（版本 2）。
+        if any(u['zombie_spec']['flags']&2097152 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_iron_death_worm_version') or p.uc.lib.msd_community_iron_death_worm_version()<5):raise RuntimeError('Native core lacks iron death worm behavior')
         self.ready=False
 
     def stock_patches(self):
@@ -739,6 +750,7 @@ class CommunityContent:
             if '33' in u.get('status_word_values',{}):row[0x374:0x378]=row[33*4:34*4]
             if 'minimap_marker' in u:struct.pack_into('<2i',row,0x34c,*u['minimap_marker'])
             if 'special_effect_size' in u:struct.pack_into('<2i',row,0x344,*u['special_effect_size'])
+            if 'draw_priority' in u:struct.pack_into('<i',row,0x340,u['draw_priority'])
             # 击退门槛为状态词 4（原生插值后乘 100 作为击退计量）；六个等级锚点按倍率四舍五入。
             # 非正值（原版 -1）表示每次受击均击退，计量不回填，该标记保持原值。
             a,b=u.get('knockback_threshold_multiplier',[1,1])
@@ -977,7 +989,7 @@ class CommunityContent:
         pointers=[]
         for spec in specs:
             if not spec:pointers.append(0);continue
-            words=[0]*104;words[0]=spec['flags']
+            words=[0]*128;words[0]=spec['flags']
             thresholds=spec.get('thresholds',[]);words[1]=len(thresholds)
             for i,(a,b) in enumerate(thresholds):words[2+i]=a;words[8+i]=b
             words[14]=sum(1<<(i+1) for i,flag in enumerate(spec.get('transitions',[])) if flag)
@@ -1014,7 +1026,11 @@ class CommunityContent:
             # 2026-10-22：77–100 侵略者之王（invader_king）：待机、落下、着地、近距、跃起、绝招开始 / 绝招 / 收尾、击退、损毁、受击与其循环、
             # 菜单待机 / 远距 / 绝招演示、反击激光与其身体段、反击激光落点爆炸、天空激光首槽 / 个数 / 身体段、地面激光首槽 / 个数、地面落点（104 字）
             for i,v in enumerate(spec.get('king',[])):words[77+i]=v
-            pointers.append(self.alloc(struct.pack('<104I',*words)))
+            # 2026-10-25：104–116 钢铁死亡蠕虫（iron_death_worm v2，核心 r92）：待机、钻入、钻出、掘削、绝招钻入（兼损毁钻入）、
+            # 地下钻击、损毁横穿、爆炸、地下行进、掘削碎块首槽与个数、损毁碎块首槽与个数；117–119（v3，核心 r95）：碎块滚动首槽、
+            # 碎块爆炸、碎块引信 tick；120（v4，核心 r96）：绝招中的钻出（128 字，121–127 保留）
+            for i,v in enumerate(spec.get('worm',[])):words[104+i]=v
+            pointers.append(self.alloc(struct.pack('<128I',*words)))
         return self.alloc(struct.pack('<'+'I'*len(pointers),*pointers))
 
     def grant_world_clear_rewards(self):

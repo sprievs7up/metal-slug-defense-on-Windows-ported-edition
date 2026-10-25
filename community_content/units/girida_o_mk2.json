@@ -33,16 +33,16 @@
     5
   ],
   "attack_range_multiplier": [
-    3,
-    2
+    21,
+    20
   ],
   "knockback_distance_multiplier": [
     1,
-    8
+    4
   ],
   "ballistic_range_multiplier": [
-    3,
-    2
+    21,
+    20
   ],
   "texture": "girida_o_gunmetal.obm",
   "icon": {

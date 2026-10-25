@@ -13,6 +13,7 @@
 - 图集 Gluttony_winged_venusian_base_0/1/2_out.obm（各 512×512）原样转为 OI 01 08。
 - 数值（用户 2026-10-22）：以原版飞行侵略者 200 为基准，生命与 AP ×2，伤害 R2 改回与 200 相同（每发 1200）；击退门槛 200 为 −1（每次受击都击退，
   加载器只缩放正值），保持；出击时间、移速、射程保持原版。价格保持 200 的 180 勋章。AP R3（用户同日）：400 → 300。
+  R5（用户 2026-10-25）：普攻 3 发合计 2400（为 200 单发 1200 的 2 倍，每发 800）、绝招 9 发每发 300（Lv40），其余不变。
 - 头像：MSA unit_icon_02.obme 中本单位的原格（m_unit_misc.pict 864 → (1295,730) 46×46，锚点 [−5, 1]）写入
   community_content/unit_icon_02.obm 的 (1800,768)。名称与说明取 MSA 主数据表；简体中文名称按用户用语为“暴食飞行侵略者”，
   简体说明中的“入侵者”按 MSD 简体用语改为“侵略者”。
@@ -62,8 +63,10 @@ ICON_CELL = (1295, 730, 46, 46)      # MSA 头像图集中的暴食飞行侵略�
 ICON = {'page': 1, 'rect': [1800, 768, 46, 46], 'anchor': [-5, 1]}
 NUMBERS = {   # 用户 2026-10-22：原版飞行侵略者 200 的生命与 AP ×2；R2（同日）伤害改回与 200 相同（每发 1200，普攻自带 3 向）
     'ap': 300, 'shop_price': 180, 'hp_multiplier': [2, 1], 'damage_multiplier': [1, 1],   # AP R3（用户同日）：400 → 300
+    # R5（用户 2026-10-25）：普攻 3 发合计为 200 单发 1200 的 2 倍（每发 800，词 22 × 2/3）；绝招 9 发每发 300（词 29 × 1/4）
+    'special_damage_multiplier': [1, 4], 'normal_damage_multiplier': [2, 3],
 }
-ONES = ('special_damage_multiplier', 'move_speed_multiplier', 'attack_wait_multiplier', 'attack_range_multiplier',
+ONES = ('move_speed_multiplier', 'attack_wait_multiplier', 'attack_range_multiplier',
         'knockback_distance_multiplier', 'ballistic_range_multiplier')
 
 
@@ -138,6 +141,8 @@ def unit_file(animations):
             # 击退门槛随生命倍率联动（第 6.1 节）；200 为 −1，加载器只缩放正值
             'knockback_threshold_multiplier': list(NUMBERS['hp_multiplier']),
             'damage_multiplier': NUMBERS['damage_multiplier'],
+            'special_damage_multiplier': NUMBERS['special_damage_multiplier'],
+            'normal_damage_multiplier': NUMBERS['normal_damage_multiplier'],
             **{k: [1, 1] for k in ONES},
             'production_reference_id': BASE, 'production_interval_multiplier': [1, 1],
             'icon': ICON, 'textures': list(TEXTURES), 'sprite_descriptor': DESCRIPTOR, 'animations': animations,

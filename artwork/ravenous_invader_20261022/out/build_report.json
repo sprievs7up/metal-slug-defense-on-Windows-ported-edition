@@ -35,8 +35,8 @@
     "ap": 270,
     "shop_price": 150,
     "hp_multiplier": [
-      2,
-      1
+      3,
+      2
     ],
     "damage_multiplier": [
       4,

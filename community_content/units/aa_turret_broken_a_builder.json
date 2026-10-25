@@ -1,0 +1,129 @@
+{
+  "key": "s1xlv.aa_turret_broken_a_builder",
+  "base_id": 5,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 100,
+  "available_from_start": true,
+  "ap": 80,
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 5,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      136,
+      770,
+      46,
+      43
+    ],
+    "anchor": [
+      -5,
+      -2
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "BROKEN TURRET α",
+      "description": "STAND. ATK : Flak shell   SPEC. ATK : -\nA damaged anti-aircraft turret on Scrap Island.\nLobs shells in a long arc at a fast rate."
+    },
+    "JP": {
+      "name": "破損砲台α",
+      "description": "通常攻撃：高射砲弾   特殊攻撃：‐\nスクラップ島に残された破損した対空砲台。\n砲弾を遠くへ放物線状に速いペースで撃ち出す。"
+    },
+    "KR": {
+      "name": "파손 포대 α",
+      "description": "일반 공격: 고사포탄   특수 공격: -\n고철 섬에 남은 파손된 대공 포대.\n포탄을 먼 곳에 포물선으로 빠르게 연달아 쏜다."
+    },
+    "ES": {
+      "name": "TORRETA ROTA α",
+      "description": "ATQ ESTÁND. : Proyectil   ATQ ESPEC. : -\nTorreta antiaérea dañada de la Isla Chatarra.\nLanza proyectiles en un arco largo a ritmo rápido."
+    },
+    "PT": {
+      "name": "TORRE DANIF. α",
+      "description": "ATQ. PADR. : Projétil   ATQ. ESPEC. : -\nTorre antiaérea danificada da Ilha da Sucata.\nLança projéteis em um arco longo em ritmo rápido."
+    },
+    "RU": {
+      "name": "ПОВРЕЖД. ТУРЕЛЬ α",
+      "description": "СТАНД. АТАК: Снаряд   СПЕЦ. АТАК: -\nПовреждённая зенитная турель с Острова Хлама.\nЧасто бросает снаряды по длинной дуге."
+    },
+    "FR": {
+      "name": "TOURELLE HS α",
+      "description": "ATT. STAND : Obus   ATT. SPÉ : -\nTourelle antiaérienne endommagée de l'île de la Ferraille.\nLance des obus en arc long à cadence rapide."
+    },
+    "DE": {
+      "name": "BESCH. GESCHÜTZ α",
+      "description": "STD.-ANGR. : Flakgranate   SPEZ.-ANGR. : -\nBeschädigtes Flakgeschütz auf der Schrottinsel.\nFeuert Granaten in weitem Bogen mit hoher Kadenz."
+    },
+    "IT": {
+      "name": "TORRETTA ROTTA α",
+      "description": "ATC STAND.: Proiettile   ATC SPEC.: -\nTorretta antiaerea danneggiata dell'Isola dei Rottami.\nLancia proiettili con un arco lungo a ritmo rapido."
+    },
+    "ZT": {
+      "name": "破損砲台α",
+      "description": "普通攻擊：高射砲彈   特殊攻擊：‐\n殘留在廢鐵島上的破損防空砲台。\n以拋物線向遠處發射砲彈，射速較快。"
+    },
+    "ZS": {
+      "name": "破损炮台α",
+      "description": "普通攻击：高射炮弹   特殊攻击：‐\n残留在废品岛上的破损防空炮台。\n以抛物线向远处发射炮弹，射速较快。"
+    }
+  },
+  "textures": [
+    "donou.obm"
+  ],
+  "tags": [
+    "ms7"
+  ],
+  "behaviors": [
+    {
+      "name": "build_structure",
+      "version": 1,
+      "params": {
+        "structure": "s1xlv.aa_turret_broken_a",
+        "construction_time_multiplier": [
+          1,
+          1
+        ]
+      }
+    }
+  ]
+}

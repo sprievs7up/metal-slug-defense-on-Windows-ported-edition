@@ -1,0 +1,130 @@
+{
+  "key": "s1xlv.aa_turret_builder",
+  "base_id": 5,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 100,
+  "available_from_start": true,
+  "ap": 100,
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 5,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      1992,
+      768,
+      46,
+      43
+    ],
+    "anchor": [
+      -5,
+      -2
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "AA TURRET",
+      "description": "STAND. ATK : Cannon     SPEC. ATK : -\nAn anti-aircraft turret the Rebel Army set up on Scrap Island.\nFires fire shells straight ahead."
+    },
+    "JP": {
+      "name": "対空砲台",
+      "description": "通常攻撃：砲撃     特殊攻撃：‐\nモーデン軍がスクラップ島に設置した対空砲台。\n火炎弾をまっすぐ撃ち出す。"
+    },
+    "KR": {
+      "name": "대공 포대",
+      "description": "일반 공격: 포격     특수 공격: -\n모덴군이 고철 섬에 설치한 대공 포대.\n화염탄을 똑바로 발사한다."
+    },
+    "ES": {
+      "name": "TORRETA AA",
+      "description": "ATQ ESTÁND. : Cañón     ATQ ESPEC. : -\nTorreta antiaérea del Ejército Rebelde en la Isla Chatarra.\nDispara proyectiles incendiarios en línea recta."
+    },
+    "PT": {
+      "name": "TORRE AA",
+      "description": "ATQ. PADR. : Canhão   ATQ. ESPEC. : -\nTorre antiaérea do Exército Rebelde na Ilha da Sucata.\nDispara projéteis incendiários em linha reta."
+    },
+    "RU": {
+      "name": "ЗЕНИТНАЯ ТУРЕЛЬ",
+      "description": "СТАНД. АТАК: Пушка   СПЕЦ. АТАК: -\nЗенитная турель армии мятежников на Острове Хлама.\nСтреляет зажигательными снарядами прямо вперёд."
+    },
+    "FR": {
+      "name": "TOURELLE DCA",
+      "description": "ATT. STAND : Canon   ATT. SPÉ : -\nTourelle antiaérienne des rebelles sur l'île de la Ferraille.\nTire des obus incendiaires droit devant."
+    },
+    "DE": {
+      "name": "FLAK-GESCHÜTZ",
+      "description": "STD.-ANGR. : Kanone   SPEZ.-ANGR. : -\nFlakgeschütz der Rebellenarmee auf der Schrottinsel.\nFeuert Brandgranaten geradeaus."
+    },
+    "IT": {
+      "name": "TORRETTA AA",
+      "description": "ATC STAND.: Cannone   ATC SPEC.: -\nTorretta antiaerea dei ribelli sull'Isola dei Rottami.\nSpara proiettili incendiari in linea retta."
+    },
+    "ZT": {
+      "name": "防空砲台",
+      "description": "普通攻擊：砲擊     特殊攻擊：‐\n摩登軍設置在廢鐵島上的防空砲台。\n向正前方發射火焰砲彈。"
+    },
+    "ZS": {
+      "name": "防空炮台",
+      "description": "普通攻击：炮击     特殊攻击：‐\n摩登军设置在废品岛上的防空炮台。\n向正前方发射火焰炮弹。"
+    }
+  },
+  "textures": [
+    "donou.obm"
+  ],
+  "tags": [
+    "ms7",
+    "msa"
+  ],
+  "behaviors": [
+    {
+      "name": "build_structure",
+      "version": 1,
+      "params": {
+        "structure": "s1xlv.aa_turret",
+        "construction_time_multiplier": [
+          1,
+          1
+        ]
+      }
+    }
+  ]
+}

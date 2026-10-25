@@ -1923,5 +1923,8 @@ if((old_elder_shot=find_block(0x1017f74du))){register_block(0x1017f74du,elder_sh
 if((old_elder_bullet=find_block(0x1019afc3u))){register_block(0x1019afc3u,elder_bullet);++elder_centipede_hooks;}
 if((old_elder_attack=find_block(0x1017747bu))){register_block(0x1017747bu,elder_attack);++elder_centipede_hooks;}
 if((old_elder_create=find_block(0x10181ec5u))){register_block(0x10181ec5u,elder_create);++elder_centipede_hooks;}
-if((old_elder_draw=find_block(0x1016f891u))&&!find_block(0x1016f89fu)&&!find_block(0x101358c3u)&&!find_block(0x101358c9u)){register_block(0x1016f891u,elder_draw);register_block(0x1016f89fu,elder_draw_v1);register_block(0x101358c3u,elder_draw_v2);register_block(0x101358c9u,elder_draw_v3);elder_centipede_hooks+=4u;}
+if((old_elder_draw=find_block(0x1016f891u))&&!find_block(0x1016f89fu)&&!find_block(0x101358c3u)&&!find_block(0x101358c9u)&&!find_block(0x101358d9u)){register_block(0x1016f891u,elder_draw);register_block(0x1016f89fu,elder_draw_v1);register_block(0x101358c3u,elder_draw_v2);register_block(0x101358c9u,elder_draw_v3);register_block(0x101358d9u,elder_draw_v4);elder_centipede_hooks+=5u;}
+if((old_wd_op3=find_block(0x101dbde7u))){register_block(0x101dbde7u,wd_op3);++wd_part_hooks;}
+if((old_wd_op4=find_block(0x101dbe2fu))){register_block(0x101dbe2fu,wd_op4);++wd_part_hooks;}
+if((old_wd_hit_test=find_block(0x101ddbcbu))){register_block(0x101ddbcbu,wd_hit_test);++wd_part_hooks;}
 }

@@ -335,8 +335,8 @@ static void z_kill_sound(Context& c){
  uint32_t attacker=rd<uint32_t>(c,c.r[13]+8u),s=zspec(c,attacker);
  if(s&&(zw(c,s,0)&8u)&&zw(c,s,23))msd_guest_call(c,Z_PLAY_SE,attacker,zw(c,s,23),0u,0u,nullptr);
 }
-static bool ik_guard(Context& c,uint32_t s,uint32_t o);   // 侵略者之王（后文）：落下、着地、跃起与绝招动作中不击退
-HOOK(zombie_no_knockback,0x1016f485u, uint32_t s=zspec(c,c.r[4]);if(s&&((zw(c,s,0)&2u)||((zw(c,s,0)&1048576u)&&ik_guard(c,s,c.r[4])))){c.pc=0x1016f4a3u;return;})
+static bool wd_guard(Context& c,uint32_t s,uint32_t o);   // 钢铁死亡蠕虫（后文）：不击退（MSA 全部动作 EnableNockBack(false)）
+HOOK(zombie_no_knockback,0x1016f485u, uint32_t s=zspec(c,c.r[4]);if(s&&((zw(c,s,0)&2u)||((zw(c,s,0)&2097152u)&&wd_guard(c,s,c.r[4])))){c.pc=0x1016f4a3u;return;})
 HOOK(zombie_armor_hit,0x1016f4a3u, z_armor_hit(c);)
 HOOK(zombie_kill_sound,0x1016f44du, z_kill_sound(c);)
 static bool z_throws(Context& c,uint32_t obj){uint32_t s=zspec(c,obj);return s&&(zw(c,s,0)&16u);}
@@ -1382,7 +1382,8 @@ static bool ec_update(Context& c){
 }
 static bool ik_update(Context& c);static bool ik_shot(Context& c);static bool ik_bullet_update(Context& c);static bool ik_create(Context& c);
 static uint32_t ik_bullet_spec(Context& c,uint32_t b);static bool ik_beam_hits(Context& c,uint32_t b,uint32_t t);   // 侵略者之王（后文）
-static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c))return;old_elder_update(c);}
+static bool wd_update(Context& c);static bool wd_shot(Context& c);static bool wd_bullet_update(Context& c);static bool wd_create(Context& c);static uint32_t wd_unit(Context& c,uint32_t o);static bool wd_debris(Context& c,uint32_t b);   // 钢铁死亡蠕虫（后文）
+static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c)||wd_update(c))return;old_elder_update(c);}
 static bool ec_shot(Context& c){
  uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=ec_unit(c,o);if(!s)return false;
  int32_t x=int32_t(c.r[3]),y=rd<int32_t>(c,c.r[13]);
@@ -1392,7 +1393,7 @@ static bool ec_shot(Context& c){
  }else if(script>=zw(c,s,70)&&script<zw(c,s,70)+zw(c,s,71))ec_fire(c,act,o,script,2u,40u,x,y);
  c.pc=c.r[14];return true;
 }
-static Block old_elder_shot;static void elder_shot(Context& c){if(ec_shot(c)||ik_shot(c))return;old_elder_shot(c);}
+static Block old_elder_shot;static void elder_shot(Context& c){if(ec_shot(c)||ik_shot(c)||wd_shot(c))return;old_elder_shot(c);}
 static bool ec_bullet_update(Context& c){
  uint32_t act=c.r[0],b=c.r[1],state=c.r[2],s=ec_bullet_spec(c,b);if(!s)return false;
  uint32_t kind=rd<uint32_t>(c,b+0x28u),age=rd<uint32_t>(c,b+0x2cu)+1u;wr<uint32_t>(c,b+0x2cu,age);
@@ -1410,10 +1411,10 @@ static bool ec_bullet_update(Context& c){
  }
  c.pc=c.r[14];return true;
 }
-static Block old_elder_bullet;static void elder_bullet(Context& c){if(ec_bullet_update(c)||ik_bullet_update(c))return;old_elder_bullet(c);}
+static Block old_elder_bullet;static void elder_bullet(Context& c){if(ec_bullet_update(c)||ik_bullet_update(c)||wd_bullet_update(c))return;old_elder_bullet(c);}
 static Block old_elder_attack;static void elder_attack(Context& c){
  uint32_t b=c.r[1],k=ec_bullet_spec(c,b)?rd<uint32_t>(c,b+0x28u):0u;
- if(k>=2u){c.pc=EC_DEFAULT_ATTACK;return;}
+ if(k>=2u||wd_debris(c,b)){c.pc=EC_DEFAULT_ATTACK;return;}   // 钢铁死亡蠕虫的掘削碎块：结算后消失（MSA 默认弹体 attackAction 0x10e54b8）
  if(ik_bullet_spec(c,b)&&!ik_beam_hits(c,b,c.r[2])){c.r[0]=0u;c.pc=c.r[14];return;}   // 侵略者之王的激光：先按光束判定
  old_elder_attack(c);
 }
@@ -1438,15 +1439,29 @@ static void ec_create(Context& c){
   wr<uint32_t>(c,sp,uint32_t(g-int32_t(rd<float>(c,o+0x90u))));
  }
 }
-static Block old_elder_create;static void elder_create(Context& c){if(ik_create(c))return;ec_create(c);old_elder_create(c);}
+static Block old_elder_create;static void elder_create(Context& c){if(ik_create(c)||wd_create(c))return;ec_create(c);old_elder_create(c);}
 // 当前裁切（Graphics +0x14–+0x20，像素；+4/+8 原点、+0xc/+0x10 全屏、+0x38 缩放）换回逻辑坐标，与“地面以上”取交集；
 // 绘制后恢复：原为全屏（clearClip 后的状态）时 clearClip，否则按换回的逻辑坐标 setClip。
 // r87：战斗中（非动作演示）原生绘制单位时不留裁切（BattleAction_Daimanji 等绘制后以覆盖全屏的矩形 setClip），本次启动若从未调用
 // setClip / clearClip，裁切字段全为 0；r80–r86 把全 0 当作 0×0 裁切并在绘制后“恢复”，此后剪裁一直为 0×0（界面与单位不再绘制、
 // 清屏无效）。战斗中改为以全屏为底、绘制后 clearClip；动作演示中取演示画框的裁切，字段无效（宽或高 ≤ 0）时同样按全屏处理。
-static struct{uint32_t busy,lr,sp,r[4],ret,go,cleared;int32_t x,y,w,h;} ec_paint;
+// r91 钢铁死亡蠕虫：MSA draw（0xef2fb4）以 BattleSprite 0xd4fe10 分两遍绘制：优先级 < 6 的层按地面裁切，≥ 6 的层（地面土环与空中碎屑）
+// 不裁切、后绘制。隐藏的层把帧号（动画层 +8）减 2000（原生 drawImpl 跳过帧号 < 0 的层，MSA 同法），绘制后加回；层的优先级为
+// BattleSprite::getObjectPriority（自身 +0x28 沿父层 +0x4c 累加）。第二遍以延续块 3 调用原生绘制、返回地址为延续块 4
+// （GraphicsOpt::setClip 中 str.w 指令的后半字 0x101358d9）。
+static constexpr int32_t WD_HIDE=2000,WD_PRIO=6;
+static constexpr uint32_t EC_V4=0x101358d9u;
+static void wd_mark(Context& c,uint32_t o,bool high,int32_t delta){
+ uint32_t sprite=rd<uint32_t>(c,o+0x5cu),st=sprite?rd<uint32_t>(c,sprite+0x54u):0u;
+ for(uint32_t k=0;st&&k<1024u;++k){
+  int32_t pr=0;for(uint32_t q=st,n=0;q&&n<16u;q=rd<uint32_t>(c,q+0x4cu),++n)pr+=rd<int32_t>(c,q+0x28u);
+  if((pr>=WD_PRIO)==high)wr<int32_t>(c,st+8u,rd<int32_t>(c,st+8u)+delta);
+  st=rd<uint32_t>(c,st+0x50u);
+ }
+}
+static struct{uint32_t busy,lr,sp,r[4],ret,go,cleared,split;int32_t x,y,w,h;} ec_paint;
 static bool ec_draw_begin(Context& c){
- uint32_t o=c.r[1];if(ec_paint.busy||!ec_unit(c,o))return false;
+ uint32_t o=c.r[1];bool worm=wd_unit(c,o)!=0u;if(ec_paint.busy||(!worm&&!ec_unit(c,o)))return false;
  uint32_t go=is_call(c,EC_GRAPHICS,0u),sp=c.r[13],g=go?rd<uint32_t>(c,go):0u;if(!g)return false;
  float s=rd<float>(c,g+0x38u);if(!(s>0.0f))return false;
  int32_t px=rd<int32_t>(c,g+0x14u),py=rd<int32_t>(c,g+0x18u),pw=rd<int32_t>(c,g+0x1cu),ph=rd<int32_t>(c,g+0x20u);
@@ -1458,6 +1473,7 @@ static bool ec_draw_begin(Context& c){
  int32_t ground=z_viewer(c)?rd<int32_t>(c,sp):stage_altitude(c,int32_t(rd<float>(c,o+0x8cu)));
  int32_t h=std::min(ec_paint.y+ec_paint.h,ground-rd<int32_t>(c,sp+8u))-ec_paint.y;if(h<0)h=0;
  ec_paint.busy=1u;ec_paint.lr=c.r[14];ec_paint.sp=sp;for(int i=0;i<4;++i)ec_paint.r[i]=c.r[i];ec_paint.go=go;
+ ec_paint.split=worm?1u:0u;if(worm)wd_mark(c,o,true,-WD_HIDE);   // 第一遍（裁切）只画优先级 < 6 的层
  wr<uint32_t>(c,sp-8u,uint32_t(h));c.r[13]=sp-8u;
  c.r[0]=go;c.r[1]=uint32_t(ec_paint.x);c.r[2]=uint32_t(ec_paint.y);c.r[3]=uint32_t(ec_paint.w);c.r[14]=EC_V1;c.pc=EC_SET_CLIP;
  return true;
@@ -1470,13 +1486,21 @@ static void elder_draw_v2(Context& c){
  wr<uint32_t>(c,ec_paint.sp-8u,uint32_t(ec_paint.h));c.r[13]=ec_paint.sp-8u;
  c.r[1]=uint32_t(ec_paint.x);c.r[2]=uint32_t(ec_paint.y);c.r[3]=uint32_t(ec_paint.w);c.pc=EC_SET_CLIP;
 }
-static void elder_draw_v3(Context& c){c.r[13]=ec_paint.sp;c.r[0]=ec_paint.ret;ec_paint.busy=0u;c.pc=ec_paint.lr;}
-extern "C" __declspec(dllexport) uint32_t msd_community_elder_centipede_version(){return elder_centipede_hooks==9u?1u:0u;}
+static void elder_draw_v3(Context& c){
+ if(ec_paint.split==1u){   // 钢铁死亡蠕虫的第二遍（裁切已恢复）：只画优先级 ≥ 6 的层
+  uint32_t o=ec_paint.r[1];wd_mark(c,o,true,WD_HIDE);wd_mark(c,o,false,-WD_HIDE);ec_paint.split=2u;
+  c.r[13]=ec_paint.sp;for(int i=0;i<4;++i)c.r[i]=ec_paint.r[i];c.r[14]=EC_V4;old_elder_draw(c);return;
+ }
+ c.r[13]=ec_paint.sp;c.r[0]=ec_paint.ret;ec_paint.busy=0u;c.pc=ec_paint.lr;
+}
+static void elder_draw_v4(Context& c){wd_mark(c,ec_paint.r[1],false,WD_HIDE);ec_paint.split=0u;c.r[13]=ec_paint.sp;c.r[0]=ec_paint.ret;ec_paint.busy=0u;c.pc=ec_paint.lr;}
+extern "C" __declspec(dllexport) uint32_t msd_community_elder_centipede_version(){return elder_centipede_hooks==10u?1u:0u;}
 // ---------- 侵略者之王（2026-10-22，行为库 v17：invader_king，标记 1048576；基准 192 BattleAction_Alien；核心 r83）----------
 // MSA 7.13.0 BattleAction_InvaderKing 与其两个无符号激光弹体类（虚表 0x4a73e40 反击激光、0x4a73f08 绝招激光；反汇编与对照
 // verification/invader_king_20261022/）在 MSD 原版侵略者类上的实现。与蜈蚣长老共用同 5 个块（Alien::update / shotBullet、
-// BulletAction_Alien::update / attackAction、BattleUnitDefault::createObject），另在 BattleUnitDefault::damageAction 的击退判定
-// （zombie_no_knockback 同一块）中，落下、着地、跃起与绝招动作期间不击退（MSA 这些动作以 EnableNockBack(false) 关闭击退）。
+// BulletAction_Alien::update / attackAction、BattleUnitDefault::createObject）。r83–r92 另在 BattleUnitDefault::damageAction 的击退
+// 判定（zombie_no_knockback 同一块）中，落下、着地、跃起与绝招动作期间与空中不击退（MSA 这些动作以 EnableNockBack(false) 关闭击退）；
+// r93（社区意见，用户 2026-10-25：去掉 MSA 的不击退段）起这些动作中同样按原生计量击退，见 update 中跃起、落下、着地一段。
 // 动作号为 MSA 脚本号，存于 ZSpec 字 77–100（community_content.py）：待机、落下、着地、近距、跃起、绝招开始 / 绝招 / 收尾、击退、
 // 损毁、受击与其循环、菜单待机 / 远距 / 绝招演示、反击激光与其身体段、反击激光落点爆炸、天空激光首槽 / 个数 / 身体段、地面激光
 // 首槽 / 个数、地面落点。
@@ -1559,12 +1583,6 @@ static void ik_death_blast(Context& c,uint32_t o){
  wr<uint32_t>(c,row+22u*4u,rd<uint32_t>(c,row+22u*4u)*2u/3u);wr<float>(c,row+23u*4u,1.0f);
  wr<uint32_t>(c,row+24u*4u,999u);wr<uint32_t>(c,row+28u*4u,2u);wr<uint32_t>(c,o+0x88u,40u);
 }
-static bool ik_guard(Context& c,uint32_t s,uint32_t o){
- if(rd<uint32_t>(c,o+0x24u)&2u)return true;
- int32_t a=int32_t(rd<uint32_t>(c,o+0xc4u));
- for(uint32_t i:{IK_FALL,IK_LAND,IK_JUMP,IK_SP0,IK_SP,IK_SP1})if(a==int32_t(ik_w(c,s,i)))return true;
- return false;
-}
 static bool ik_update(Context& c){
  uint32_t act=c.r[0],o=c.r[1],state=c.r[2],frame=c.r[3],s=ik_unit(c,o);if(!s)return false;
  int32_t anim=int32_t(rd<uint32_t>(c,o+0xc4u)),pend=-1;
@@ -1592,8 +1610,20 @@ static bool ik_update(Context& c){
  }else if(!viewer&&(!(fl&1u)||is_any({IK_JUMP,IK_FALL,IK_LAND}))){
   // 出场与远距攻击的跃起、落下、着地（其间不切换到其他状态的动作）
   bool appear=!(fl&1u);
+  // r93（社区意见，用户 2026-10-25：去掉 MSA 的不击退段）：跃起、落下与着地中原生计量耗尽时同样预约击退（状态 80）。在地面（起跳前、
+  // 着地踏击）立即播放击退；在空中原地落下（不移到前线、不踏击；高于地面 400 时自 400 处落下），到地面时播放击退。出场途中视为已出场。
+  if(state==80u&&is_any({IK_JUMP,IK_FALL,IK_LAND})){
+   if(fl&2u){
+    float x=rd<float>(c,o+0x8cu),y=rd<float>(c,o+0x90u),g=ik_ground(c,o,x),v=rd<float>(c,o+0x30u);
+    if(cur()!=A(IK_FALL)){v=0.0f;y=std::max(y,g-IK_DROP);set(A(IK_FALL));}
+    y+=v;wr<float>(c,o+0x30u,v+IK_FALL_A);
+    if(y>=g){y=g;fl&=~2u;set(A(IK_KNOCK));}
+    wr<float>(c,o+0x90u,y);wr<float>(c,o+0x98u,y);
+   }else set(A(IK_KNOCK));
+   fl|=1u;
+  }
   // r88（用户 2026-10-22）：出击的单位也在原处（本方据点旁）落下，不再直接落到敌方最前线；着地后等待一次跃起间隔再行动
-  if(appear&&!is_any({IK_FALL,IK_LAND}))drop(rd<float>(c,o+0x8cu));
+  else if(appear&&!is_any({IK_FALL,IK_LAND}))drop(rd<float>(c,o+0x8cu));
   else if(cur()==A(IK_JUMP)){
    if(tick>=IK_JUMP_T){
     float v=tick==IK_JUMP_T?IK_JUMP_V:rd<float>(c,o+0x30u),x=rd<float>(c,o+0x8cu);
@@ -1789,7 +1819,305 @@ static bool ik_create(Context& c){
  wr<uint32_t>(c,sp,uint32_t(g-int32_t(rd<float>(c,o+0x90u))));
  return false;
 }
-extern "C" __declspec(dllexport) uint32_t msd_community_invader_king_version(){return elder_centipede_hooks==9u?1u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_invader_king_version(){return elder_centipede_hooks==10u?1u:0u;}
+// ---------- 钢铁死亡蠕虫（2026-10-25，行为库 v19：iron_death_worm v2，标记 2097152；基准 192 BattleAction_Alien；核心 r92，R3 r94；R4 行为库 v20 / 行为 v3，核心 r95；R5 行为库 v21 / 行为 v4，核心 r96）----------
+// MSA 7.13.0 匿名命名空间 BattleAction_IronDeathWarm（虚表 0x4a742f0：update 0xef25d8、createObject 0xef2e38、shotBullet 0xef2f30、
+// draw 0xef2fb4、startPosition 0xef304c、actionViewPosition 0xef30cc）与 EffectAction_DeadBody（虚表 0x4a743b0：update 0xef3134、
+// createObject 0xef3208）在 MSD 原版侵略者类上的实现。r92 按 MSA 底层代码逐条核对（verification/iron_death_worm_20261025/msa_r2/
+// FINDINGS_R2.md）。与蜈蚣长老、侵略者之王共用侵略者类的块与地面裁切绘制（按优先级分两遍，见 ec_draw_begin 之前的说明）。动作号为
+// MSA 脚本号，存于 ZSpec 字 104–116（community_content.py）：待机、钻入、钻出、掘削、绝招钻入（兼损毁钻入）、地下钻击、损毁横穿、
+// 爆炸、地下行进、碎块首槽与个数、损毁碎块首槽与个数（步长 2，落地动作为其后一个）。
+// MSA 脚本指令 24–35、47–58（BattleSprite::EventCallback；MSD runScript 不识别，生成脚本已删）的作用由本段实现：全部动作的 op26
+// EnableNockBack(false)（MSA 的击退为状态 70，changeState 0x10eb570 拒绝）→ 不击退（zombie_no_knockback 中 wd_guard 恒真；MSD 状态 80
+// 若仍进入则预约状态 10、不切换动作）；掘削 17 的 op35 / op34 EveryTimeAtk（攻击框存在期间每 tick 重置攻击 ID，对象 update 0x10ec334 →
+// BattleUnit 虚表 +0x160）→ 掘削动作中每 tick 以 BattleUnit::refreshAttackStatus 换新攻击 ID（攻击框已清除时 ID 为 0，不换），同一目标
+// 每 tick 可再次受击；op54 / op56 攻击结算组 → 掘削 30、绝招钻入与钻击 50（单位 +0x88，每 tick 按当前动作写入）。
+//  1 Alien::update（MSA update 0xef25d8），不进入原生；动作切换在末尾以尾调用交给原生 setAnimationID（参数同 MSA：动作、强制、清除移动）。
+//    出场（MSA startPosition 置状态 78）：钻出，其间不近距攻击、不发动绝招（MSA +0x184 位 0x400 / 4），播完待机并预约状态 10；
+//    单位菜单的动作演示中不出场。
+//    10（MSA 通用待机 0x10d7b1c）：状态第一 tick 强制重播待机；
+//    20：钻入（期间不近距攻击）→ 地下行进（用户 2026-10-25 要求；MSA 为钻入后移到敌方最前方单位前缘之前再钻出）：原生 actionMove 按
+//        移速前进，高度取地形，不设受击框（R3）；转入 10 / 30 / 50 时在原处钻出，为近距攻击钻出后接着掘削、为绝招钻出后接着绝招钻入；
+//    30（MSA 通用攻击 0x10d8e94）：掘削，播完进入攻击等待并待机；
+//    50（MSA 绝招）：记下当前位置；钻入进行中先播完并在原处钻出，之后绝招钻入 25 → 选目标（前线 F 至 F + 朝向 × 绝招投射距离（词 33）
+//        之间生命最低的敌方单位，不含战场道具 116，同生命取较靠前者；没有时为 F；动作演示中为原处前方 250）→ 移到其 x → 地下钻击 33 →
+//        回到“F − 朝向 × 本单位宽度”与原处中较靠后者（动作演示中为原处）→ 钻出 → 待机并进入绝招等待。MSA 在钻击中置不可接触 /
+//        不可选为目标 / 穿过，按用户要求不置（保持受击框）。攻击（R3，核心 r94，用户 2026-10-25：分段输出，范围跟随可见钻身）：25 与 33
+//        在 MSA 的攻击时段（25 第 0–60 tick、33 第 0–59 tick）内由生成脚本每 4 tick 写一条 op4（攻击框为该段地面以上可见身体的外接矩形，
+//        没有可见部分时为 0）；这两个动作中置身体状态 0x20（BattleObject::changeStateAttackIDReset），每条 op4 经 initAttackStatus 建立
+//        新的攻击 ID，框内各目标每段各受 1 次（r92 / r93 为 MSA 原样的固定攻击框 3，每个动作对同一目标只结算一次）；
+//    100–140 损毁（MSA 0xef263c）：开始时播放 25 → 播完移到本方舞台外侧（我方 −220、敌方舞台宽度 + 220，MSA 0x10df5b0）、置不可接触 /
+//        穿过 / 不可选为目标（MSA 0x10ee200 / 0x10ee5a8 / 0x10ee630）→ 横穿 44（脚本 op7 的速度；高度随地形，第 6.2 节）越过舞台中央
+//        （MSA 0x10df9ac）→ 爆炸 49 → 移除；
+//    其余状态（含 MSD 70 胜利动作）：MSA 为默认分支（0x10dafd4，空），不切换动作。
+//    钻入、钻出与绝招一经开始即按动作顺序进行到底（状态在其间改变时不打断）。
+//    R5（用户 2026-10-25：钻入 / 钻出速度 200%，不影响大招的速度）：生成脚本把移动的钻入与平常的钻出换为 2 倍速的副本（字 105 / 106），
+//    绝招中的钻出（绝招开始时在地下先于原处钻出、钻击后回原处钻出）改用字 120（原速的钻出）。
+//  2 Alien::shotBullet（MSA 0xef2f30）：掘削的碎块（字 113 起字 114 个弹体脚本）经 addBulletNotAim 发射，攻击 ID（+0x144）新建
+//    （MSA 碎块由自身的 op4 建立）；BulletAction_Alien::attackAction 改走 BattleBulletDefault::attackAction，结算后转入状态 60 消失（同 MSA
+//    默认弹体 attackAction 0x10e54b8；原生侵略者弹体只在动作号为 20 时结算）。单位菜单的动作演示中不发射。
+//  3 BattleUnitDefault::createObject（MSA createObject 0xef2e38）：损毁碎块（字 115 起每隔 1 共字 116 个）改以弹体建立（+0x28 为 21、
+//    +0x24 记落地动作），按 MSA EffectAction_DeadBody 运动。
+//  4 BulletAction_Alien::update：掘削碎块命中（状态 60）或落地（待定位置已到地形高度）时移除，脚本播完不移除（MSA 0x10e5304）；
+//    R4（用户 2026-10-25：同 MS7 / MSXX，落地后随惯性弹跳、滚动，过 0.5 秒爆炸，碰到敌军立即爆炸，无索敌）：落地时以本 tick 的位移为速度，
+//    横向乘 WD_BOUNCE_KEEP、纵向反向乘 WD_BOUNCE，改播滚动动作（字 117 起与碎块对应，种类 22，攻击 ID 保留）；此后每 tick 纵向加
+//    WD_GRAVITY（碎块脚本 op45 的加速度 80 × 2 / 100），落到地形高度 − 落地时帧高的一半时再弹起，纵向速度不大于 WD_BOUNCE_MIN 时贴地
+//    滚动、横向乘 WD_ROLL_FRICTION；落地后字 119 tick 或碰到敌方单位（状态 60，伤害由 BattleBulletDefault::attackAction 结算）时改播
+//    爆炸（字 118，种类 23，攻击 ID 保留，碰到的目标不重复结算；爆炸攻击框伤害同碎块），播完移除；状态 200 时移除。
+//    损毁碎块（MSA 0xef3134）：落地动作播完移除；否则向下运动且 y ≥ 地形高度（按待定 x）− 当前帧第一个矩形高 × 精灵缩放 / 2 时，
+//    y 置为该值、改播落地动作并清除移动。
+// 单位的状态只在客体对象内存：+0x24 记下的位置 x（整数）、+0x28 本次绝招已钻击、+0x2c 标记（1 已出场、2 已置不近距攻击、4 已置不发动
+// 绝招、8 绝招进行中、16 已置攻击 ID 重置、32 损毁已开始）、+0x34 本动作 tick、+0x38 损毁时的舞台中央 x。弹体：+0x24 落地动作、
+// +0x28 种类、+0x2c 存在 tick；R4 掘削碎块：+0x24 落地时的存在 tick、+0x30 / +0x34 横纵速度、+0x38 落地时帧高的一半。
+// R4 部件判定（用户 2026-10-25：判定框贴合贴图）：生成脚本在描述符受击框 / 攻击框表中每个框之后接部件（第 5 值 WD_PART_MARK）。
+//  5 BattleSprite::runScript 的 op3 / op4（0x101dbde6 / 0x101dbe2e，回调与命令已确认后）：本单位的框号记在 +0x3c / +0x40。
+//  6 BattleObject::hitTest（0x101ddbca，this 为受击方、参数为攻击方攻击框的世界坐标；BattleObjectManager::advanceFrame 的全部命中判定
+//    经此）：受击方为本单位且当前受击框有部件时，按各部件判定（按 op3 的换算：朝向与原画朝向不同时 x 取 −(x + w)，加精灵偏移
+//    +0x34 / +0x38，× 2 加单位位置取整）；单位攻击单位的判定（返回地址 WD_UNIT_ATTACK_SITE，攻击方 r5）中攻击方为本单位且当前攻击框
+//    有部件时，按攻击部件判定；两者都有时任一对相交即命中。外框（+0xcc–+0xd8、+0xdc–+0xe8）不变，供原生的其他用途。
+static constexpr uint32_t WD_FLAG=2097152u,WD_W=104u,WD_DEBRIS=20u,WD_BODY=21u,WD_ROLL=22u,WD_BURST=23u;
+static constexpr float WD_GRAVITY=1.6f,WD_BOUNCE=0.25f,WD_BOUNCE_KEEP=0.7f,WD_BOUNCE_MIN=3.0f,WD_ROLL_FRICTION=0.85f;
+static constexpr uint32_t WD_DEBRIS_LIFE=600u;   // 碎块存在上限（tick）
+static constexpr int32_t WD_PART_MARK=0x57445054,WD_MAX_PARTS=16;   // 'WDPT'
+static constexpr uint32_t WD_HIT_INDEX=0x3cu,WD_ATTACK_INDEX=0x40u,WD_UNIT_ATTACK_SITE=0x101dfb75u;
+static constexpr uint32_t WD_DONT_SHORT=0x1017859au,WD_STAGE_SIZE=0x101e1c20u;   // changeStateDontShortAttack、BattleStage::getStageSize
+// BattleObject::changeStateDontToche / AreaThrough / NoTarget（MSA +0x184 位 8 / 0x10 / 0x40）、BattleUnit::refreshAttackStatus
+static constexpr uint32_t WD_DONT_TOCHE=0x10177f76u,WD_AREA_THROUGH=0x10177f7eu,WD_NO_TARGET=0x101780d8u,WD_REFRESH_ID=0x101e0bd0u,
+ WD_NEW_ID=0x101dfeecu,   // BattleObjectManager::createAttackID
+ WD_ID_RESET=0x101780acu;   // BattleObject::changeStateAttackIDReset（身体状态 0x20）
+static constexpr float WD_DEATH_FROM=220.0f,WD_VIEW_DRILL=250.0f;
+enum:uint32_t{WD_NEUTRAL,WD_BURROW,WD_EMERGE,WD_NEAR,WD_DIVE,WD_DRILL,WD_DEATH_MOVE,WD_DEATH_BURST,WD_UNDER,
+ WD_DEBRIS_FIRST,WD_DEBRIS_N,WD_BODY_FIRST,WD_BODY_N,WD_DEBRIS_ROLL,WD_DEBRIS_BURST,WD_DEBRIS_FUSE,WD_SP_EMERGE};
+static uint32_t wd_w(Context& c,uint32_t s,uint32_t i){return zw(c,s,WD_W+i);}
+static uint32_t wd_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&WD_FLAG)?s:0u;}
+static uint32_t wd_bullet_spec(Context& c,uint32_t b){
+ if(!active(c)||!head(c,168u)||!b||rd<uint32_t>(c,b)!=FS_BULLET_VPTR)return 0u;
+ uint32_t uid=rd<uint32_t>(c,b+0x128u);if(!record(c,uid))return 0u;
+ uint32_t s=rd<uint32_t>(c,head(c,168u)+(uid-U)*4u),kind=rd<uint32_t>(c,b+0x28u);
+ return s&&(zw(c,s,0)&WD_FLAG)&&(kind==WD_DEBRIS||kind==WD_BODY||kind==WD_ROLL||kind==WD_BURST)?s:0u;
+}
+static bool wd_debris(Context& c,uint32_t b){return wd_bullet_spec(c,b)&&rd<uint32_t>(c,b+0x28u)!=WD_BODY;}
+static float wd_width(Context& c,uint32_t u){return float(int32_t(is_call(c,IS_WIDTH,u)));}
+static float wd_edge(Context& c,uint32_t u){return rd<float>(c,u+0x8cu)+float(ik_dir(c,u))*wd_width(c,u);}   // 单位前缘
+static uint32_t wd_front(Context& c,uint32_t o){return rd<uint32_t>(c,IS_MANAGER+0x38u+((rd<uint32_t>(c,o+0x70u)&1u)^1u)*4u);}
+// MSA 0x10dae34：限在本方据点与“敌方据点前缘 − 朝向 × 本单位宽度”之间
+static float wd_clamp(Context& c,uint32_t o,float x){
+ uint32_t team=rd<uint32_t>(c,o+0x70u)&1u,own=ik_base(c,team),foe=ik_base(c,team^1u);int32_t d=ik_dir(c,o);
+ if(foe){float f=wd_edge(c,foe)-float(d)*wd_width(c,o);x=d>0?std::min(x,f):std::max(x,f);}
+ if(own){float ox=rd<float>(c,own+0x8cu);x=d>0?std::max(x,ox):std::min(x,ox);}
+ return x;
+}
+// MSA 0x10f9bfc：前线 = 敌方最前方单位的前缘，不越过敌方据点前缘（没有敌方单位时为敌方据点前缘）
+static float wd_line(Context& c,uint32_t o){
+ uint32_t foe=ik_base(c,(rd<uint32_t>(c,o+0x70u)&1u)^1u),t=wd_front(c,o);int32_t d=ik_dir(c,o);
+ float lim=foe?wd_edge(c,foe):rd<float>(c,o+0x8cu);
+ if(!t)return lim;
+ float v=wd_edge(c,t);return d>0?std::min(lim,v):std::max(lim,v);
+}
+// MSA 0xef2af4：前线至前线 + 朝向 × 绝招投射距离（词 33）之间生命最低的敌方单位（整数 x；同生命取较靠前者），没有时为前线
+static float wd_target(Context& c,uint32_t o){
+ int32_t d=ik_dir(c,o),line=int32_t(wd_line(c,o)),reach=int32_t(is_status(c,o,33u)),best=line,hp=INT32_MAX,near=INT32_MAX;
+ uint32_t u=is_call(c,IS_TEAM_UNITS,IS_MANAGER,(rd<uint32_t>(c,o+0x70u)&1u)^1u,0u);
+ for(uint32_t k=0;u&&k<1024u;++k){
+  int32_t h=rd<int32_t>(c,u+0x308u),ux=int32_t(rd<float>(c,u+0x8cu)),gap=(ux-line)*d;
+  if(h>0&&rd<uint32_t>(c,u+0x7cu)<100u&&rd<uint32_t>(c,u+0x128u)!=116u&&gap>=0&&gap<=reach&&(h<hp||(h==hp&&gap<near))){hp=h;near=gap;best=ux;}
+  uint32_t link=rd<uint32_t>(c,u+0x120u);u=link?link-0x11cu:0u;
+ }
+ return float(best);
+}
+// MSA 全部动作 op26 EnableNockBack(false)：不击退
+static bool wd_guard(Context&,uint32_t,uint32_t){return true;}
+static bool wd_update(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],state=c.r[2],frame=c.r[3],s=wd_unit(c,o);if(!s)return false;
+ int32_t anim=int32_t(rd<uint32_t>(c,o+0xc4u)),pend=-1,d=ik_dir(c,o);uint32_t force=0u;
+ auto A=[&](uint32_t i){return int32_t(wd_w(c,s,i));};
+ auto emerge=[&](bool sp){return A(sp?WD_SP_EMERGE:WD_EMERGE);};   // R5：绝招中的钻出为原速
+ auto cur=[&]{return pend>=0?pend:anim;};
+ auto run=[&]{return pend>=0||rd<uint8_t>(c,o+0xc9u)!=0;};
+ auto set=[&](int32_t a){pend=a;wr<uint32_t>(c,o+0x34u,0u);};
+ auto is_any=[&](std::initializer_list<uint32_t> l){for(uint32_t i:l)if(cur()==A(i))return true;return false;};
+ bool viewer=z_viewer(c),first=frame==0u;
+ uint32_t fl=rd<uint32_t>(c,o+0x2cu),tick=rd<uint32_t>(c,o+0x34u)+1u;wr<uint32_t>(c,o+0x34u,tick);
+ auto flag=[&](uint32_t bit,uint32_t fn,bool on){if(on!=((fl&bit)!=0u)){is_call(c,fn,o,on?1u:0u);fl=on?fl|bit:fl&~bit;}};
+ auto place=[&](float x){ik_place(c,o,x,ik_ground(c,o,x));};
+ auto special=[&]{fl|=8u;wr<int32_t>(c,o+0x24u,int32_t(rd<float>(c,o+0x8cu)));wr<uint32_t>(c,o+0x28u,0u);flag(2u,WD_DONT_SHORT,false);};
+ if(state>=100u&&state<=140u){
+  if(!(fl&32u)){fl|=32u;set(A(WD_DIVE));}
+  else if(cur()==A(WD_DIVE)){
+   if(!run()){
+    uint32_t stage=viewer?0u:is_call(c,IS_STAGE,0u);
+    if(!stage)is_call(c,IS_KILL,o);
+    else{
+     float size=float(int32_t(is_call(c,WD_STAGE_SIZE,stage)));
+     wr<float>(c,o+0x38u,float(int32_t(size)/2));
+     place((rd<uint32_t>(c,o+0x70u)&1u)?size+WD_DEATH_FROM:-WD_DEATH_FROM);set(A(WD_DEATH_MOVE));
+     for(uint32_t fn:{WD_DONT_TOCHE,WD_AREA_THROUGH,WD_NO_TARGET})is_call(c,fn,o,1u);
+    }
+   }
+  }else if(cur()==A(WD_DEATH_MOVE)){
+   float x=rd<float>(c,o+0x8cu),half=rd<float>(c,o+0x38u),g=ik_ground(c,o,x);wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);
+   if((rd<uint32_t>(c,o+0x70u)&1u)?int32_t(x)<=int32_t(half):int32_t(half)<=int32_t(x))set(A(WD_DEATH_BURST));
+  }else if(cur()==A(WD_DEATH_BURST)&&!run())is_call(c,IS_KILL,o);
+ }else if(!viewer&&!(fl&1u)){
+  // MSA 状态 78（startPosition 0xef304c / update 0xef2960）：钻出，播完待机并预约状态 10
+  if(cur()!=A(WD_EMERGE)){set(A(WD_EMERGE));flag(2u,WD_DONT_SHORT,true);flag(4u,EC_DONT_SP,true);}
+  else if(!run()){
+   fl|=1u;flag(2u,WD_DONT_SHORT,false);flag(4u,EC_DONT_SP,false);set(A(WD_NEUTRAL));
+   wr<uint32_t>(c,o+0x84u,10u);is_call(c,IS_RESERVE,o,10u,0u);
+  }
+ }else if(cur()==A(WD_UNDER)&&state!=20u){
+  // 地下行进中转入 10 / 30 / 50：在原处钻出（绝招记下位置）；80（不应出现）预约回到移动；其余状态不切换动作
+  if(state==80u)wr<uint32_t>(c,o+0x84u,20u);
+  else if(state==10u||state==30u||state==50u){if(state==50u)special();set(emerge(state==50u));}
+ }else if(is_any({WD_BURROW,WD_EMERGE,WD_SP_EMERGE,WD_DIVE,WD_DRILL})){
+  // 移动与绝招的动作顺序（MSA update 状态 20 与 50 的分支；其间状态改变时不打断）
+  bool sp=(fl&8u)!=0u;
+  if(state==50u&&first&&!sp){special();sp=true;}
+  if(run()){}
+  else if(cur()==A(WD_BURROW)){
+   if(sp||viewer)set(emerge(sp));                                      // MSA 状态 50 分支：钻入 7 播完在原处钻出 12
+   else{flag(2u,WD_DONT_SHORT,false);set(A(WD_UNDER));}                // 地下行进（用户要求）
+  }else if(cur()==A(WD_EMERGE)||cur()==A(WD_SP_EMERGE)){
+   if(sp&&!rd<uint32_t>(c,o+0x28u))set(A(WD_DIVE));
+   else if(sp){fl&=~8u;is_call(c,EC_START_WAIT,act,o,50u);set(A(WD_NEUTRAL));}
+   else if(state==30u){flag(2u,WD_DONT_SHORT,false);set(A(WD_NEAR));}  // 为近距攻击钻出：接着掘削
+   else{flag(2u,WD_DONT_SHORT,false);set(A(WD_NEUTRAL));wr<uint32_t>(c,o+0x84u,10u);is_call(c,IS_RESERVE,o,10u,0u);}
+  }else if(cur()==A(WD_DIVE)){
+   place(viewer?float(rd<int32_t>(c,o+0x24u))+float(d)*WD_VIEW_DRILL:wd_target(c,o));set(A(WD_DRILL));
+  }else{   // 地下钻击结束：回到原处（敌方前线已越过原处时为前线之后）
+   wr<uint32_t>(c,o+0x28u,1u);
+   float back=float(rd<int32_t>(c,o+0x24u));
+   if(!viewer){float f=wd_line(c,o)-float(d)*wd_width(c,o);back=wd_clamp(c,o,d>0?std::min(f,back):std::max(f,back));}
+   place(back);set(emerge(true));
+  }
+ }else switch(state){
+  case 10u:
+   if(first){set(A(WD_NEUTRAL));force=1u;}
+   break;
+  case 20u:
+   if(viewer){if(cur()!=A(WD_NEUTRAL))set(A(WD_NEUTRAL));break;}
+   if(cur()==A(WD_UNDER)){   // 地下行进：原生 actionMove 按移速前进（遇敌方单位停住，由原生 AI 转入攻击），高度取地形（同蜈蚣长老）
+    msd_guest_call(c,EC_ACTION_MOVE,act,o,l_bits(-1.0f),0u,nullptr);
+    float g=ik_ground(c,o,rd<float>(c,o+0x94u));wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);
+   }else{set(A(WD_BURROW));flag(2u,WD_DONT_SHORT,true);}
+   break;
+  case 30u:
+   if(first)set(A(WD_NEAR));
+   else if(!run()){is_call(c,EC_START_WAIT,act,o,30u);set(A(WD_NEUTRAL));}
+   break;
+  case 50u:
+   if(first){special();set(A(WD_DIVE));}
+   break;
+  case 80u:   // MSD 击退（本单位不击退，不应出现）：MSA changeState 拒绝，预约状态 10、不切换动作
+   wr<uint32_t>(c,o+0x84u,10u);
+   break;
+  default:
+   break;
+ }
+ // MSA op54 / op56：攻击结算组随动作；op35 / op34 EveryTimeAtk：掘削的攻击框存在期间每 tick 换新攻击 ID
+ int32_t a=cur();
+ if(a==A(WD_NEAR))wr<uint32_t>(c,o+0x88u,30u);else if(a==A(WD_DIVE)||a==A(WD_DRILL))wr<uint32_t>(c,o+0x88u,50u);
+ if(!viewer&&pend<0&&anim==A(WD_NEAR))is_call(c,WD_REFRESH_ID,o);
+ flag(16u,WD_ID_RESET,!viewer&&(a==A(WD_DIVE)||a==A(WD_DRILL)));   // R3：钻离与钻击每段（op4）新建攻击 ID
+ wr<uint32_t>(c,o+0x2cu,fl);
+ if(pend>=0){c.r[0]=o;c.r[1]=uint32_t(pend);c.r[2]=force;c.r[3]=1u;c.pc=IS_SET_ANIM|1u;}
+ else c.pc=c.r[14];
+ return true;
+}
+static bool wd_shot(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=wd_unit(c,o);if(!s)return false;
+ int32_t x=int32_t(c.r[3]),y=rd<int32_t>(c,c.r[13]);uint32_t z=rd<uint32_t>(c,c.r[13]+4u),first=wd_w(c,s,WD_DEBRIS_FIRST);
+ if(!z_viewer(c)&&script>=first&&script<first+wd_w(c,s,WD_DEBRIS_N)){
+  uint32_t b=ec_fire(c,act,o,script,WD_DEBRIS,z,x,y);
+  if(b)wr<uint16_t>(c,b+0x144u,uint16_t(is_call(c,WD_NEW_ID,IS_MANAGER,rd<uint32_t>(c,o+0x70u),0u)));
+ }
+ c.pc=c.r[14];return true;
+}
+// MSA createObject 0xef2e38：损毁碎块以 EffectAction_DeadBody 建立（落地动作 = 脚本 + 1）
+static bool wd_create(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=wd_unit(c,o),sp=c.r[13];if(!s)return false;
+ uint32_t first=wd_w(c,s,WD_BODY_FIRST),n=wd_w(c,s,WD_BODY_N);
+ if(script<first||script>=first+2u*n||((script-first)&1u))return false;
+ if(!z_viewer(c)){uint32_t b=ec_fire(c,act,o,script,WD_BODY,rd<uint32_t>(c,sp+4u),int32_t(c.r[3]),rd<int32_t>(c,sp));if(b)wr<uint32_t>(c,b+0x24u,script+1u);}
+ c.pc=c.r[14];return true;
+}
+// 当前帧第一个矩形的高 × 精灵缩放（MSA 0xd4e9f8）
+static float wd_frame_h(Context& c,uint32_t b){
+ uint32_t sprite=rd<uint32_t>(c,b+0x5cu),root=sprite?rd<uint32_t>(c,sprite+0x58u):0u,desc=sprite?rd<uint32_t>(c,sprite+0x40u):0u;
+ if(!root||!desc)return 0.0f;
+ int32_t f=rd<int32_t>(c,root+8u);if(f<0)return 0.0f;
+ uint32_t r=rd<uint32_t>(c,rd<uint32_t>(c,desc+12u)+uint32_t(f+1)*4u);
+ return float(rd<int16_t>(c,rd<uint32_t>(c,desc+8u)+r*16u+6u))*rd<float>(c,sprite+0x28u);
+}
+// 掘削碎块（R4）：改播动作并保留攻击 ID（setAnimationID 清空攻击 ID）、放到 (x, y)
+static void wd_debris_anim(Context& c,uint32_t b,uint32_t anim,uint32_t kind){
+ uint16_t id=rd<uint16_t>(c,b+0x144u);is_call(c,IS_SET_ANIM,b,anim,0u,1u);wr<uint16_t>(c,b+0x144u,id);wr<uint32_t>(c,b+0x28u,kind);
+}
+static void wd_debris_place(Context& c,uint32_t b,float x,float y){wr<float>(c,b+0x8cu,x);wr<float>(c,b+0x94u,x);wr<float>(c,b+0x90u,y);wr<float>(c,b+0x98u,y);}
+static bool wd_bullet_update(Context& c){
+ uint32_t act=c.r[0],b=c.r[1],state=c.r[2],s=wd_bullet_spec(c,b);if(!s)return false;
+ uint32_t age=rd<uint32_t>(c,b+0x2cu)+1u;wr<uint32_t>(c,b+0x2cu,age);
+ if(rd<uint32_t>(c,b+0x28u)==WD_BODY){
+  uint32_t land=rd<uint32_t>(c,b+0x24u);
+  if(rd<uint32_t>(c,b+0xc4u)==land){if(rd<uint8_t>(c,b+0xc9u)==0u)is_call(c,IS_KILL,b);}
+  else if(rd<float>(c,b+0xa8u)>0.0f){
+   float g=float(stage_altitude(c,int32_t(rd<float>(c,b+0x94u))))-wd_frame_h(c,b)*0.5f;
+   if(rd<float>(c,b+0x90u)>=g){wr<float>(c,b+0x90u,g);wr<float>(c,b+0x98u,g);is_call(c,IS_SET_ANIM,b,land,0u,1u);}
+  }
+ }else{
+  uint32_t kind=rd<uint32_t>(c,b+0x28u);
+  if(kind==WD_BURST){if(rd<uint8_t>(c,b+0xc9u)==0u)is_call(c,IS_KILL,b);}
+  else if(state==200u||age>WD_DEBRIS_LIFE)is_call(c,IS_KILL,b);
+  else if(state==60u){wd_debris_anim(c,b,wd_w(c,s,WD_DEBRIS_BURST),WD_BURST);wd_debris_place(c,b,rd<float>(c,b+0x8cu),rd<float>(c,b+0x90u));}
+  else if(kind==WD_ROLL){
+   float x=rd<float>(c,b+0x8cu),y=rd<float>(c,b+0x90u),vx=rd<float>(c,b+0x30u),vy=rd<float>(c,b+0x34u)+WD_GRAVITY;
+   x+=vx;y+=vy;float g=float(stage_altitude(c,int32_t(x)))-rd<float>(c,b+0x38u);
+   if(y>=g){y=g;if(vy>WD_BOUNCE_MIN){vy=-vy*WD_BOUNCE;vx*=WD_BOUNCE_KEEP;}else{vy=0.0f;vx*=WD_ROLL_FRICTION;}}
+   wd_debris_place(c,b,x,y);wr<float>(c,b+0x30u,vx);wr<float>(c,b+0x34u,vy);
+   if(age-rd<uint32_t>(c,b+0x24u)>=wd_w(c,s,WD_DEBRIS_FUSE))wd_debris_anim(c,b,wd_w(c,s,WD_DEBRIS_BURST),WD_BURST);
+  }else if(state==59u||rd<float>(c,b+0x98u)>=float(stage_altitude(c,int32_t(rd<float>(c,b+0x94u))))||is_call(c,EC_ADJUST_GROUND,act,b)!=0u){
+   // 落地（待定位置 +0x94 / +0x98 已到地形高度）：本 tick 的位移为速度，改播滚动动作并贴到地形
+   float x0=rd<float>(c,b+0x8cu),y0=rd<float>(c,b+0x90u),x1=rd<float>(c,b+0x94u),y1=rd<float>(c,b+0x98u),half=wd_frame_h(c,b)*0.5f;
+   uint32_t roll=wd_w(c,s,WD_DEBRIS_ROLL)+rd<uint32_t>(c,b+0xc4u)-wd_w(c,s,WD_DEBRIS_FIRST);
+   wd_debris_anim(c,b,roll,WD_ROLL);wd_debris_place(c,b,x1,float(stage_altitude(c,int32_t(x1)))-half);
+   wr<float>(c,b+0x30u,(x1-x0)*WD_BOUNCE_KEEP);wr<float>(c,b+0x34u,-(y1-y0)*WD_BOUNCE);wr<float>(c,b+0x38u,half);wr<uint32_t>(c,b+0x24u,age);
+  }
+ }
+ c.pc=c.r[14];return true;
+}
+// R4 部件判定：框表 idx 之后的部件条目换为世界坐标（同 runScript op3 / op4 与 onEventSetHitRect / onEventSetAttackRect 的换算）
+struct WdBox{int32_t l,t,r,b;};
+static int32_t wd_parts(Context& c,uint32_t o,bool attack,WdBox* out){
+ uint32_t sprite=rd<uint32_t>(c,o+0x5cu),desc=sprite?rd<uint32_t>(c,sprite+0x40u):0u;if(!desc)return 0;
+ uint32_t table=rd<uint32_t>(c,desc+(attack?0x14u:0x10u)),idx=rd<uint32_t>(c,o+(attack?WD_ATTACK_INDEX:WD_HIT_INDEX));
+ if(!table||!idx||idx>=4096u)return 0;
+ bool same=rd<uint32_t>(c,sprite+0x48u)==rd<uint32_t>(c,sprite+0x10u);
+ int32_t offx=rd<int32_t>(c,sprite+0x34u),offy=rd<int32_t>(c,sprite+0x38u),ox=int32_t(rd<float>(c,o+0x8cu)),oy=int32_t(rd<float>(c,o+0x90u)),n=0;
+ for(uint32_t e=table+(idx+1u)*20u;n<WD_MAX_PARTS&&rd<int32_t>(c,e+16u)==WD_PART_MARK;e+=20u,++n){
+  int32_t x=rd<int32_t>(c,e),y=rd<int32_t>(c,e+4u),w=rd<int32_t>(c,e+8u),h=rd<int32_t>(c,e+12u),lx=same?x+offx:-(x+w)-offx,ly=y+offy;
+  out[n]={ox+2*lx,oy+2*ly,ox+2*(lx+w),oy+2*(ly+h)};
+ }
+ return n;
+}
+static uint32_t wd_part_hooks=0u;
+static Block old_wd_op3;static void wd_op3(Context& c){uint32_t o=c.r[0]-8u;if(wd_unit(c,o))wr<uint32_t>(c,o+WD_HIT_INDEX,rd<uint32_t>(c,c.r[6]+4u));old_wd_op3(c);}
+static Block old_wd_op4;static void wd_op4(Context& c){uint32_t o=c.r[0]-8u;if(wd_unit(c,o))wr<uint32_t>(c,o+WD_ATTACK_INDEX,rd<uint32_t>(c,c.r[6]+4u));old_wd_op4(c);}
+static Block old_wd_hit_test;static void wd_hit_test(Context& c){
+ uint32_t o=c.r[0],a=c.r[14]==WD_UNIT_ATTACK_SITE?c.r[5]:0u;
+ bool empty=!rd<int32_t>(c,o+0xd4u)&&!rd<int32_t>(c,o+0xd8u);
+ WdBox h[WD_MAX_PARTS],k[WD_MAX_PARTS];
+ int32_t nh=!empty&&wd_unit(c,o)?wd_parts(c,o,false,h):0,na=a&&wd_unit(c,a)?wd_parts(c,a,true,k):0;
+ if(!nh&&!na){old_wd_hit_test(c);return;}
+ if(empty){ret(c,0u);return;}
+ if(!nh){int32_t ox=int32_t(rd<float>(c,o+0x8cu)),oy=int32_t(rd<float>(c,o+0x90u));
+  h[0]={ox+rd<int32_t>(c,o+0xccu),oy+rd<int32_t>(c,o+0xd0u),ox+rd<int32_t>(c,o+0xd4u),oy+rd<int32_t>(c,o+0xd8u)};nh=1;}
+ if(!na){uint32_t r=c.r[1];k[0]={rd<int32_t>(c,r),rd<int32_t>(c,r+4u),rd<int32_t>(c,r+8u),rd<int32_t>(c,r+12u)};na=1;}
+ for(int32_t i=0;i<na;++i)for(int32_t j=0;j<nh;++j)if(k[i].l<h[j].r&&k[i].r>h[j].l&&k[i].t<h[j].b&&k[i].b>h[j].t){ret(c,1u);return;}
+ ret(c,0u);
+}
+// 版本 2（r92）：按 MSA 底层代码核对后的流程、地下行进与损毁碎块；3（r94）：绝招分段；4（r95）：部件判定、碎块弹跳滚动后爆炸；
+// 5（r96）：绝招中的钻出用字 120
+extern "C" __declspec(dllexport) uint32_t msd_community_iron_death_worm_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u?5u:0u;}
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
 HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&(rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0]))&&c.r[1]==45u&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
 extern "C" __declspec(dllexport) uint32_t msd_community_paratrooper_landing_version(){return 1u;}

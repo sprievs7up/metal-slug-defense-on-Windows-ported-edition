@@ -1,4 +1,4 @@
-# 单位行为目录 / Unit behavior catalog（行为库版本 17）
+# 单位行为目录 / Unit behavior catalog（行为库版本 21）
 
 本文件由 `content_tool.py list-behaviors --markdown` 从 `behavior_library.json` 生成，请勿手工修改。
 Generated from `behavior_library.json` by `content_tool.py list-behaviors --markdown`; do not edit by hand.
@@ -473,4 +473,33 @@ Invader King (MSA 7.13.0 INVADER KING, BattleAction_InvaderKing, implemented on 
 | `ground_laser_first_animation` | int | default: 49; min: 0; max: 1023 |
 | `ground_laser_count` | int | default: 6; min: 1; max: 16 |
 | `ground_impact_animation` | int | default: 55; min: 0; max: 1023 |
+
+## iron_death_worm（v4）
+
+- 适用的原版基准单位 / base_id: 192
+- 需要字段 / requires fields: sprite_descriptor
+
+钢铁死亡蠕虫（MSA 7.13.0 IRON DEATH WORM 的匿名类 BattleAction_IronDeathWarm，按 MSD 原生侵略者类实现，流程按 MSA 底层代码）：不步行，不击退（MSA 全部动作关闭击退）。出击后由地下钻出（emerge_animation），其间不近距攻击、不发动绝招；待机为 neutral_animation；移动为钻入地下（burrow_animation），之后以地下行进动作（underground_animation，地面上只见土环与扬尘，不设受击框）按移速向敌方前线推移，转入待机、近距攻击或绝招时在原处钻出，为近距攻击钻出后接着掘削；近距攻击为掘削（near_attack_animation），攻击框存在期间每 tick都可再次命中同一目标（MSA EveryTimeAtk），抛出的碎块（debris_first_animation 起 debris_count 个弹体脚本）落地后按惯性弹跳、滚动（显示 debris_roll_first_animation 起与各碎块对应的动作），落地 debris_fuse tick 后或碰到敌方单位时爆炸（debris_burst_animation，伤害同碎块，碰到的目标不重复结算），播完移除；绝招为钻入（dive_animation，钻离地面飞向空中）→ 移到前线前方绝招投射距离（状态词 33）之内生命最低的敌方单位处（没有时为前线处）→ 自上方钻下（drill_animation）→ 回到原处（敌方前线已越过原处时为前线之后）钻出（绝招中的钻出，含绝招开始时在地下先于原处钻出，用 special_emerge_animation），钻入与钻击各自结算。受击与攻击按部件判定：精灵描述符受击框 / 攻击框表中某条之后第 5 值为 0x57445054 的各条为该框的部件，动作脚本设定该框时，受到的攻击与本单位对敌方单位的攻击按部件矩形判定（外框仍供原生的其他用途）。损毁为 dive_animation → 自本方舞台外侧（−220 / 舞台宽度 + 220）横穿（death_move_animation，穿过敌方单位、不可接触、不可选为目标）至舞台中央 → 爆炸（death_burst_animation）后移除；爆炸中建立的损毁碎块（dead_body_first_animation 起每隔一个共 dead_body_count 个）下落到地形高度减当前帧高的一半时改播其后一个动作，播完移除。绘制时优先级低于 6 的层按地面裁切，6 以上的层（地面土环与空中碎屑）不裁切。单位菜单的动作演示中绝招钻到原处前方 250，结束后回到原处。动作切换在客体流程中执行。
+
+Iron Death Worm (the anonymous BattleAction_IronDeathWarm of MSA 7.13.0 IRON DEATH WORM, implemented on the native Invader class following the MSA code): the unit does not walk and is never knocked back (MSA disables knockback in every action). After deployment it emerges from the ground (emerge_animation) and can neither attack at close range nor use the special meanwhile; it idles with neutral_animation; moving burrows into the ground (burrow_animation) and advances underground at the movement speed with underground_animation (only the dirt ring and dust show above the ground; no hit box), emerging in place when it switches to idle, the near attack or the special, and drilling right away when it emerges for the near attack; the near attack is the drill (near_attack_animation), whose attack box can hit the same target again every tick while it exists (MSA EveryTimeAtk), and whose thrown debris (debris_count bullet scripts from debris_first_animation) bounce and roll on landing (showing the matching animation from debris_roll_first_animation) and explode debris_fuse ticks after landing or on touching an enemy unit (debris_burst_animation, same damage as the debris, a target already touched is not settled again), being removed afterwards; the special dives (dive_animation, leaving the ground upwards), moves to the enemy unit with the lowest life within the special projection distance (status word 33) beyond the front line (the front line when there is none), drills down from above (drill_animation) and emerges back at its original position (behind the front line when the enemy front has passed it; the emergences within the special, including emerging in place when the special starts underground, use special_emerge_animation), the dive and the drill being settled separately. Hits are judged by parts: in the sprite descriptor hit / attack box tables, the entries following a box whose fifth value is 0x57445054 are its parts, and while an animation script has set that box, attacks it receives and its attacks on enemy units are judged against the part rectangles (the outer box still serves the other native uses). The destruction plays dive_animation, crosses from outside its own end of the stage (-220 / stage width + 220) to the stage centre (death_move_animation; passing through enemy units, untouchable and untargetable) and explodes (death_burst_animation) before removal; the wreckage created by the explosion (dead_body_count scripts every second one from dead_body_first_animation) falls until it reaches the terrain height minus half the current frame height, switches to the next animation and is removed when that ends. Layers with priority below 6 are clipped at the ground when drawn; layers of priority 6 and above (ground dirt and airborne debris) are not. In the unit menu action demo the special drills 250 ahead of the original position and returns afterwards. Animation changes run in the guest flow.
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `neutral_animation` | int | default: 6; min: 0; max: 1023 |
+| `burrow_animation` | int | default: 7; min: 0; max: 1023 |
+| `emerge_animation` | int | default: 12; min: 0; max: 1023 |
+| `near_attack_animation` | int | default: 17; min: 0; max: 1023 |
+| `dive_animation` | int | default: 25; min: 0; max: 1023 |
+| `drill_animation` | int | default: 33; min: 0; max: 1023 |
+| `death_move_animation` | int | default: 44; min: 0; max: 1023 |
+| `death_burst_animation` | int | default: 49; min: 0; max: 1023 |
+| `underground_animation` | int | default: 111; min: 0; max: 1023 |
+| `debris_first_animation` | int | default: 22; min: 0; max: 1023 |
+| `debris_count` | int | default: 3; min: 0; max: 16 |
+| `dead_body_first_animation` | int | default: 50; min: 0; max: 1023 |
+| `dead_body_count` | int | default: 3; min: 0; max: 16 |
+| `debris_roll_first_animation` | int | default: 113; min: 0; max: 1023 |
+| `debris_burst_animation` | int | default: 116; min: 0; max: 1023 |
+| `debris_fuse` | int | default: 15; min: 1; max: 300 |
+| `special_emerge_animation` | int | default: 12; min: 0; max: 1023 |
 

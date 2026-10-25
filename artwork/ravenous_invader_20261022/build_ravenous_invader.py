@@ -56,7 +56,8 @@ SUBLAYER_MSA = 36                    # MSA：挂子层（参数同 op11），本
 ICON_CELL = (1013, 600, 42, 42)      # MSA 头像图集中的暴食侵略者（pict 675）
 ICON = {'page': 1, 'rect': [1750, 768, 42, 42], 'anchor': [-6, -3]}
 NUMBERS = {   # 用户 2026-10-22：原版侵略者 192 的生命与 AP ×2；R2（同日）伤害改为近距 2000、绝招 3200（192 的 1500 / 2400 × 4/3）
-    'ap': 270, 'shop_price': 150, 'hp_multiplier': [2, 1], 'damage_multiplier': [4, 3],   # AP R3（用户同日）：360 → 270
+    # R5（社区意见，用户 2026-10-25：相对价格与伤害过于耐打）：生命改为 192 的 1.5 倍（Lv40 9000），击退门槛随之 ×3/2（30）
+    'ap': 270, 'shop_price': 150, 'hp_multiplier': [3, 2], 'damage_multiplier': [4, 3],   # AP R3（用户同日）：360 → 270
     'status_word_values': {'7': 0},
 }
 ONES = ('special_damage_multiplier', 'move_speed_multiplier', 'attack_wait_multiplier', 'attack_range_multiplier',
@@ -126,7 +127,7 @@ def unit_file(animations):
     unit = {'key': KEY, 'base_id': BASE, 'faction': 3, 'identity': 'Invader',
             'shop_price': NUMBERS['shop_price'], 'available_from_start': True, 'ap': NUMBERS['ap'],
             'hp_multiplier': NUMBERS['hp_multiplier'],
-            # 击退门槛随生命倍率联动（第 6.1 节）：192 为 20，×2 为 40
+            # 击退门槛随生命倍率联动（第 6.1 节）：192 为 20，×3/2 为 30（R5；此前 ×2 为 40）
             'knockback_threshold_multiplier': list(NUMBERS['hp_multiplier']),
             'damage_multiplier': NUMBERS['damage_multiplier'],
             **{k: [1, 1] for k in ONES},

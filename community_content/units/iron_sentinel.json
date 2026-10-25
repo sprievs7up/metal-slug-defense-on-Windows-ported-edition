@@ -5,7 +5,7 @@
   "shop_price": 500,
   "upgrade_cost_base": 1800,
   "hp_multiplier": [
-    4,
+    6,
     5
   ],
   "knockback_threshold_multiplier": [
@@ -64,6 +64,7 @@
     380,
     120
   ],
+  "draw_priority": -90,
   "image_direction": 90,
   "icon": {
     "page": 1,

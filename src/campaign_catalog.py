@@ -94,7 +94,9 @@ class Catalog:
             if 'graphics' in scene:
                 if scene.get('base_id',0)!=0:raise ValueError('自定义图块使用基础场景 0')
                 graphics=scene['graphics'];rects=graphics['rects']
-                if not 0<len(rects)<=4096:raise ValueError('图块数量超出范围')
+                # 上限（2026-10-25 起图块 32767、每层 8192 帧，此前 4096 / 1024）：滚动图层以同一图集区域、逐帧锚点不同的图块实现
+                # （MS7 任务 1 云层）。原生 drawBack / drawFront 以场景计数器对层帧数取余、按序号取图块，对两者没有容量限制。
+                if not 0<len(rects)<=32767:raise ValueError('图块数量超出范围')
                 for rect in rects:
                     if len(rect)!=8:raise ValueError('图块要求八个 int16 字段')
                     for v in rect:integer(v,-32768,32767)
@@ -104,7 +106,7 @@ class Catalog:
                     layers=graphics.get(name,[])
                     if len(layers)>64:raise ValueError('场景图层数量超出范围')
                     for frames in layers:
-                        if not 0<len(frames)<=1024:raise ValueError('场景动画帧数超出范围')
+                        if not 0<len(frames)<=8192:raise ValueError('场景动画帧数超出范围')
                         for v in frames:integer(v,0,len(rects)-1)
             if any(name in scene for name in ('terrain','bases')) and 'bounds' not in scene:raise ValueError('地形与基地位置配置需要战场边界')
             if 'bounds' in scene:

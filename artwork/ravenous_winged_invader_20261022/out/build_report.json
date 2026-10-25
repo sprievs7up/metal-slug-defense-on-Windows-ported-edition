@@ -41,6 +41,14 @@
     "damage_multiplier": [
       1,
       1
+    ],
+    "special_damage_multiplier": [
+      1,
+      4
+    ],
+    "normal_damage_multiplier": [
+      2,
+      3
     ]
   },
   "preview_ticks": {

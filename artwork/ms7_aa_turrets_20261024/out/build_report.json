@@ -1,0 +1,338 @@
+{
+  "types": {
+    "broken_a": {
+      "ax0": 31,
+      "offsets": [
+        [
+          "idle",
+          0,
+          0
+        ],
+        [
+          "idle",
+          1,
+          0
+        ],
+        [
+          "fire",
+          0,
+          0
+        ],
+        [
+          "fire",
+          1,
+          0
+        ],
+        [
+          "fire",
+          2,
+          0
+        ],
+        [
+          "fire",
+          3,
+          0
+        ],
+        [
+          "fire",
+          4,
+          0
+        ],
+        [
+          "fire",
+          5,
+          0
+        ],
+        [
+          "dest",
+          0,
+          0
+        ],
+        [
+          "dest",
+          1,
+          0
+        ],
+        [
+          "dest",
+          2,
+          0
+        ],
+        [
+          "dest",
+          3,
+          0
+        ],
+        [
+          "dest",
+          4,
+          0
+        ],
+        [
+          "dest",
+          5,
+          0
+        ],
+        [
+          "dest",
+          6,
+          0
+        ],
+        [
+          "wreck",
+          0,
+          0
+        ]
+      ],
+      "fire0_muzzle_in_frame": [
+        14.0,
+        2.0
+      ],
+      "fire0_face_sum": 16,
+      "face_pixels": 5,
+      "fire0_anchor": [
+        31,
+        59
+      ],
+      "muzzle_art": [
+        -17.0,
+        -57.0
+      ],
+      "idle_muzzle_art": [
+        -23.0,
+        -62.0
+      ],
+      "shots": {
+        "22": {
+          "offset": [
+            -11,
+            -51
+          ],
+          "op7": [
+            -457,
+            -457,
+            0,
+            60
+          ],
+          "ticks": 23,
+          "land_world": 232.2,
+          "apex_world": 141.5
+        },
+        "23": {
+          "offset": [
+            -6,
+            -46
+          ],
+          "op7": [
+            -709,
+            -709,
+            0,
+            60
+          ],
+          "ticks": 30,
+          "land_world": 437.4,
+          "apex_world": 183.0
+        }
+      },
+      "icon_crop": [
+        19,
+        15
+      ]
+    },
+    "broken_b": {
+      "ax0": 38,
+      "offsets": [
+        [
+          "idle",
+          0,
+          0
+        ],
+        [
+          "idle",
+          1,
+          0
+        ],
+        [
+          "fire",
+          0,
+          0
+        ],
+        [
+          "fire",
+          1,
+          -1
+        ],
+        [
+          "fire",
+          2,
+          0
+        ],
+        [
+          "fire",
+          3,
+          -1
+        ],
+        [
+          "fire",
+          4,
+          0
+        ],
+        [
+          "fire",
+          5,
+          0
+        ],
+        [
+          "dest",
+          0,
+          -1
+        ],
+        [
+          "dest",
+          1,
+          -1
+        ],
+        [
+          "dest",
+          2,
+          -1
+        ],
+        [
+          "dest",
+          3,
+          -1
+        ],
+        [
+          "dest",
+          4,
+          0
+        ],
+        [
+          "dest",
+          5,
+          -1
+        ],
+        [
+          "wreck",
+          0,
+          0
+        ]
+      ],
+      "fire0_muzzle_in_frame": [
+        18.0,
+        2.0
+      ],
+      "fire0_face_sum": 20,
+      "face_pixels": 5,
+      "fire0_anchor": [
+        38,
+        59
+      ],
+      "muzzle_art": [
+        -20.0,
+        -57.0
+      ],
+      "idle_muzzle_art": [
+        -26.0,
+        -62.0
+      ],
+      "shots": {
+        "22": {
+          "offset": [
+            -18,
+            -55
+          ],
+          "op7": [
+            -291,
+            -291,
+            0,
+            60
+          ],
+          "ticks": 19,
+          "land_world": 146.6,
+          "apex_world": 127.1
+        },
+        "23": {
+          "offset": [
+            -11,
+            -48
+          ],
+          "op7": [
+            -632,
+            -632,
+            0,
+            60
+          ],
+          "ticks": 28,
+          "land_world": 375.9,
+          "apex_world": 169.0
+        }
+      },
+      "icon_crop": [
+        27,
+        15
+      ]
+    },
+    "intact": {
+      "msa_shot_offset": [
+        [
+          16,
+          0,
+          -50,
+          -36
+        ]
+      ],
+      "msa_flash_offset": [
+        [
+          14,
+          0,
+          -4,
+          4
+        ],
+        [
+          15,
+          0,
+          -47,
+          -37
+        ]
+      ]
+    }
+  },
+  "ms7_atlas": [
+    512,
+    512
+  ],
+  "ms7_colors": 51,
+  "msa_icon_roundel_offset": [
+    16.0,
+    0.0
+  ],
+  "unit_ids": {
+    "s1xlv.aa_turret_builder": 1071,
+    "s1xlv.aa_turret": 1072,
+    "s1xlv.aa_turret_broken_a_builder": 1073,
+    "s1xlv.aa_turret_broken_a": 1074,
+    "s1xlv.aa_turret_broken_b_builder": 1075,
+    "s1xlv.aa_turret_broken_b": 1076
+  },
+  "icon_rects": {
+    "intact": [
+      1992,
+      768,
+      46,
+      43
+    ],
+    "broken_a": [
+      136,
+      770,
+      46,
+      43
+    ],
+    "broken_b": [
+      184,
+      770,
+      46,
+      43
+    ]
+  }
+}
