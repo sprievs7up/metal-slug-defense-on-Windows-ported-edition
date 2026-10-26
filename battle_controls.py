@@ -32,6 +32,24 @@ def context(p):
     return controller,None,scene
 
 
+def drop_stale_unit_press(p):
+    # onUITouchBegan checks isUnitCreate (AP and cooldown) and records the
+    # pressed slot at operator+0x20; onUITouchEnded then creates that unit
+    # after checking only the unit limit. A keyboard deploy while the slot is
+    # held spends the AP and starts the cooldown, so the release would create
+    # a second unit. Called before a release reaches the native TouchEvent.
+    app=p.app_instance()
+    main=p.word(app+0xc220) if app and p.word(app+0x22bc)==100 else 0
+    if not main or not p.word(main+8):return
+    scene=p.call('_ZN10BattleMain12getMainSceneEv',main)
+    operator=p.word(scene+0x3c) if scene else 0
+    if not 0x10000000<=operator<0x1ffff000 or p.word(operator)!=p.symbols['_ZTV20BattlePlayerOperator']+8:return
+    slot=p.word(operator+0x20)
+    controller=p.word(operator+0x18)
+    if slot<10 and 0x10000000<=controller<0x1ffff000 and not p.call('_ZN26BattleControllerPlayerBase12isUnitCreateEi',controller,slot):
+        p.put(operator+0x20,0xffffffff)
+
+
 def team_units(p,controller):
     manager=p.call('_ZN19BattleObjectManager11getInstanceEv')
     team=p.word(controller+0x38c)

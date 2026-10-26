@@ -972,6 +972,9 @@ class Probe:
         # Convert the uniformly scaled surface coordinate to those units.
         scale=min(self.window_size[0]/960,self.window_size[1]/640)
         x,y=x/scale,y/scale
+        if action==3:
+            from battle_controls import drop_stale_unit_press
+            drop_stale_unit_press(self)
         if not hasattr(self,'touch_arrays'):
             ids=self.jni(179,[self.env,16]);coords=self.jni(181,[self.env,32])
             self.touch_arrays=ids,coords

@@ -349,6 +349,24 @@ def internal_fields(resolved):
             'debris_fuse',
             'special_emerge_animation',
         )])
+    # 2026-10-26 鼹鼠弹（行为库 v22 / 行为 v1，核心 r97，基准 133 SPECIAL FORCE (RIDER) 类，ZSpec 字 121–131）：各动作号与冲刺参数；
+    # R1（行为库 v23 / 行为 v2，核心 r98）：字 130 / 131 改为悬停点的前方距离与离地高度（追踪俯冲）；
+    # 本单位不击退（标记 2，同 no_knockback）
+    if 'mole_missile' in resolved:
+        v = resolved['mole_missile']
+        zombie.update(flags=zombie['flags'] | 4194304 | 2, mole=[v[k] for k in (
+            'neutral_animation',
+            'burrow_animation',
+            'underground_animation',
+            'emerge_animation',
+            'dash_animation',
+            'explode_animation',
+            'special_explode_animation',
+            'death_animation',
+            'dash_speed',
+            'launch_forward',
+            'launch_height',
+        )])
     if zombie['flags']:
         fields['zombie_spec'] = zombie
     return fields

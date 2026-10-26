@@ -510,6 +510,9 @@ class CommunityContent:
         # 2026-10-25 钢铁死亡蠕虫（iron_death_worm，标记 2097152）：与蜈蚣长老共用侵略者类的块与地面裁切绘制，另加分层绘制的第 4 个延续块（核心 r91）；
         # 行为 v2（按 MSA 底层代码核对的流程、地下行进、损毁碎块）需核心 r92（版本 2）。
         if any(u['zombie_spec']['flags']&2097152 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_iron_death_worm_version') or p.uc.lib.msd_community_iron_death_worm_version()<5):raise RuntimeError('Native core lacks iron death worm behavior')
+        # 2026-10-26 鼹鼠弹（mole_missile，标记 4194304）：Bike_P 类 update / attackAction 的 2 个块（核心 r97）；钻出时借用蜈蚣长老的地面裁切绘制。
+        # R1 行为 v2（悬停点与追踪俯冲）需核心 r98（版本 2）。
+        if any(u['zombie_spec']['flags']&4194304 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_mole_missile_version') or p.uc.lib.msd_community_mole_missile_version()<2 or not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks mole missile behavior')
         self.ready=False
 
     def stock_patches(self):
@@ -989,7 +992,7 @@ class CommunityContent:
         pointers=[]
         for spec in specs:
             if not spec:pointers.append(0);continue
-            words=[0]*128;words[0]=spec['flags']
+            words=[0]*136;words[0]=spec['flags']
             thresholds=spec.get('thresholds',[]);words[1]=len(thresholds)
             for i,(a,b) in enumerate(thresholds):words[2+i]=a;words[8+i]=b
             words[14]=sum(1<<(i+1) for i,flag in enumerate(spec.get('transitions',[])) if flag)
@@ -1028,9 +1031,12 @@ class CommunityContent:
             for i,v in enumerate(spec.get('king',[])):words[77+i]=v
             # 2026-10-25：104–116 钢铁死亡蠕虫（iron_death_worm v2，核心 r92）：待机、钻入、钻出、掘削、绝招钻入（兼损毁钻入）、
             # 地下钻击、损毁横穿、爆炸、地下行进、掘削碎块首槽与个数、损毁碎块首槽与个数；117–119（v3，核心 r95）：碎块滚动首槽、
-            # 碎块爆炸、碎块引信 tick；120（v4，核心 r96）：绝招中的钻出（128 字，121–127 保留）
+            # 碎块爆炸、碎块引信 tick；120（v4，核心 r96）：绝招中的钻出
             for i,v in enumerate(spec.get('worm',[])):words[104+i]=v
-            pointers.append(self.alloc(struct.pack('<128I',*words)))
+            # 2026-10-26：121–131 鼹鼠弹（mole_missile v1，核心 r97）：悬停、钻入、地下潜行、钻出、冲刺、爆炸、绝招爆炸、损毁动作，
+            # 冲刺速度（世界单位 × 10 / tick）、悬停点的前方距离与离地高度（R1，核心 r98；136 字，132–135 保留）
+            for i,v in enumerate(spec.get('mole',[])):words[121+i]=v
+            pointers.append(self.alloc(struct.pack('<136I',*words)))
         return self.alloc(struct.pack('<'+'I'*len(pointers),*pointers))
 
     def grant_world_clear_rewards(self):

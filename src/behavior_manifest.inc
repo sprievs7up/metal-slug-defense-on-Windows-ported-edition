@@ -1,6 +1,6 @@
 static const char BEHAVIOR_MANIFEST[]=R"MSD({
   "schema": 1,
-  "library_version": 21,
+  "library_version": 23,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位",
     "rational": "[分子, 分母] 正整数倍率",
@@ -1243,6 +1243,88 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "doc": {
         "ZS": "钢铁死亡蠕虫（MSA 7.13.0 IRON DEATH WORM 的匿名类 BattleAction_IronDeathWarm，按 MSD 原生侵略者类实现，流程按 MSA 底层代码）：不步行，不击退（MSA 全部动作关闭击退）。出击后由地下钻出（emerge_animation），其间不近距攻击、不发动绝招；待机为 neutral_animation；移动为钻入地下（burrow_animation），之后以地下行进动作（underground_animation，地面上只见土环与扬尘，不设受击框）按移速向敌方前线推移，转入待机、近距攻击或绝招时在原处钻出，为近距攻击钻出后接着掘削；近距攻击为掘削（near_attack_animation），攻击框存在期间每 tick都可再次命中同一目标（MSA EveryTimeAtk），抛出的碎块（debris_first_animation 起 debris_count 个弹体脚本）落地后按惯性弹跳、滚动（显示 debris_roll_first_animation 起与各碎块对应的动作），落地 debris_fuse tick 后或碰到敌方单位时爆炸（debris_burst_animation，伤害同碎块，碰到的目标不重复结算），播完移除；绝招为钻入（dive_animation，钻离地面飞向空中）→ 移到前线前方绝招投射距离（状态词 33）之内生命最低的敌方单位处（没有时为前线处）→ 自上方钻下（drill_animation）→ 回到原处（敌方前线已越过原处时为前线之后）钻出（绝招中的钻出，含绝招开始时在地下先于原处钻出，用 special_emerge_animation），钻入与钻击各自结算。受击与攻击按部件判定：精灵描述符受击框 / 攻击框表中某条之后第 5 值为 0x57445054 的各条为该框的部件，动作脚本设定该框时，受到的攻击与本单位对敌方单位的攻击按部件矩形判定（外框仍供原生的其他用途）。损毁为 dive_animation → 自本方舞台外侧（−220 / 舞台宽度 + 220）横穿（death_move_animation，穿过敌方单位、不可接触、不可选为目标）至舞台中央 → 爆炸（death_burst_animation）后移除；爆炸中建立的损毁碎块（dead_body_first_animation 起每隔一个共 dead_body_count 个）下落到地形高度减当前帧高的一半时改播其后一个动作，播完移除。绘制时优先级低于 6 的层按地面裁切，6 以上的层（地面土环与空中碎屑）不裁切。单位菜单的动作演示中绝招钻到原处前方 250，结束后回到原处。动作切换在客体流程中执行。",
         "EN": "Iron Death Worm (the anonymous BattleAction_IronDeathWarm of MSA 7.13.0 IRON DEATH WORM, implemented on the native Invader class following the MSA code): the unit does not walk and is never knocked back (MSA disables knockback in every action). After deployment it emerges from the ground (emerge_animation) and can neither attack at close range nor use the special meanwhile; it idles with neutral_animation; moving burrows into the ground (burrow_animation) and advances underground at the movement speed with underground_animation (only the dirt ring and dust show above the ground; no hit box), emerging in place when it switches to idle, the near attack or the special, and drilling right away when it emerges for the near attack; the near attack is the drill (near_attack_animation), whose attack box can hit the same target again every tick while it exists (MSA EveryTimeAtk), and whose thrown debris (debris_count bullet scripts from debris_first_animation) bounce and roll on landing (showing the matching animation from debris_roll_first_animation) and explode debris_fuse ticks after landing or on touching an enemy unit (debris_burst_animation, same damage as the debris, a target already touched is not settled again), being removed afterwards; the special dives (dive_animation, leaving the ground upwards), moves to the enemy unit with the lowest life within the special projection distance (status word 33) beyond the front line (the front line when there is none), drills down from above (drill_animation) and emerges back at its original position (behind the front line when the enemy front has passed it; the emergences within the special, including emerging in place when the special starts underground, use special_emerge_animation), the dive and the drill being settled separately. Hits are judged by parts: in the sprite descriptor hit / attack box tables, the entries following a box whose fifth value is 0x57445054 are its parts, and while an animation script has set that box, attacks it receives and its attacks on enemy units are judged against the part rectangles (the outer box still serves the other native uses). The destruction plays dive_animation, crosses from outside its own end of the stage (-220 / stage width + 220) to the stage centre (death_move_animation; passing through enemy units, untouchable and untargetable) and explodes (death_burst_animation) before removal; the wreckage created by the explosion (dead_body_count scripts every second one from dead_body_first_animation) falls until it reaches the terrain height minus half the current frame height, switches to the next animation and is removed when that ends. Layers with priority below 6 are clipped at the ground when drawn; layers of priority 6 and above (ground dirt and airborne debris) are not. In the unit menu action demo the special drills 250 ahead of the original position and returns afterwards. Animation changes run in the guest flow."
+      }
+    },
+    {
+      "name": "mole_missile",
+      "version": 2,
+      "base_classes": [
+        133
+      ],
+      "requires_fields": [
+        "sprite_descriptor"
+      ],
+      "params": {
+        "neutral_animation": {
+          "type": "int",
+          "default": 6,
+          "min": 0,
+          "max": 1023
+        },
+        "burrow_animation": {
+          "type": "int",
+          "default": 7,
+          "min": 0,
+          "max": 1023
+        },
+        "underground_animation": {
+          "type": "int",
+          "default": 8,
+          "min": 0,
+          "max": 1023
+        },
+        "emerge_animation": {
+          "type": "int",
+          "default": 9,
+          "min": 0,
+          "max": 1023
+        },
+        "dash_animation": {
+          "type": "int",
+          "default": 10,
+          "min": 0,
+          "max": 1023
+        },
+        "explode_animation": {
+          "type": "int",
+          "default": 11,
+          "min": 0,
+          "max": 1023
+        },
+        "special_explode_animation": {
+          "type": "int",
+          "default": 12,
+          "min": 0,
+          "max": 1023
+        },
+        "death_animation": {
+          "type": "int",
+          "default": 13,
+          "min": 0,
+          "max": 1023
+        },
+        "dash_speed": {
+          "type": "int",
+          "default": 120,
+          "min": 1,
+          "max": 400
+        },
+        "launch_forward": {
+          "type": "int",
+          "default": 22,
+          "min": 0,
+          "max": 400
+        },
+        "launch_height": {
+          "type": "int",
+          "default": 160,
+          "min": 0,
+          "max": 600
+        }
+      },
+      "doc": {
+        "ZS": "鼹鼠弹（MS7 / MSXX 任务 2 首领 Crablops 放出的钻地飞弹；原生只有 CRABLOPS 的弹体，这里做成单位）：基准 133 SPECIAL FORCE (RIDER)（BattleAction_Bike_P）。出击后播放钻入动作（burrow_animation）并转入地下潜行（underground_animation）：不被选为目标、不阻挡、不被阻挡（身体状态 DontToche、AreaThrough、NoTarget、NockbackGuard），动作不设受击框，按移速前进。敌方前线进入普攻距离（状态词 7，检测距离）或发动绝招时在原处钻出（emerge_animation：以很小的前倾角高高升起、悬停，钻出中按地面裁切绘制），此后可被选为目标、不能再发动绝招；钻出动作播完时单位移到悬停点（出土点前方 launch_forward、离地 launch_height，世界单位；冲刺动作以弹体为原点），锁定前方最近的有效敌方单位（没有时取最近者，据点亦可），转入冲刺（dash_animation）：每 tick 朝目标受击框中心飞行 dash_speed / 10；目标在途中失效时不改锁，沿原路径直线飞行；攻击框接触对方单位或据点、到达目标点或触地即爆炸（explode_animation，绝招为 special_explode_animation），爆炸动作的攻击框按进入攻击时的攻击组结算（普攻词 22、绝招词 29），播完移除，不经死亡流程（对方不获得击毁奖励）。钻出后生命耗尽时播放 death_animation（不造成伤害）后移除。不击退。单位菜单的动作演示中待机为 neutral_animation，移动为地下潜行，攻击与绝招朝前方固定点的方向直飞至地面后爆炸。",
+        "EN": "Mole missile (the drilling missile released by Crablops, boss of MS7 / MSXX Mission 2; natively only a CRABLOPS bullet, here a unit): base 133 SPECIAL FORCE (RIDER) (BattleAction_Bike_P). On deployment it plays burrow_animation and then travels underground (underground_animation): it is not targeted, does not block and is not blocked (body states DontToche, AreaThrough, NoTarget, NockbackGuard), the animation has no hit box, and it moves at its move speed. When the enemy front comes within the normal attack range (status word 7, the detection range) or its special is used, it emerges where it is (emerge_animation: it rises high at a slight forward angle and hovers, drawn clipped at the ground while emerging); from then on it can be targeted and can no longer use its special. When emerge_animation ends the unit moves to the hovering point (launch_forward ahead of the emerging point and launch_height above the ground, world units; the dash animation is centred on the missile), locks on to the nearest valid enemy ahead (otherwise the nearest one; the base counts) and dashes (dash_animation): each tick it flies dash_speed / 10 towards the centre of the target hit box; if the target becomes invalid on the way it keeps flying straight along its path without re-locking. It explodes when its attack box touches an enemy unit or base, when it reaches the target point or when it reaches the ground (explode_animation, special_explode_animation for the special). The explosion attack box uses the attack group active when the attack started (word 22 normal, word 29 special); afterwards the unit is removed without the death flow (no kill reward for the enemy). If its HP runs out after emerging it plays death_animation (no damage) and is removed. It is never knocked back. In the unit menu action viewer, idle is neutral_animation, moving is the underground travel, and the attack and special fly straight towards a fixed point ahead down to the ground and explode."
       }
     }
   ]

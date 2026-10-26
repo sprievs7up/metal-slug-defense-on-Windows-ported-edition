@@ -1927,4 +1927,6 @@ if((old_elder_draw=find_block(0x1016f891u))&&!find_block(0x1016f89fu)&&!find_blo
 if((old_wd_op3=find_block(0x101dbde7u))){register_block(0x101dbde7u,wd_op3);++wd_part_hooks;}
 if((old_wd_op4=find_block(0x101dbe2fu))){register_block(0x101dbe2fu,wd_op4);++wd_part_hooks;}
 if((old_wd_hit_test=find_block(0x101ddbcbu))){register_block(0x101ddbcbu,wd_hit_test);++wd_part_hooks;}
+if((old_mole_update=find_block(0x1018258du))){register_block(0x1018258du,mole_update);++mole_hooks;}
+if((old_mole_attack=find_block(0x101780e1u))){register_block(0x101780e1u,mole_attack);++mole_hooks;}
 }

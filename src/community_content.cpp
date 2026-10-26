@@ -1382,6 +1382,7 @@ static bool ec_update(Context& c){
 }
 static bool ik_update(Context& c);static bool ik_shot(Context& c);static bool ik_bullet_update(Context& c);static bool ik_create(Context& c);
 static uint32_t ik_bullet_spec(Context& c,uint32_t b);static bool ik_beam_hits(Context& c,uint32_t b,uint32_t t);   // 侵略者之王（后文）
+static bool mm_clip(Context& c,uint32_t o);   // 鼹鼠弹（后文）：钻出动作中按地面裁切绘制
 static bool wd_update(Context& c);static bool wd_shot(Context& c);static bool wd_bullet_update(Context& c);static bool wd_create(Context& c);static uint32_t wd_unit(Context& c,uint32_t o);static bool wd_debris(Context& c,uint32_t b);   // 钢铁死亡蠕虫（后文）
 static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c)||wd_update(c))return;old_elder_update(c);}
 static bool ec_shot(Context& c){
@@ -1461,7 +1462,7 @@ static void wd_mark(Context& c,uint32_t o,bool high,int32_t delta){
 }
 static struct{uint32_t busy,lr,sp,r[4],ret,go,cleared,split;int32_t x,y,w,h;} ec_paint;
 static bool ec_draw_begin(Context& c){
- uint32_t o=c.r[1];bool worm=wd_unit(c,o)!=0u;if(ec_paint.busy||(!worm&&!ec_unit(c,o)))return false;
+ uint32_t o=c.r[1];bool worm=wd_unit(c,o)!=0u;if(ec_paint.busy||(!worm&&!ec_unit(c,o)&&!mm_clip(c,o)))return false;
  uint32_t go=is_call(c,EC_GRAPHICS,0u),sp=c.r[13],g=go?rd<uint32_t>(c,go):0u;if(!g)return false;
  float s=rd<float>(c,g+0x38u);if(!(s>0.0f))return false;
  int32_t px=rd<int32_t>(c,g+0x14u),py=rd<int32_t>(c,g+0x18u),pw=rd<int32_t>(c,g+0x1cu),ph=rd<int32_t>(c,g+0x20u);
@@ -2419,6 +2420,146 @@ static void fx_bullet_begin(Context& c){
 }
 static Block old_fx_bullet;static void fx_bullet(Context& c){fx_bullet_begin(c);old_fx_bullet(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_scene_fx_version(){return scene_fx_hooks==4u?1u:0u;}
+// ---------- 鼹鼠弹（2026-10-26，行为库 v22：mole_missile v1，标记 4194304；基准 133 BattleAction_Bike_P；核心 r97，R1 r98）----------
+// MS7 / MSXX 任务 2 首领 Crablops 绝招放出的鼹鼠弹做成单位（MSA / MSD 原生只有 CRABLOPS 的弹体 BulletAction_CrabMecha_Mogura，
+// 无生命与受击框；核查与方案 docs/ms7/MS7_MOLE_MISSILE_CHECK_2026-10-26.md）。本单位的 Bike_P::update（0x18258c）由下列流程执行，
+// 动作号与参数为 ZSpec 字 121–131：
+//  出击：钻入动作（字 122）播完转入地下潜行（字 123）。地下段置身体状态 DontToche 8、AreaThrough 0x10、NoTarget 0x40、
+//   NockbackGuard 0x80（不被选为目标、不阻挡、不被阻挡；动作不设受击框）；状态 20 以原生 actionMove 按移速前进，高度取地形。
+//  状态 30 / 40 / 50（原生按普攻距离词 7 或发动绝招转入）：清除地下标记、置 DontSpAttack 4，播放钻出动作（字 124，按地面裁切绘制），
+//   播完置 AreaThrough、播放冲刺动作（字 125）。R1（用户 2026-10-26 逻辑图：检测到前方敌人后钻出、以很小的前倾角高高跃起、悬停索敌、
+//   冲向敌方自爆，冲刺中索敌，未被击落则必中）：冲刺开始时把单位移到悬停点（出土点前方 字 130、离地 字 131，世界单位；冲刺动作以弹体
+//   为原点），锁定前方最近的有效敌方单位（生命 > 0、状态 < 100、无 NoTarget / DontToche，横向在弹体前方者取最近，没有时取最近者，
+//   据点为队伍链表首项），此后每 tick 朝目标受击框（+0xcc–+0xd8）中心飞行 字 129 / 10，到达目标点即预约状态 140；目标在途中失效时
+//   不改锁，按当前速度沿原路径直线飞行（用户 2026-10-26）；触地即预约状态 140。冲刺中攻击框接触对方时（Bike_P::attackAction 0x1780e0）
+//   不结算，预约状态 140（同 Bike_P 接触即爆炸）。
+//  状态 140：播放爆炸动作（字 126，绝招为 字 127），置 NoTarget、DontToche、DontSpAttack；爆炸动作的攻击框交给
+//   BattleUnitDefault::attackAction（0x16c46e）结算，伤害取进入 30 / 40 / 50 时的攻击组（+0x88 每 tick 写回）；播完移除，不经死亡流程。
+//  状态 100–130（钻出后生命耗尽）：播放损毁动作（字 128，无攻击框），置 NoTarget、DontToche，播完移除。本单位不击退（ZSpec 标记 2）。
+//  单位菜单的动作演示：10 为悬停（字 121），20 为地下潜行（不置标记），冲刺朝前方 MM_VIEW_REACH、离地 MM_VIEW_ALT 处的方向直飞至地面后爆炸，
+//   爆炸播完恢复身体状态与高度并回到 10。
+// 对象内存：+0x1c 出土点的地面 y、+0x24 阶段、+0x28 冲刺 tick、+0x2c 标记（位 0 绝招；位 8–15 进入时的攻击状态）、+0x30 / +0x34 锁定目标
+// 与其实例号（+0x62；目标失效后 +0x30 为 0）、+0x38 / +0x3c 当前速度（世界单位 / tick）。
+static constexpr uint32_t MM_FLAG=4194304u,MM_W=121u,MM_DASH_LIMIT=300u;
+static constexpr float MM_VIEW_REACH=260.0f,MM_VIEW_ALT=30.0f;
+static constexpr uint32_t MM_UNDER_BITS=0xd8u,MM_BLAST_BITS=0x4cu,MM_DEFAULT_ATTACK=0x1016c46fu;
+enum:uint32_t{MM_NEUTRAL,MM_BURROW,MM_UNDER,MM_EMERGE,MM_DASH,MM_BLAST,MM_BLAST_SP,MM_DEATH,MM_SPEED,MM_FWD,MM_HEIGHT};
+enum:uint32_t{MP_NEW,MP_BURROW,MP_UNDER,MP_EMERGE,MP_DASH,MP_BLAST,MP_DEAD,MP_VIEW};
+static uint32_t mole_hooks=0u;
+static uint32_t mm_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&MM_FLAG)?s:0u;}
+static bool mm_clip(Context& c,uint32_t o){return mm_unit(c,o)&&rd<uint32_t>(c,o+0x24u)==MP_EMERGE;}
+static void mm_bits(Context& c,uint32_t o,uint32_t set,uint32_t clear){wr<uint32_t>(c,o+0x6cu,(rd<uint32_t>(c,o+0x6cu)&~clear)|set);}
+// 可锁定的敌方单位：对方队伍、生命 > 0、状态 < 100、无 NoTarget / DontToche、不是道具 116（据点亦可）
+static bool mm_valid(Context& c,uint32_t o,uint32_t u){
+ if(!u||(rd<uint32_t>(c,u+0x70u)&1u)==(rd<uint32_t>(c,o+0x70u)&1u))return false;
+ return int32_t(rd<uint32_t>(c,u+0x308u))>0&&rd<uint32_t>(c,u+0x7cu)<100u&&!(rd<uint32_t>(c,u+0x6cu)&0x48u)&&rd<uint32_t>(c,u+0x128u)!=116u;
+}
+// 锁定：弹体前方（横向差 × 朝向 ≥ 0）最近者，没有时取横向最近者
+static uint32_t mm_lock(Context& c,uint32_t o){
+ int32_t d=ik_dir(c,o);float mx=rd<float>(c,o+0x8cu),ahead=1e30f,any=1e30f;uint32_t best=0u,near=0u;
+ uint32_t u=is_call(c,IS_TEAM_UNITS,IS_MANAGER,(rd<uint32_t>(c,o+0x70u)&1u)^1u,0u);
+ for(uint32_t k=0;u&&k<1024u;++k){
+  if(mm_valid(c,o,u)){
+   float g=(rd<float>(c,u+0x8cu)-mx)*float(d);
+   if(g>=0.0f&&g<ahead){ahead=g;best=u;}
+   if(std::fabs(g)<any){any=std::fabs(g);near=u;}
+  }
+  uint32_t link=rd<uint32_t>(c,u+0x120u);u=link?link-0x11cu:0u;
+ }
+ u=best?best:near;wr<uint32_t>(c,o+0x30u,u);wr<uint32_t>(c,o+0x34u,u?uint32_t(rd<uint16_t>(c,u+0x62u)):0u);
+ return u;
+}
+// 目标受击框中心（受击框为空时取脚点上方 40）
+static void mm_aim(Context& c,uint32_t u,float& tx,float& ty){
+ int32_t l=rd<int32_t>(c,u+0xccu),t=rd<int32_t>(c,u+0xd0u),r=rd<int32_t>(c,u+0xd4u),b=rd<int32_t>(c,u+0xd8u);
+ tx=rd<float>(c,u+0x8cu);ty=rd<float>(c,u+0x90u);
+ if(r>l&&b>t){tx+=float(l+r)*0.5f;ty+=float(t+b)*0.5f;}else ty-=40.0f;
+}
+static bool mm_update(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],state=c.r[2],s=mm_unit(c,o);if(!s)return false;
+ auto A=[&](uint32_t i){return int32_t(zw(c,s,MM_W+i));};
+ int32_t pend=-1;uint32_t force=0u;
+ bool viewer=z_viewer(c);
+ uint32_t ph=rd<uint32_t>(c,o+0x24u),fl=rd<uint32_t>(c,o+0x2cu);
+ auto run=[&]{return pend>=0||rd<uint8_t>(c,o+0xc9u)!=0;};
+ auto set=[&](int32_t a){pend=a;};
+ if(state==140u||ph==MP_BLAST){
+  if(ph!=MP_BLAST){ph=MP_BLAST;mm_bits(c,o,MM_BLAST_BITS,0u);set(A((fl&1u)?MM_BLAST_SP:MM_BLAST));}
+  else if(!run()){
+   if(!viewer)is_call(c,IS_KILL,o);
+   else{   // 动作演示：恢复身体状态与位置高度，回到待机
+    mm_bits(c,o,0u,MM_UNDER_BITS|MM_BLAST_BITS);ph=MP_VIEW;fl=0u;
+    float g=rd<float>(c,o+0x1cu);wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);
+    is_call(c,IS_RESERVE,o,10u,1u);set(A(MM_NEUTRAL));force=1u;
+   }
+  }
+ }else if(state>=100u&&state<=130u){
+  if(ph!=MP_DEAD){ph=MP_DEAD;mm_bits(c,o,0x48u,0x10u);set(A(MM_DEATH));}
+  else if(!run())is_call(c,IS_KILL,o);
+ }else if(ph==MP_EMERGE){
+  if(!run()){
+   // 冲刺开始：单位移到悬停点并锁定目标（动作演示中为前方的固定点）
+   float g=rd<float>(c,o+0x90u),x=rd<float>(c,o+0x8cu)+float(ik_dir(c,o))*float(A(MM_FWD)),y=g-float(A(MM_HEIGHT));
+   ph=MP_DASH;wr<uint32_t>(c,o+0x28u,0u);wr<float>(c,o+0x1cu,g);ik_place(c,o,x,y);
+   float tx=x+float(ik_dir(c,o))*MM_VIEW_REACH,ty=g-MM_VIEW_ALT;   // 动作演示与无目标时的方向
+   uint32_t u=viewer?0u:mm_lock(c,o);
+   if(!viewer&&u)mm_aim(c,u,tx,ty);
+   float dx=tx-x,dy=ty-y,dist=std::sqrt(dx*dx+dy*dy),sp=float(A(MM_SPEED))*0.1f;
+   if(viewer)wr<uint32_t>(c,o+0x30u,0u);
+   wr<float>(c,o+0x38u,dist>0.0f?dx/dist*sp:float(ik_dir(c,o))*sp);wr<float>(c,o+0x3cu,dist>0.0f?dy/dist*sp:0.0f);
+   mm_bits(c,o,0x10u,0u);set(A(MM_DASH));
+  }
+ }else if(ph==MP_DASH){
+  // 追踪：目标有效时朝其受击框中心修正方向，到达即爆炸；目标失效后不改锁，保持当前速度直线飞行；触地即爆炸
+  uint32_t t=rd<uint32_t>(c,o+0x28u)+1u;wr<uint32_t>(c,o+0x28u,t);
+  float x=rd<float>(c,o+0x8cu),y=rd<float>(c,o+0x90u),vx=rd<float>(c,o+0x38u),vy=rd<float>(c,o+0x3cu);bool arrive=false;
+  uint32_t u=rd<uint32_t>(c,o+0x30u);
+  if(u&&(!mm_valid(c,o,u)||uint32_t(rd<uint16_t>(c,u+0x62u))!=rd<uint32_t>(c,o+0x34u))){u=0u;wr<uint32_t>(c,o+0x30u,0u);}
+  if(u){
+   float tx,ty;mm_aim(c,u,tx,ty);
+   float dx=tx-x,dy=ty-y,dist=std::sqrt(dx*dx+dy*dy),sp=float(A(MM_SPEED))*0.1f;
+   if(dist<=sp){x=tx;y=ty;arrive=true;}
+   else{vx=dx/dist*sp;vy=dy/dist*sp;wr<float>(c,o+0x38u,vx);wr<float>(c,o+0x3cu,vy);}
+  }
+  if(!arrive){x+=vx;y+=vy;}
+  float g=viewer?rd<float>(c,o+0x1cu):ik_ground(c,o,x);
+  if(y>=g){y=g;arrive=true;}
+  ik_place(c,o,x,y);
+  if(arrive||t>=MM_DASH_LIMIT)is_call(c,IS_RESERVE,o,140u,0u);
+ }else if(state==30u||state==40u||state==50u){
+  fl=(state==50u?1u:0u)|(state<<8);
+  ph=MP_EMERGE;mm_bits(c,o,0x04u,MM_UNDER_BITS);set(A(MM_EMERGE));
+  float g=ik_ground(c,o,rd<float>(c,o+0x8cu));wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);
+ }else if(viewer){
+  if(state==20u){
+   if(ph!=MP_UNDER){ph=MP_UNDER;set(A(MM_UNDER));}
+   msd_guest_call(c,EC_ACTION_MOVE,act,o,l_bits(-1.0f),0u,nullptr);
+  }else if(ph!=MP_VIEW){ph=MP_VIEW;set(A(MM_NEUTRAL));}
+ }else{
+  if(ph==MP_NEW||ph==MP_VIEW){ph=MP_BURROW;mm_bits(c,o,MM_UNDER_BITS,0u);set(A(MM_BURROW));}
+  else if(ph==MP_BURROW&&!run()){ph=MP_UNDER;set(A(MM_UNDER));}
+  if(state==20u){   // 地下潜行：原生 actionMove 按移速前进（AreaThrough，不被阻挡），高度取地形（同钢铁死亡蠕虫）
+   msd_guest_call(c,EC_ACTION_MOVE,act,o,l_bits(-1.0f),0u,nullptr);
+   float g=ik_ground(c,o,rd<float>(c,o+0x94u));wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);
+  }
+ }
+ if(ph==MP_EMERGE||ph==MP_DASH||ph==MP_BLAST)wr<uint32_t>(c,o+0x88u,(fl>>8)&0xffu);
+ wr<uint32_t>(c,o+0x24u,ph);wr<uint32_t>(c,o+0x2cu,fl);
+ if(pend>=0){c.r[0]=o;c.r[1]=uint32_t(pend);c.r[2]=force;c.r[3]=1u;c.pc=IS_SET_ANIM|1u;}
+ else c.pc=c.r[14];
+ return true;
+}
+// Bike_P::attackAction（r1 攻击方、r2 受击方）：冲刺中接触即预约爆炸、不结算；爆炸动作按默认结算；其余阶段不结算。
+static bool mm_attack(Context& c){
+ uint32_t o=c.r[1];if(!mm_unit(c,o))return false;
+ uint32_t ph=rd<uint32_t>(c,o+0x24u);
+ if(ph==MP_BLAST){c.pc=MM_DEFAULT_ATTACK;return true;}
+ if(ph==MP_DASH&&!z_viewer(c))is_call(c,IS_RESERVE,o,140u,0u);
+ c.r[0]=0u;c.pc=c.r[14];return true;
+}
+static Block old_mole_update;static void mole_update(Context& c){if(mm_update(c))return;old_mole_update(c);}
+static Block old_mole_attack;static void mole_attack(Context& c){if(mm_attack(c))return;old_mole_attack(c);}
+extern "C" __declspec(dllexport) uint32_t msd_community_mole_missile_version(){return mole_hooks==2u?2u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

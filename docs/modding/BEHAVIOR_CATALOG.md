@@ -1,4 +1,4 @@
-# 单位行为目录 / Unit behavior catalog（行为库版本 21）
+# 单位行为目录 / Unit behavior catalog（行为库版本 23）
 
 本文件由 `content_tool.py list-behaviors --markdown` 从 `behavior_library.json` 生成，请勿手工修改。
 Generated from `behavior_library.json` by `content_tool.py list-behaviors --markdown`; do not edit by hand.
@@ -502,4 +502,27 @@ Iron Death Worm (the anonymous BattleAction_IronDeathWarm of MSA 7.13.0 IRON DEA
 | `debris_burst_animation` | int | default: 116; min: 0; max: 1023 |
 | `debris_fuse` | int | default: 15; min: 1; max: 300 |
 | `special_emerge_animation` | int | default: 12; min: 0; max: 1023 |
+
+## mole_missile（v2）
+
+- 适用的原版基准单位 / base_id: 133
+- 需要字段 / requires fields: sprite_descriptor
+
+鼹鼠弹（MS7 / MSXX 任务 2 首领 Crablops 放出的钻地飞弹；原生只有 CRABLOPS 的弹体，这里做成单位）：基准 133 SPECIAL FORCE (RIDER)（BattleAction_Bike_P）。出击后播放钻入动作（burrow_animation）并转入地下潜行（underground_animation）：不被选为目标、不阻挡、不被阻挡（身体状态 DontToche、AreaThrough、NoTarget、NockbackGuard），动作不设受击框，按移速前进。敌方前线进入普攻距离（状态词 7，检测距离）或发动绝招时在原处钻出（emerge_animation：以很小的前倾角高高升起、悬停，钻出中按地面裁切绘制），此后可被选为目标、不能再发动绝招；钻出动作播完时单位移到悬停点（出土点前方 launch_forward、离地 launch_height，世界单位；冲刺动作以弹体为原点），锁定前方最近的有效敌方单位（没有时取最近者，据点亦可），转入冲刺（dash_animation）：每 tick 朝目标受击框中心飞行 dash_speed / 10；目标在途中失效时不改锁，沿原路径直线飞行；攻击框接触对方单位或据点、到达目标点或触地即爆炸（explode_animation，绝招为 special_explode_animation），爆炸动作的攻击框按进入攻击时的攻击组结算（普攻词 22、绝招词 29），播完移除，不经死亡流程（对方不获得击毁奖励）。钻出后生命耗尽时播放 death_animation（不造成伤害）后移除。不击退。单位菜单的动作演示中待机为 neutral_animation，移动为地下潜行，攻击与绝招朝前方固定点的方向直飞至地面后爆炸。
+
+Mole missile (the drilling missile released by Crablops, boss of MS7 / MSXX Mission 2; natively only a CRABLOPS bullet, here a unit): base 133 SPECIAL FORCE (RIDER) (BattleAction_Bike_P). On deployment it plays burrow_animation and then travels underground (underground_animation): it is not targeted, does not block and is not blocked (body states DontToche, AreaThrough, NoTarget, NockbackGuard), the animation has no hit box, and it moves at its move speed. When the enemy front comes within the normal attack range (status word 7, the detection range) or its special is used, it emerges where it is (emerge_animation: it rises high at a slight forward angle and hovers, drawn clipped at the ground while emerging); from then on it can be targeted and can no longer use its special. When emerge_animation ends the unit moves to the hovering point (launch_forward ahead of the emerging point and launch_height above the ground, world units; the dash animation is centred on the missile), locks on to the nearest valid enemy ahead (otherwise the nearest one; the base counts) and dashes (dash_animation): each tick it flies dash_speed / 10 towards the centre of the target hit box; if the target becomes invalid on the way it keeps flying straight along its path without re-locking. It explodes when its attack box touches an enemy unit or base, when it reaches the target point or when it reaches the ground (explode_animation, special_explode_animation for the special). The explosion attack box uses the attack group active when the attack started (word 22 normal, word 29 special); afterwards the unit is removed without the death flow (no kill reward for the enemy). If its HP runs out after emerging it plays death_animation (no damage) and is removed. It is never knocked back. In the unit menu action viewer, idle is neutral_animation, moving is the underground travel, and the attack and special fly straight towards a fixed point ahead down to the ground and explode.
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `neutral_animation` | int | default: 6; min: 0; max: 1023 |
+| `burrow_animation` | int | default: 7; min: 0; max: 1023 |
+| `underground_animation` | int | default: 8; min: 0; max: 1023 |
+| `emerge_animation` | int | default: 9; min: 0; max: 1023 |
+| `dash_animation` | int | default: 10; min: 0; max: 1023 |
+| `explode_animation` | int | default: 11; min: 0; max: 1023 |
+| `special_explode_animation` | int | default: 12; min: 0; max: 1023 |
+| `death_animation` | int | default: 13; min: 0; max: 1023 |
+| `dash_speed` | int | default: 120; min: 1; max: 400 |
+| `launch_forward` | int | default: 22; min: 0; max: 400 |
+| `launch_height` | int | default: 160; min: 0; max: 600 |
 
