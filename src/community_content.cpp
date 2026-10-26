@@ -2120,8 +2120,11 @@ static Block old_wd_hit_test;static void wd_hit_test(Context& c){
 // 5（r96）：绝招中的钻出用字 120
 extern "C" __declspec(dllexport) uint32_t msd_community_iron_death_worm_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u?5u:0u;}
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
-HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&(rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0]))&&c.r[1]==45u&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
+// 2026-10-27（r99）：5 连发马克斯奈尔（BattleAction_McsnlFive::update 0x184ebc）的领队固定以 UnitID 187 生成 4 架僚机；
+// 基准为 187 的社区领队改为生成落地映射表登记的僚机单位（formation_unit_key），映射为 0 时保持原生。
+HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&((rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0]))&&c.r[1]==45u||rd<uint32_t>(c,p+4u)==187u&&c.r[1]==187u)&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
 extern "C" __declspec(dllexport) uint32_t msd_community_paratrooper_landing_version(){return 1u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_formation_version(){return 1u;}
 // 属性面板显示实际作战单位；其他调用保留购买与拥有状态的原生标识。
 HOOK(menu_display_id,0x101652fdu, if(record(c,c.r[0])&&c.r[14]==0x101ecd31u&&head(c,104)){ret(c,rd<uint32_t>(c,head(c,104)+(c.r[0]-U)*4u));return;})
 extern "C" __declspec(dllexport) uint32_t msd_community_display_status_version(){return 1u;}
@@ -2560,6 +2563,40 @@ static bool mm_attack(Context& c){
 static Block old_mole_update;static void mole_update(Context& c){if(mm_update(c))return;old_mole_update(c);}
 static Block old_mole_attack;static void mole_attack(Context& c){if(mm_attack(c))return;old_mole_attack(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_mole_missile_version(){return mole_hooks==2u?2u:0u;}
+// ---------- 贯穿子弹（2026-10-27，行为库 v25：piercing_shots v1，标记 8388608；基准 187；核心 r100）----------
+// 5 连发马克斯奈尔（187）的子弹动作类为 BattleActionBullet。原生 BattleActionBullet::attackAction（0x177754，r1 子弹、r2 目标）在目标
+// 受伤（damage 返回非 0）时，除子弹 +0x1c 或 +0x20 为 −2 外预约子弹状态 60（0x17777c，移除）；每发命中目标数（+0x148）只决定接触
+// 当帧结算的重叠目标数，BattleBullet::attack（0x1dceb2）每结算一次减 1，减到 0 时清除攻击框。
+// 带此标记的单位所发射的子弹（子弹 +0x128 为发射方 UnitID）：命中后不预约状态 60，子弹继续飞行，依次结算之后接触的目标。
+// 同一颗子弹对同一目标只结算一次：除原生受击 ID 环（目标 +0x328 起 80 项）外，子弹工作区记录已结算的目标——+0x24 子弹攻击 ID
+// （+0x144）作标签（与当前 ID 不同即视为空，对象池重用时不读旧数据）、+0x26 个数、+0x28 起最多 14 个目标实例号（+0x62）；
+// 已在其中的目标在 attackAction 入口直接返回 0（不结算、不减目标数）。超过 14 个后只由受击 ID 环去重。状态全部保存在客体内存中。
+static constexpr uint32_t PS_FLAG=8388608u,PS_SLOTS=14u,PS_CONTINUE=0x10177787u;
+static uint32_t pierce_hooks=0u;
+static bool ps_bullet(Context& c,uint32_t b){
+ if(!active(c)||!head(c,168u)||!b||rd<uint32_t>(c,b)!=head(c,88u))return false;
+ uint32_t uid=rd<uint32_t>(c,b+0x128u);if(!record(c,uid))return false;
+ uint32_t s=rd<uint32_t>(c,head(c,168u)+(uid-U)*4u);return s&&(zw(c,s,0)&PS_FLAG);
+}
+static uint32_t ps_count(Context& c,uint32_t b){
+ uint32_t n=rd<uint16_t>(c,b+0x26u);return rd<uint16_t>(c,b+0x24u)==rd<uint16_t>(c,b+0x144u)&&n<=PS_SLOTS?n:0u;
+}
+static bool ps_attack(Context& c){
+ uint32_t b=c.r[1],t=c.r[2];if(!t||!ps_bullet(c,b))return false;
+ uint32_t n=ps_count(c,b),inst=rd<uint16_t>(c,t+0x62u);
+ for(uint32_t i=0;i<n;++i)if(rd<uint16_t>(c,b+0x28u+i*2u)==inst){c.r[0]=0u;c.pc=c.r[14];return true;}
+ return false;
+}
+static bool ps_hit(Context& c){
+ uint32_t b=c.r[4],t=c.r[5];if(!ps_bullet(c,b))return false;   // 0x17777c：r4 子弹、r5 目标
+ uint32_t n=ps_count(c,b);
+ if(!n){wr<uint16_t>(c,b+0x24u,rd<uint16_t>(c,b+0x144u));}
+ if(n<PS_SLOTS){wr<uint16_t>(c,b+0x28u+n*2u,rd<uint16_t>(c,t+0x62u));wr<uint16_t>(c,b+0x26u,uint16_t(n+1u));}
+ c.pc=PS_CONTINUE;return true;   // 不调用 reserveChangeState(60)，照原生继续：比较并复制目标 +0xf0，返回 1
+}
+static Block old_pierce_attack;static void pierce_attack(Context& c){if(ps_attack(c))return;old_pierce_attack(c);}
+static Block old_pierce_hit;static void pierce_hit(Context& c){if(ps_hit(c))return;old_pierce_hit(c);}
+extern "C" __declspec(dllexport) uint32_t msd_community_piercing_shots_version(){return pierce_hooks==2u?1u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

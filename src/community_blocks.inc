@@ -1929,4 +1929,6 @@ if((old_wd_op4=find_block(0x101dbe2fu))){register_block(0x101dbe2fu,wd_op4);++wd
 if((old_wd_hit_test=find_block(0x101ddbcbu))){register_block(0x101ddbcbu,wd_hit_test);++wd_part_hooks;}
 if((old_mole_update=find_block(0x1018258du))){register_block(0x1018258du,mole_update);++mole_hooks;}
 if((old_mole_attack=find_block(0x101780e1u))){register_block(0x101780e1u,mole_attack);++mole_hooks;}
+if((old_pierce_attack=find_block(0x10177755u))){register_block(0x10177755u,pierce_attack);++pierce_hooks;}
+if((old_pierce_hit=find_block(0x1017777du))){register_block(0x1017777du,pierce_hit);++pierce_hooks;}
 }

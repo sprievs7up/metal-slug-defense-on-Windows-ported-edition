@@ -14,7 +14,8 @@ INTERNAL_FIELDS = frozenset((
     'child_unit_key', 'preview_unit_key', 'construction_time_multiplier', 'summoned_unit_key',
     'summon_interval_multiplier', 'summon_interval_additional_multiplier', 'landing_unit_key',
     'shot_action_reference_id', 'recovery_animation', 'flame_interrupt', 'ground_special_attack',
-    'retained_special_weapon', 'zombie_spec', 'throw_child_key', 'native_action', 'second_form_key'))
+    'retained_special_weapon', 'zombie_spec', 'throw_child_key', 'native_action', 'second_form_key',
+    'formation_unit_key'))
 # 与 content_sounds.KEY_PATTERN 相同（音效稳定键）。
 SOUND_KEY_PATTERN = re.compile(r'[a-z][a-z0-9_]{1,31}\.[a-z0-9_][a-z0-9_.\-]{0,63}')
 
@@ -157,6 +158,9 @@ def resolve(unit, units, library):
             raise ValueError(f'{unit["key"]}: throw_child_on_stage.stage must be a stage with a transition')
         if throw and units[throw['unit']]['base_id'] != 160:
             raise ValueError(f'{unit["key"]}: the thrown unit must use base unit 160')
+    wingmen = resolved.get('formation_wingmen')
+    if wingmen and (units[wingmen['unit']]['base_id'] != 187 or wingmen['unit'] == unit['key']):
+        raise ValueError(f'{unit["key"]}: formation_wingmen.unit must be another unit with base unit 187')
     return resolved
 
 
@@ -175,6 +179,9 @@ def internal_fields(resolved):
         fields['child_unit_key'] = resolved['spawn_child_unit']['unit']
     if 'para_drop_transform' in resolved:
         fields['landing_unit_key'] = resolved['para_drop_transform']['landing_unit']
+    # 2026-10-27 未来 5 连发马克斯奈尔（行为库 v24，核心 r99）：领队生成的僚机单位写入落地映射表。
+    if 'formation_wingmen' in resolved:
+        fields['formation_unit_key'] = resolved['formation_wingmen']['unit']
     if 'insect_swarm_release' in resolved:
         fields['shot_action_reference_id'] = 157
     if 'recovery_slot' in resolved:
@@ -367,6 +374,9 @@ def internal_fields(resolved):
             'launch_forward',
             'launch_height',
         )])
+    # 2026-10-27 贯穿子弹（行为库 v25，核心 r100）：ZSpec 标记 8388608，子弹命中后继续飞行、同一目标只结算一次。
+    if 'piercing_shots' in resolved:
+        zombie['flags'] |= 8388608
     if zombie['flags']:
         fields['zombie_spec'] = zombie
     return fields

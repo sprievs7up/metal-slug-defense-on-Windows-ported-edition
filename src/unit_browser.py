@@ -97,6 +97,8 @@ CONV_POSITION = 0x1030a1c0                     # position_icon.obm 转换表 53�
 MENU_TABLE_LITERAL = (0x101652d0, 0x101652b4)  # GetMenuUnitData 的菜单表（320 行 × 20 字节，+10 头像序号）
 ICON_PAGES = {0: 'unit_icon_01.obm', 1: 'unit_icon_02.obm'}
 BUTTONS = {'back': 30, 'sort': 101, 'deck': 106, 'free': 120, 'map': 118}   # 底栏原生按钮（ConvMenuParts）
+# FAVORITES 按钮图（用户设计，D26）：收藏筛选关闭 / 开启（文字为金色）
+FAVORITES_BUTTONS = {'favorites': 'u1_button_favorites.png', 'favorites_on': 'u1_button_favorites_on.png'}
 CELL_TINT = (0, 80, 50)                        # D18
 GAUGE_FRAME_RANGE = 0.6                        # D27
 GAUGE_COLORS = ((200, 84, 0), (255, 166, 0), (226, 110, 0), (255, 204, 0))   # D24：升级中、充满
@@ -391,14 +393,17 @@ class Art:
         return frame
 
     def button(self, name):
-        """底栏按钮（60×48）：原生 BACK / SORT，FAVORITES 为空白占位（D26），PACK 为原生 FREE 拼字（D33）。"""
+        """底栏按钮（60×48）：原生 BACK / SORT，FAVORITES 为用户设计的按钮图（D26，筛选开启时为 favorites_on），
+        PACK 为原生 FREE 拼字（D33）。"""
         key = ('button', name)
         if key in self.cache:
             return self.cache[key]
         from PIL import Image
         if name in BUTTONS:
             img = self.conv(BUTTONS[name])[0]
-        elif name in ('favorites', 'blank'):
+        elif name in FAVORITES_BUTTONS:
+            img = Image.open(self.root / 'custom_content' / FAVORITES_BUTTONS[name]).convert('RGBA')
+        elif name == 'blank':
             img = Image.open(self.root / 'custom_content' / 'u1_button_blank.png').convert('RGBA')
         elif name == 'pack':
             img = self.button('free').copy()
@@ -843,15 +848,14 @@ class UnitBrowser:
         self.bar_boxes = []
         for i, name in enumerate(names):
             x = round(BAR_LEFT + (BAR_RIGHT - BAR_LEFT) * i / max(1, len(names) - 1))
-            img.alpha_composite(scaled(art.button(name), BUTTON_SCALE), (x, BAR_Y))
-            if name == 'favorites':
-                # 占位标签（按钮框由用户另行设计，D26）；收藏筛选开启时标签为金色。
-                active = s['favorites_only']
-                self.text(img, (x + 67, BAR_Y + 89), name.upper(), 15, (255, 214, 90, 255) if active else (200, 200, 200, 255),
-                          'mm', 2)
+            img.alpha_composite(scaled(self.bar_button(name), BUTTON_SCALE), (x, BAR_Y))
             self.bar_boxes.append(((x, BAR_Y, round(60 * BUTTON_SCALE), round(48 * BUTTON_SCALE)), ('bar', name)))
         self.static_layers[key] = (img, list(self.bar_boxes))
         return self.static_layers[key]
+
+    def bar_button(self, name):
+        """底栏按钮图：收藏筛选开启时 FAVORITES 为 favorites_on（D26）。"""
+        return self.art.button('favorites_on' if name == 'favorites' and self.settings['favorites_only'] else name)
 
     def chrome(self, names):
         """静态层加顶栏勋章与 MSP 计数（单位菜单使用）：返回 (图像, 底栏点击区域)。"""
@@ -1972,7 +1976,7 @@ class UnitBrowser:
         fw, fh = round(frame[1][2] * k), round(frame[1][3] * k)
         out = self.rendered.crop((left, top, left + fw, top + fh)).copy()
         out.alpha_composite(scaled(self.art.part(frame), k), (0, 0))
-        out.alpha_composite(scaled(self.art.button(command[1]), k), (x - left, y - top))
+        out.alpha_composite(scaled(self.bar_button(command[1]), k), (x - left, y - top))
         out.alpha_composite(scaled(self.art.part(lamps), k), (x - round(lx * k) - left, y - round(ly * k) - top))
         return out, (left, top, fw, fh)
 

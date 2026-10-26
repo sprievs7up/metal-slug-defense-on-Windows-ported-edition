@@ -287,6 +287,9 @@ def check_references(u,by_key):
     if preview is not None and (preview!=child or preview not in by_key):raise ValueError('Invalid unit preview reference')
     thrown=u.get('throw_child_key')
     if thrown is not None and (thrown not in by_key or not by_key[thrown].get('internal_only') or by_key[thrown]['base_id']!=160 or thrown==u['key']):raise ValueError('Invalid thrown child reference')
+    # 2026-10-27 5 连发马克斯奈尔的僚机（行为 formation_wingmen，核心 r99）：领队与僚机的基准均为 187，僚机为内部单位。
+    wingman=u.get('formation_unit_key')
+    if wingman is not None and (u['base_id']!=187 or wingman not in by_key or not by_key[wingman].get('internal_only') or by_key[wingman]['base_id']!=187 or wingman==u['key']):raise ValueError('Invalid formation wingman reference')
 
 def check_sprite_descriptor(u,dims,descriptor_path):
     """精灵描述符与动作脚本的检查（社区单位与原版单位外观替换共用）；u 含 textures、sprite_descriptor、animations；无描述符时返回 None。"""
@@ -467,6 +470,8 @@ class CommunityContent:
         if any(not u['available_from_start'] for u in self.units) and (not hasattr(p.uc.lib,'msd_community_shop_gate_version') or p.uc.lib.msd_community_shop_gate_version()!=1):raise RuntimeError('Native core lacks original-shop unlock references')
         if self.unit_pack and (not hasattr(p.uc.lib,'msd_community_unit_pack_version') or p.uc.lib.msd_community_unit_pack_version()!=1):raise RuntimeError('Native core lacks community unit packs')
         if any(u.get('landing_unit_key') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_paratrooper_landing_version') or p.uc.lib.msd_community_paratrooper_landing_version()!=1):raise RuntimeError('Native core lacks paratrooper landing references')
+        # 2026-10-27 僚机映射（formation_unit_key）：领队生成 UnitID 187 时经落地映射表换为登记的单位（核心 r99）。
+        if any(u.get('formation_unit_key') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_formation_version') or p.uc.lib.msd_community_formation_version()<1):raise RuntimeError('Native core lacks formation wingman references')
         if any(u.get('child_unit_key') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_display_status_version') or p.uc.lib.msd_community_display_status_version()!=1):raise RuntimeError('Native core lacks child display status references')
         if any('recovery_animation' in u for u in self.units) and (not hasattr(p.uc.lib,'msd_community_mummy_variant_version') or p.uc.lib.msd_community_mummy_variant_version()!=1):raise RuntimeError('Native core lacks mummy recovery and viewer adaptation')
         if any(u.get('flame_interrupt') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_flame_interrupt_version') or p.uc.lib.msd_community_flame_interrupt_version()!=1):raise RuntimeError('Native core lacks the flame interruption adapter')
@@ -512,6 +517,8 @@ class CommunityContent:
         if any(u['zombie_spec']['flags']&2097152 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_iron_death_worm_version') or p.uc.lib.msd_community_iron_death_worm_version()<5):raise RuntimeError('Native core lacks iron death worm behavior')
         # 2026-10-26 鼹鼠弹（mole_missile，标记 4194304）：Bike_P 类 update / attackAction 的 2 个块（核心 r97）；钻出时借用蜈蚣长老的地面裁切绘制。
         # R1 行为 v2（悬停点与追踪俯冲）需核心 r98（版本 2）。
+        # 2026-10-27 贯穿子弹（piercing_shots，标记 8388608）：BattleBulletDefault::attackAction 的 2 个块（核心 r100）。
+        if any(u['zombie_spec']['flags']&8388608 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_piercing_shots_version') or p.uc.lib.msd_community_piercing_shots_version()<1):raise RuntimeError('Native core lacks piercing shots')
         if any(u['zombie_spec']['flags']&4194304 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_mole_missile_version') or p.uc.lib.msd_community_mole_missile_version()<2 or not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks mole missile behavior')
         self.ready=False
 
@@ -867,8 +874,9 @@ class CommunityContent:
         unlocks=struct.pack('<'+'I'*n,*(512 if u is None or u.get('world_clear_reward') else 0xffffffff if u['available_from_start'] else u['shop_unlock_reference_id'] for u in units))
         fields+= (self.alloc(profiles),1,p.symbols['_ZTV10BattleUnit']+8,p.symbols['_ZTV12BattleBullet']+8,self.alloc(unlocks))
         landing_ids={u['key']:u['id'] for u in self.units}
-        # 落地映射：空降单位登记落地后的单位；投出子单位的生命分档单位登记被投出的飞行单位（原生均以固定 UnitID 45 生成）。
-        landings=struct.pack('<'+'I'*n,*(landing_ids[u.get('landing_unit_key') or u.get('throw_child_key')] if u and (u.get('landing_unit_key') or u.get('throw_child_key')) else 0 for u in units))
+        # 落地映射：空降单位登记落地后的单位；投出子单位的生命分档单位登记被投出的飞行单位（原生均以固定 UnitID 45 生成）；
+        # 基准 187 的编队领队登记僚机单位（原生以固定 UnitID 187 生成，2026-10-27）。
+        landings=struct.pack('<'+'I'*n,*(landing_ids[u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key')] if u and (u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key')) else 0 for u in units))
         display_ids=struct.pack('<'+'I'*n,*(landing_ids[u['child_unit_key']] if u and u.get('child_unit_key') else UNIT_ID_BASE+i for i,u in enumerate(units)))
         fields+=(pack_pointer,self.alloc(landings),self.alloc(display_ids))
         recoveries=struct.pack('<'+'I'*n,*((u or empty).get('recovery_animation',26) for u in units))

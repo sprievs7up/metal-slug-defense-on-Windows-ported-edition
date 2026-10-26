@@ -1,0 +1,121 @@
+{
+  "key": "s1xlv.mcsnl_five_future_wing",
+  "base_id": 187,
+  "faction": 1,
+  "identity": "X Army",
+  "shop_price": 300,
+  "available_from_start": true,
+  "ap": 550,
+  "hp_multiplier": [
+    4,
+    3
+  ],
+  "knockback_threshold_multiplier": [
+    4,
+    3
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    37,
+    35
+  ],
+  "production_reference_id": 187,
+  "production_interval_multiplier": [
+    3,
+    2
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "status_word_values": {
+    "17": 999,
+    "24": 999
+  },
+  "textures": [
+    "mcsnl_five_future_wing.obm"
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      322,
+      770,
+      40,
+      46
+    ],
+    "anchor": [
+      -5,
+      1
+    ]
+  },
+  "animations": {},
+  "behaviors": [
+    {
+      "name": "piercing_shots",
+      "version": 1,
+      "params": {}
+    }
+  ],
+  "localization": {
+    "ZS": {
+      "name": "未来5连发马克斯奈尔",
+      "description": "普通攻击：机关炮   特殊攻击：-\n从未来而来的马克斯奈尔5连队。\n由最前方的紫色马克斯奈尔指挥攻击。"
+    },
+    "ZT": {
+      "name": "未來5連發馬克斯奈爾",
+      "description": "普通攻擊：機關砲   特殊攻擊：-\n從未來而來的馬克斯奈爾5連隊。\n由最前方的紫色馬克斯奈爾指揮攻擊。"
+    },
+    "JP": {
+      "name": "未来5連マクスネル",
+      "description": "通常攻撃：バルカン   特殊攻撃：-\n未来からやってきたマクスネルの5連隊。\n先頭の紫のマクスネルが攻撃を指揮している。"
+    },
+    "KR": {
+      "name": "미래 마크스넬 5개 편대",
+      "description": "일반 공격: 발칸     특수 공격: -\n미래에서 온 마크스넬의 5개 편대.\n선두의 보라색 마크스넬이 공격을 지휘하고 있다."
+    },
+    "EN": {
+      "name": "REGIMENTAL MH-6s VER.F",
+      "description": "STAND. ATK : Vulcan     SPEC. ATK : -\nFormation of 5 Max Nail soldiers from the future.\nThe Purple leader in front directs the attack."
+    },
+    "ES": {
+      "name": "MH-6s REGIMIENTO VER.F",
+      "description": "ATQ ESTÁND. : Vulcano    ATQ ESPEC. :  -\nFormación de 5 soldados Max Nail del futuro.\nEl líder morado al frente dirige el ataque."
+    },
+    "PT": {
+      "name": "BATALHÃO DE MH-6 VER.F",
+      "description": "ATQ. PADR. : Vulcan ATQ. ESPEC. : -\nBatalhão de 5 Masknells vindos do futuro.\nO líder roxo à frente lidera o ataque."
+    },
+    "FR": {
+      "name": "RÉGIMENT DE MH-6S DU FUTUR",
+      "description": "ATT. STAND : Vulcain   ATT. SPÉ : -\nFormation de 5 soldats Max Nail venus du futur.\nLe chef en violet, en tête, dirige l'attaque."
+    },
+    "DE": {
+      "name": "MH-6S-GESCHWADER (Zukunft)",
+      "description": "NORM. ANGR.: Vulkan     SPEZ. ANGR.: -\nEine Formation aus 5 Masknells aus der Zukunft.\nDer violette Masknell an der Spitze ist der Anführer."
+    },
+    "IT": {
+      "name": "SQUADRA MH-6 VER.F",
+      "description": "ATC STAND.: Vulcan   ATC SPEC.: -\nFormazione di 5 soldati dal futuro.\nIl leader in viola in testa dirige l'attacco."
+    },
+    "RU": {
+      "name": "Полковый вертолет MH-6 ВЕР. Эф",
+      "description": "СТАНД. АТАК: Вулкан   СПЕЦ. АТАК: -\nФормирование 5-ого полка из будущего.\nАтакой командует фиолетовый лидер впереди."
+    }
+  },
+  "internal_only": true
+}

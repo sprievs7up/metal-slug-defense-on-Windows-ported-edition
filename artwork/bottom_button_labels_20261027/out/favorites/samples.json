@@ -1,0 +1,338 @@
+{
+ "BACK": {
+  "base": "#66b3c8",
+  "text_bbox": [
+   5,
+   37,
+   55,
+   43
+  ],
+  "letters": [
+   {
+    "letter": "F",
+    "from": "FREE",
+    "recolored": true
+   },
+   {
+    "letter": "A",
+    "from": "BACK",
+    "recolored": false
+   },
+   {
+    "letter": "V",
+    "from": "EVENT",
+    "recolored": true
+   },
+   {
+    "letter": "O",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "R",
+    "from": "SORT",
+    "recolored": true
+   },
+   {
+    "letter": "I",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "T",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "E",
+    "from": "MEDAL",
+    "recolored": true
+   },
+   {
+    "letter": "S",
+    "from": "SHOP",
+    "recolored": true
+   }
+  ]
+ },
+ "OPTION": {
+  "base": "#75b078",
+  "text_bbox": [
+   5,
+   37,
+   55,
+   43
+  ],
+  "letters": [
+   {
+    "letter": "F",
+    "from": "FREE",
+    "recolored": true
+   },
+   {
+    "letter": "A",
+    "from": "BACK",
+    "recolored": true
+   },
+   {
+    "letter": "V",
+    "from": "EVENT",
+    "recolored": true
+   },
+   {
+    "letter": "O",
+    "from": "OPTION",
+    "recolored": false
+   },
+   {
+    "letter": "R",
+    "from": "SORT",
+    "recolored": true
+   },
+   {
+    "letter": "I",
+    "from": "OPTION",
+    "recolored": false
+   },
+   {
+    "letter": "T",
+    "from": "OPTION",
+    "recolored": false
+   },
+   {
+    "letter": "E",
+    "from": "MEDAL",
+    "recolored": true
+   },
+   {
+    "letter": "S",
+    "from": "SHOP",
+    "recolored": true
+   }
+  ]
+ },
+ "SHOP": {
+  "base": "#b9b23c",
+  "text_bbox": [
+   5,
+   37,
+   55,
+   43
+  ],
+  "letters": [
+   {
+    "letter": "F",
+    "from": "FREE",
+    "recolored": true
+   },
+   {
+    "letter": "A",
+    "from": "BACK",
+    "recolored": true
+   },
+   {
+    "letter": "V",
+    "from": "EVENT",
+    "recolored": true
+   },
+   {
+    "letter": "O",
+    "from": "SHOP",
+    "recolored": false
+   },
+   {
+    "letter": "R",
+    "from": "SORT",
+    "recolored": true
+   },
+   {
+    "letter": "I",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "T",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "E",
+    "from": "MEDAL",
+    "recolored": true
+   },
+   {
+    "letter": "S",
+    "from": "SHOP",
+    "recolored": false
+   }
+  ]
+ },
+ "MEDAL": {
+  "base": "#878787",
+  "text_bbox": [
+   5,
+   37,
+   55,
+   43
+  ],
+  "letters": [
+   {
+    "letter": "F",
+    "from": "FREE",
+    "recolored": true
+   },
+   {
+    "letter": "A",
+    "from": "MEDAL",
+    "recolored": false
+   },
+   {
+    "letter": "V",
+    "from": "EVENT",
+    "recolored": true
+   },
+   {
+    "letter": "O",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "R",
+    "from": "SORT",
+    "recolored": true
+   },
+   {
+    "letter": "I",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "T",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "E",
+    "from": "MEDAL",
+    "recolored": false
+   },
+   {
+    "letter": "S",
+    "from": "SHOP",
+    "recolored": true
+   }
+  ]
+ },
+ "LAB": {
+  "base": "#87a58b",
+  "text_bbox": [
+   5,
+   37,
+   55,
+   43
+  ],
+  "letters": [
+   {
+    "letter": "F",
+    "from": "FREE",
+    "recolored": true
+   },
+   {
+    "letter": "A",
+    "from": "BACK",
+    "recolored": true
+   },
+   {
+    "letter": "V",
+    "from": "EVENT",
+    "recolored": true
+   },
+   {
+    "letter": "O",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "R",
+    "from": "SORT",
+    "recolored": true
+   },
+   {
+    "letter": "I",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "T",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "E",
+    "from": "MEDAL",
+    "recolored": true
+   },
+   {
+    "letter": "S",
+    "from": "SHOP",
+    "recolored": true
+   }
+  ]
+ },
+ "MISSION": {
+  "base": "#de7676",
+  "text_bbox": [
+   5,
+   37,
+   55,
+   43
+  ],
+  "letters": [
+   {
+    "letter": "F",
+    "from": "FREE",
+    "recolored": true
+   },
+   {
+    "letter": "A",
+    "from": "BACK",
+    "recolored": true
+   },
+   {
+    "letter": "V",
+    "from": "EVENT",
+    "recolored": true
+   },
+   {
+    "letter": "O",
+    "from": "MISSION",
+    "recolored": false
+   },
+   {
+    "letter": "R",
+    "from": "SORT",
+    "recolored": true
+   },
+   {
+    "letter": "I",
+    "from": "MISSION",
+    "recolored": false
+   },
+   {
+    "letter": "T",
+    "from": "OPTION",
+    "recolored": true
+   },
+   {
+    "letter": "E",
+    "from": "MEDAL",
+    "recolored": true
+   },
+   {
+    "letter": "S",
+    "from": "MISSION",
+    "recolored": false
+   }
+  ]
+ }
+}

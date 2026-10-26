@@ -1,6 +1,6 @@
 static const char BEHAVIOR_MANIFEST[]=R"MSD({
   "schema": 1,
-  "library_version": 23,
+  "library_version": 25,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位",
     "rational": "[分子, 分母] 正整数倍率",
@@ -128,6 +128,36 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "doc": {
         "ZS": "空降中的内部单位：落地后转换为指定的可选单位（替代原生固定的 UnitID 45）。",
         "EN": "Falling paratrooper (internal unit) turns into the given selectable unit on landing, replacing the native fixed UnitID 45."
+      }
+    },
+    {
+      "name": "formation_wingmen",
+      "version": 1,
+      "base_classes": [
+        187
+      ],
+      "params": {
+        "unit": {
+          "type": "unit_key",
+          "required": true,
+          "internal": true
+        }
+      },
+      "doc": {
+        "ZS": "5 连发马克斯奈尔类编队（原生 BattleAction_McsnlFive）：领队出击后生成的 4 架僚机改为指定的内部单位（替代原生固定的 UnitID 187；该单位的基准须为 187），僚机按其自身的数据行与图集作战与绘制。",
+        "EN": "Regimental MH-6s formation (native BattleAction_McsnlFive): the four wingmen spawned by the leader become the given internal unit (replacing the native fixed UnitID 187; that unit must use base unit 187), and fight and draw with their own data row and atlas."
+      }
+    },
+    {
+      "name": "piercing_shots",
+      "version": 1,
+      "base_classes": [
+        187
+      ],
+      "params": {},
+      "doc": {
+        "ZS": "贯穿子弹：本单位发射的子弹（原生 BattleActionBullet）命中后不消失，继续飞行并依次结算之后接触的目标，直到落地或飞出射程；同一颗子弹对同一目标只结算一次（子弹记录已结算的目标，另有原生受击 ID 环）。每发命中目标数（状态词 17 / 24）须足够大（如 999），否则数到 0 时子弹的攻击框关闭。",
+        "EN": "Piercing shots: bullets fired by this unit (native BattleActionBullet) are not removed on a hit; they keep flying and hit each target they touch afterwards, until they reach the ground or their range. One bullet hits the same target only once (the bullet records the targets it has hit, besides the native hit-ID ring). Set the targets per shot (status words 17 / 24) high enough (for example 999); when it counts down to 0 the bullet's attack box closes."
       }
     },
     {

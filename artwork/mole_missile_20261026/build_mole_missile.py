@@ -82,6 +82,8 @@ RISE_DRIFT = 11       # R1：升起中前移的距离（很小的前倾角，约
 RISE_FROM = 26        # 升起开始时机体重心在地面以下的深度（整体在地下，按地面裁切）
 BULGE_T, RISE_T, TILT_STEP, ADJUST_STEP = 3, 15, 3, 2
 ADJUST = (6, 7, 8, 9, 10, 11, 12, 13, 11)   # 悬停调整位置，奇数步为蓝色版（录像：钻出后约 0.5–1 秒原地闪烁再冲刺）
+# 单位菜单待机：悬停帧往返播放（1 2 3 4 5 4 3 2 1 …，同猎人待机的往返；用户 2026-10-27），此前为 6–10 单向循环，第 10 帧跳回第 6 帧
+NEUTRAL_ORDER = (6, 7, 8, 9, 10, 9, 8, 7)
 DASH_STEP = 2
 DASH_SPEED = 120      # 世界单位 × 10 / tick（R1：追踪俯冲路程变长，取每 tick 12，约 1 秒命中；首版按录像取 9）
 BLAST = (80, 80)      # 普攻爆炸攻击框（同原生鼹鼠弹爆炸攻击框 8：宽 80、高 80 脚本单位；R1 起以弹头为中心）
@@ -346,7 +348,7 @@ def build(fr):
 
     # 单位菜单动作演示的待机与编队页：悬停姿态放在较低处（NEUTRAL_Y），单位宽度取此动作的受击框
     s[SLOT['neutral']] = sum(([cmd(3, hbox(i, *at(i, 0, -NEUTRAL_Y)))] + hover(i, i, 0, -NEUTRAL_Y, 3)
-                              for i in HOVER[:5]), []) + [cmd(5)]
+                              for i in NEUTRAL_ORDER), []) + [cmd(5)]
     s[SLOT['deck']] = [cmd(3, hbox(6, *at(6, 0, -NEUTRAL_Y))), show(frame(6, *at(6, 0, -NEUTRAL_Y))), cmd(1, 60), cmd(5)]
     s[SLOT['deck2']] = list(s[SLOT['deck']])
 
@@ -552,7 +554,7 @@ def main():
     cell = icon_cell(fr[6]['img'])
     Image.fromarray(cell, 'RGBA').save(OUT / 'icon.png')
     page.save(OUT / 'atlas.png')
-    for name, ticks, step, clip in (('emerge', 48, 1, True), ('dash', 16, 1, False), ('neutral', 15, 1, False),
+    for name, ticks, step, clip in (('emerge', 48, 1, True), ('dash', 16, 1, False), ('neutral', 24, 1, False),
                                     ('under', 18, 1, False), ('burrow', 10, 1, False), ('blast', 8, 1, False),
                                     ('blast_sp', 8, 1, False), ('mound_fx', 56, 2, False), ('death', 4, 1, False)):
         strip(page, rects, words, hits, atks, anims, SLOT[name], ticks, step, clip=clip).save(OUT / f'strip_{SLOT[name]:02d}_{name}.png')
