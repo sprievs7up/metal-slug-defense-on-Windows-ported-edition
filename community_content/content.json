@@ -68,7 +68,9 @@
     "s1xlv.iron_death_worm": 1077,
     "s1xlv.mole_missile": 1078,
     "s1xlv.mcsnl_five_future": 1079,
-    "s1xlv.mcsnl_five_future_wing": 1080
+    "s1xlv.mcsnl_five_future_wing": 1080,
+    "s1xlv.sandbag_future_builder": 1081,
+    "s1xlv.sandbag_future": 1082
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -142,7 +144,8 @@
     "iron_death_worm_1.obm": "3f40b84e91a6069d8247fb55015a3f458884822d50377b5a7052068ec0817d4f",
     "mole_missile.obm": "fe61f9df4154acf675964c6725740cf62f7a5a96c0628634f872215622bbd8c1",
     "mcsnl_five_future.obm": "6a524d4dbad5c9fac34d749ea8143c40fe0917d5813b537df40f8063ffaaf2ab",
-    "mcsnl_five_future_wing.obm": "a4e893a001d5ed5cd89a20b8ef902203e109e99a98922536bdf4034c5eec5f54"
+    "mcsnl_five_future_wing.obm": "a4e893a001d5ed5cd89a20b8ef902203e109e99a98922536bdf4034c5eec5f54",
+    "sandbag_future.obm": "7eb8179653f7bf75362b45dbf6877d11df013c5248bb89b5df9479c25eeca348"
   },
   "stock_sprites": {
     "381": "tyra_elson_sprite.json",
@@ -668,6 +671,15 @@
       "file": "mole_emerge.msdf",
       "type": "se",
       "volume": 100
+    },
+    {
+      "key": "s1xlv.bgm_ms7_m2",
+      "file": "bgm_ms7_m2.msdf",
+      "type": "bgm",
+      "loop": [
+        9.884626,
+        100.894104
+      ]
     }
   ]
 }

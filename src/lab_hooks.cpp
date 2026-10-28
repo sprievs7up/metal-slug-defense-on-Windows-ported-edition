@@ -37,6 +37,7 @@ bool enabled(Context& c,uint32_t flag){
     return rd<uint32_t>(c,H)==MAGIC && (rd<uint32_t>(c,FLAGS)&flag);
 }
 Block old_gauge_loop_exit,old_gauge_minimap;
+bool drawing_gauge=false;                          // 底栏分栏的等待条遍中正在绘制等待条（0x1d8dbc…0x1d8e48）
 void gauge_loop_exit(Context& c){
     if(enabled(c,FLAG_ENEMY_GAUGE)){
         if(rd<uint32_t>(c,GAUGE_PASS)==0u){
@@ -52,6 +53,7 @@ void gauge_loop_exit(Context& c){
     old_gauge_loop_exit(c);
 }
 void gauge_minimap(Context& c){
+    drawing_gauge=false;
     if(rd<uint32_t>(c,H)==MAGIC && rd<uint32_t>(c,GAUGE_PASS)==1u){
         c.pc=0x101d8ef7u;                          // 敌方补画遍：跳过小地图点，取下一单位
         return;
@@ -319,7 +321,7 @@ constexpr Segment SEGMENTS[]={
     {-88.89f,-70,true,1,true}};
 constexpr int SEGMENT_COUNT=int(sizeof SEGMENTS/sizeof SEGMENTS[0]);
 constexpr float ARROW_SHIFT=-246.0f;                           // 滚动箭头（源 x 742）移到 3 格窗口右端
-struct Pass{bool active=false;float s=1,offx=0,offy=0;int clip[4]={0,0,0,0};int filter=0;bool cells=false;bool tinted=false;bool rotate=false;bool ap_button=false;bool apbar=false;bool no_apbar=false;bool mirror=false;bool mirror_sprite=false;bool coin_overlay=false;bool banner_overlay=false;float mirror_center=0;uint32_t atlas=0;};
+struct Pass{bool active=false;float s=1,offx=0,offy=0;int clip[4]={0,0,0,0};int filter=0;bool cells=false;bool tinted=false;bool rotate=false;bool ap_button=false;bool apbar=false;bool no_apbar=false;bool mirror=false;bool mirror_sprite=false;bool coin_overlay=false;bool banner_overlay=false;bool gauge_overlay=false;float mirror_center=0;uint32_t atlas=0;};
 Pass pass;
 bool enemy_pass=false,drawing_banner=false;
 float seg_dest[SEGMENT_COUNT];
@@ -419,6 +421,7 @@ template<uint32_t ENTRY> void DrawHook<ENTRY>::run(Context& c){
     graphics_ptr=c.r[0];
     if(pass.active){
         if(pass.banner_overlay && !drawing_banner){c.pc=c.r[14];return;}
+        if(pass.gauge_overlay && !drawing_gauge){c.pc=c.r[14];return;}
         if(!pass_filter(c,c.r[3])){c.pc=c.r[14];return;}
         float extra=(pass.cells && is_arrow(c))?ARROW_SHIFT*pass.s:0.0f;
         uint32_t m=c.r[2],dst=H+0x800u;
@@ -483,6 +486,7 @@ Block old_fill;
 void fill_hook(Context& c){
     if(pass.active){
         if(pass.banner_overlay && !drawing_banner){c.pc=c.r[14];return;}
+        if(pass.gauge_overlay && !drawing_gauge){c.pc=c.r[14];return;}
         if(pass.filter==1){c.pc=c.r[14];return;}
         float s=pass.s;
         int x=int(std::lround(int32_t(c.r[1])*s+pass.offx)),y=int(std::lround(int32_t(c.r[2])*s+pass.offy));
@@ -615,11 +619,11 @@ void tick_enemy_sprite(Context& c,uint32_t op){
 }
 void run_pass(Context& c,uint32_t op,const Pass& p,uint32_t fn=DRAWUI){
     pass=p;
-    drawing_banner=false;
+    drawing_banner=drawing_gauge=false;
     std::memcpy(cur_clip,p.clip,sizeof cur_clip);
     guest_call(c,fn,op);
     pass.active=false;
-    drawing_banner=false;
+    drawing_banner=drawing_gauge=false;
 }
 
 Block old_drawui_entry;
@@ -684,6 +688,12 @@ void drawui_entry(Context& c){
         guest_call(c,G_FILL-1u,graphics_ptr,uint32_t(int(SCREEN_LEFT)-1),uint32_t(int(bottom)),uint32_t(int(SCREEN_RIGHT-SCREEN_LEFT)+2),stack,1);
         guest_call(c,0x101417dfu-1u,graphics_ptr,0xffffffffu);
     }
+    // 绝招等待条：原生 drawUI 在底栏与 AP 框之后、金币之前以原坐标绘制（0x1d8dbc）。分栏的其他各遍不画等待条，
+    // 此处以原坐标与整屏裁剪单独执行一遍，只保留等待条的框体与填充。
+    Pass gauge;gauge.active=true;gauge.gauge_overlay=true;gauge.no_apbar=true;
+    gauge.clip[0]=int(SCREEN_LEFT)-1;gauge.clip[1]=0;
+    gauge.clip[2]=int(SCREEN_RIGHT-SCREEN_LEFT)+2;gauge.clip[3]=int(BAR_BOTTOM);
+    run_pass(c,op,gauge);
     // 原生 drawUI 在人物之后绘制金币（0x1d92f6）。分栏金币统一置于 AP 框及底栏之上，
     // 使用对应 AP 按钮的变换并允许越过框体；各侧金币对象独立，敌方镜像中心采用其按钮中心。
     for(int i=0;i<SEGMENT_COUNT;++i){
@@ -785,6 +795,15 @@ Block old_coin_draw;
 void coin_draw(Context& c){
     if(pass.active && !pass.coin_overlay){c.pc=c.r[14];return;}
     old_coin_draw(c);
+}
+// 绝招等待条（0x1d8dbc 画框体、0x1d8e22 画填充，随后进入 0x1d8e48 小地图点）。分栏常规各遍跳过等待条，
+// 只在等待条遍中绘制：地势低处单位的等待条越过底栏上沿（D 498）时，第 0 遍会裁掉其下半部，
+// 各片段遍又会按片段的缩放与位移把下半部画进底栏（2026-10-27 用户报告的错位）。
+Block old_gauge_draw;
+void gauge_draw(Context& c){
+    if(pass.active && !pass.gauge_overlay){c.pc=0x101d8e49u;return;}
+    drawing_gauge=pass.active;
+    old_gauge_draw(c);
 }
 // ---------- 敌方 AP 按钮人物的动画（与我方相同的逻辑） ----------
 // 我方：BattlePlayerOperator::update 每帧推进 operator+204；BattleScene 的事件切换动画——
@@ -1681,6 +1700,7 @@ void install_ui_hooks(){
     old_base_dead=find_block(0x101d5dfdu);register_block(0x101d5dfdu,scene_base_dead);
     old_ap_bar=find_block(DRAW_AP_BAR|1u);register_block(DRAW_AP_BAR|1u,ap_bar_entry);
     old_coin_draw=find_block(0x101d6881u);register_block(0x101d6881u,coin_draw);
+    old_gauge_draw=find_block(0x101d8dbdu);register_block(0x101d8dbdu,gauge_draw);
     old_drawui_entry=find_block(0x101d7ca9u);register_block(0x101d7ca9u,drawui_entry);
     DrawHook<G_DRAW_S>::old=find_block(G_DRAW_S);register_block(G_DRAW_S,DrawHook<G_DRAW_S>::run);
     DrawHook<G_DRAW>::old=find_block(G_DRAW);register_block(G_DRAW,DrawHook<G_DRAW>::run);
@@ -1885,7 +1905,7 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     if(dropped){*dropped=net_action_dropped;net_action_dropped=0;}
     return n;
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 25u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 26u;}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;

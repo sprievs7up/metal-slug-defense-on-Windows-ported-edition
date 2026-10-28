@@ -857,7 +857,35 @@ static bool stage_hires(Context& c,uint32_t base){
  return (rd<uint8_t>(c,head(c,172u)+id-138u)&1u)!=0u;
 }
 static Block old_stage_back_draw,old_stage_front_draw;static uint32_t stage_scale_hooks=0u;
-static void stage_back_draw(Context& c){if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);old_stage_back_draw(c);}
+// 背景图层视差（2026-10-28，MS7 任务 2 第 5 关；核心 r102）：场景效果记录（头部 +184，见下文 scene_fx）标记位 2 时，字 20 为背景层数、
+// 字 21 为逐层卷动比例表（int32 千分比，1000 为与镜头同速）。drawBack 的逐层绘制块（0x1e147c）以 r9 = −（参数 + C）作为 drawConv 的
+// 横坐标：参数为 BattleScreen::getScreenPosition = 镜头 x（BattleScreen +8）+ 屏幕边距（+12，构造时取 FrameworkInstance::
+// GetScreenMarginWidth，16:9 布局为 84），C = [场景 +0x14] × [场景 +0x10]（战斗缩放 2.0；0x1e1426）；当前层表项地址为 r6
+// （层表首地址为 [[场景 +4]]）。令 B = 边距 + C，比例 f 的层在本块执行期间把 r9 改为 f ×（r9 + B）− B = −（f × 镜头 x + B）（四舍五入），
+// 块后复原：镜头 x 为 0 时各层与原坐标对齐，该层随镜头移动 f 倍的距离。初版把整个 r9 乘以 f，镜头在最左端时比例小于 1 的层右移
+// (1 − f) × 84，第 5 关截图左缘露出黑边（暗色底层 63、暗色石柱 42、浅色石柱 21，探针 run_parallax_probe.py），同日改正。
+// 只改绘制，不影响对战模拟与回滚。
+static uint32_t scene_fx(Context& c,uint32_t stage);
+static constexpr uint32_t STAGE_MARGIN=0x1016c0cbu;   // FrameworkInstance::GetScreenMarginWidth
+static int32_t stage_parallax(Context& c,uint32_t st){
+ uint32_t r=scene_fx(c,st);
+ if(!r||!(rd<uint32_t>(c,r)&4u))return 1000;
+ uint32_t base=rd<uint32_t>(c,rd<uint32_t>(c,st+4u));
+ if(c.r[6]<base)return 1000;
+ uint32_t idx=(c.r[6]-base)>>2;
+ if(idx>=rd<uint32_t>(c,r+80u))return 1000;
+ return rd<int32_t>(c,rd<uint32_t>(c,r+84u)+4u*idx);
+}
+static void stage_back_draw(Context& c){
+ if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);
+ int32_t f=stage_parallax(c,c.r[4]);uint32_t r9=c.r[9];
+ if(f!=1000){
+  int64_t base=int64_t(float(rd<int32_t>(c,c.r[4]+0x14u))*rd<float>(c,c.r[4]+0x10u))+int32_t(is_call(c,STAGE_MARGIN,0u));
+  int64_t v=(int64_t(int32_t(r9))+base)*f;
+  c.r[9]=uint32_t(int32_t((v>=0?(v+500)/1000:(v-500)/1000)-base));
+ }
+ old_stage_back_draw(c);c.r[9]=r9;
+}
 static void stage_front_draw(Context& c){if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);old_stage_front_draw(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_stage_scale_version(){return stage_scale_hooks==2u?1u:0u;}
 // 自制战场的地形跟随（2026-10-20，里世界 4 实机反馈：坡道上被击退的单位只横向位移、偏离地形线，向上坡被推开后可能卡住）。
@@ -2344,9 +2372,10 @@ void msd_retained_count(Context& c,uint32_t uid){
 }
 extern "C" __declspec(dllexport) uint32_t msd_community_retained_weapon_version(){return 1u;}
 // ---------- 自制场景的水花与子弹墙（2026-10-22，MS6 任务 3；核心 r76）----------
-// 头部 +184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（宿主 install_scene_fx），无此类场景时为 0。记录 20 个字：
-//  0 标记（位 0 水花，位 1 子弹墙）；1–4 水花左界、右界、起水高度、画线；5–8 水花颜色 r、g、b 与染色强度（float）；
-//  9 已建立 WaterFunc 的场景对象；10–17 WaterFunc 存储（0x20 字节）；18 子弹墙多边形数；19 多边形数据（每个：点数 n，再 n 对 x、y）。
+// 头部 +184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（宿主 install_scene_fx），无此类场景时为 0。记录 22 个字：
+//  0 标记（位 0 水花，位 1 子弹墙，位 2 背景图层视差）；1–4 水花左界、右界、起水高度、画线；5–8 水花颜色 r、g、b 与染色强度（float）；
+//  9 已建立 WaterFunc 的场景对象；10–17 WaterFunc 存储（0x20 字节）；18 子弹墙多边形数；19 多边形数据（每个：点数 n，再 n 对 x、y）；
+//  20 视差表的背景层数；21 视差表（int32 千分比，见上文 stage_parallax，2026-10-28 核心 r102）。
 // 水花：原生水面场景（BattleStage1_3、2_4、3_1、5_1_2 等）在构造时建 WaterFunc（共用效果 402 的精灵），setup 中 waterSetup(2.0, 左界, 右界,
 // 起水高度, 画线)，drawFront 末尾 waterDraw(镜头 x, 帧)：按每个地面单位的 x 画 7 帧水花（宽单位画多处），只画 y 不小于起水高度的单位，纵向
 // 位置固定为画线。自制场景为通用 BattleStageBase（update 0x1e13c2，drawFront 0x1e14c4，析构 0x1e1398）。setup 时 BattleSpriteFactory
@@ -2423,6 +2452,7 @@ static void fx_bullet_begin(Context& c){
 }
 static Block old_fx_bullet;static void fx_bullet(Context& c){fx_bullet_begin(c);old_fx_bullet(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_scene_fx_version(){return scene_fx_hooks==4u?1u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_stage_parallax_version(){return stage_scale_hooks==2u&&scene_fx_hooks==4u?1u:0u;}
 // ---------- 鼹鼠弹（2026-10-26，行为库 v22：mole_missile v1，标记 4194304；基准 133 BattleAction_Bike_P；核心 r97，R1 r98）----------
 // MS7 / MSXX 任务 2 首领 Crablops 绝招放出的鼹鼠弹做成单位（MSA / MSD 原生只有 CRABLOPS 的弹体 BulletAction_CrabMecha_Mogura，
 // 无生命与受击框；核查与方案 docs/ms7/MS7_MOLE_MISSILE_CHECK_2026-10-26.md）。本单位的 Bike_P::update（0x18258c）由下列流程执行，

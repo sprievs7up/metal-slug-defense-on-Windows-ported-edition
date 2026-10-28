@@ -1,0 +1,115 @@
+{
+  "key": "s1xlv.sandbag_future",
+  "base_id": 4,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 100,
+  "available_from_start": true,
+  "ap": 100,
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 5,
+  "production_interval_multiplier": [
+    156,
+    125
+  ],
+  "hp_multiplier": [
+    8,
+    3
+  ],
+  "knockback_threshold_multiplier": [
+    8,
+    3
+  ],
+  "menu_reference_id": 5,
+  "internal_only": true,
+  "textures": [
+    "sandbag_future.obm"
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      364,
+      770,
+      47,
+      39
+    ],
+    "anchor": [
+      1,
+      -6
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "ZS": {
+      "name": "沙包（未来）",
+      "description": "普通攻击：‐     特殊攻击：‐\n完全没有任何理由被制造的兵器，\n唯一能知晓的是来自创作者的恶趣味。"
+    },
+    "ZT": {
+      "name": "沙包（未來）",
+      "description": "普通攻擊：‐     特殊攻擊：‐\n完全沒有任何理由被製造的兵器，\n唯一能知曉的是來自創作者的惡趣味。"
+    },
+    "JP": {
+      "name": "土嚢（未来）",
+      "description": "通常攻撃：‐     特殊攻撃：‐\n何の理由もなく造られた兵器。\n唯一わかるのは、作者の悪趣味によるものだということだ。"
+    },
+    "KR": {
+      "name": "샌드백 (미래)",
+      "description": "일반 공격: -     특수 공격: -\n아무런 이유 없이 만들어진 병기.\n알 수 있는 것은 제작자의 짓궂은 취향뿐이다."
+    },
+    "EN": {
+      "name": "SANDBAG (Future)",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nA weapon built for no reason whatsoever.\nThe only clue is its creator's twisted sense of humor."
+    },
+    "ES": {
+      "name": "BOLSA DE ARENA (Futuro)",
+      "description": "ATQ. ESTÁND. : -    ATQ. ESPEC. : -\nUn arma fabricada sin razón alguna.\nSolo se sabe que nace del mal gusto de su creador."
+    },
+    "PT": {
+      "name": "SACO DE AREIA (Futuro)",
+      "description": "ATQ. PADR. : -   ATQ. ESPEC. : -\nUma arma criada sem motivo algum.\nSó se sabe que vem do gosto duvidoso de seu criador."
+    },
+    "FR": {
+      "name": "SAC DE SABLE (Futur)",
+      "description": "ATT. STAND : -   ATT. SPÉ : -\nUne arme fabriquée sans la moindre raison.\nSeul indice : l'humour douteux de son créateur."
+    },
+    "DE": {
+      "name": "SANDSACK (Zukunft)",
+      "description": "STANDARDANGR. : -     SPEZIALANGR. : -\nEine Waffe, gebaut ohne jeden Grund.\nBekannt ist nur der schräge Humor ihres Schöpfers."
+    },
+    "IT": {
+      "name": "SACCO DI SABBIA (Futuro)",
+      "description": "ATC STAND.: -   ATC SPEC.: -\nUn'arma costruita senza alcun motivo.\nSi sa solo che nasce dal gusto perverso del suo creatore."
+    },
+    "RU": {
+      "name": "САНДБАГ (будущее)",
+      "description": "СТАНД. АТАК: -   СПЕЦ. АТАК: -\nОружие, созданное без всякой причины.\nИзвестно лишь, что это причуда его создателя."
+    }
+  }
+}

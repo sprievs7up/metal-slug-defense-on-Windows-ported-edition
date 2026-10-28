@@ -2,7 +2,7 @@
 from pathlib import Path
 import json,re
 
-DEFAULTS={'application_name':'MSD WINDOWS S1XLV','display_version':'26.10.8','menu_image':'menu_screen.png'}
+DEFAULTS={'application_name':'MSD WINDOWS S1XLV','display_version':'26.10.9','menu_image':'menu_screen.png'}
 
 def load(root):
  path=Path(root)/'branding.json';data=dict(DEFAULTS)

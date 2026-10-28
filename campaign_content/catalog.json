@@ -63,11 +63,21 @@
     "ms7_m1_tunnel.webp": "91419bfe88e33a8b2a368c7f5b1f37c35d44aca4c4f0c4e33e34707eb7bbda32",
     "ms7_m1_works1.webp": "4301781fee10674632431ad5e3ad1be65d91e795dac0786a10f34a0f69cc6aae",
     "ms7_m1_works2.webp": "5a89304ca039a65e4f95502743aed0736cd63885be6fbee3ecc1e61882355124",
+    "ms7_m2_boss.webp": "cd1594c701a72a7c8b7e2edf3a58a930aded05eb5823e84437304b91664c551e",
+    "ms7_m2_descent.webp": "7597db3b705cbd14b23dc3ad5b3be02997326930eaeba16405bdfb60ee8af81f",
+    "ms7_m2_shaft.webp": "9a195cbbdee1346593e3eb591ac3681e40a3994f1d0a3d8751bdc273904f58bf",
+    "ms7_m2_tunnel1.webp": "bdaff0f29c7f668685222765e251978cf6bb6e36e5b08bccd0b7cb0941f069df",
+    "ms7_m2_tunnel2.webp": "a5c6442a4c0b02775ac8d15edb25da3c9b1d2bda93c7be480bb64af6f487e3f6",
     "ms7_thumb_m1_s1.png": "edddc49da95257fc4121330fccc65cd3ae5100885400f4d0655b3d435930e83e",
     "ms7_thumb_m1_s2.png": "5ede2025de030d6e1f14bfe953aeb0b8efb494121ad45e10620f48b3680431ea",
     "ms7_thumb_m1_s3.png": "ce30b1365cbca753cde564889158489686e4a4feff2f01760305222c852de37c",
     "ms7_thumb_m1_s4.png": "41242ace69e8d0fc4118913f8429b775e7ee69e6b5b544fe92504f908ed9b3ae",
-    "ms7_thumb_m1_s5.png": "65cbcdb6d4462b1f889484b26f794ea3236701b493f188cc54c3e5481088a38b"
+    "ms7_thumb_m1_s5.png": "65cbcdb6d4462b1f889484b26f794ea3236701b493f188cc54c3e5481088a38b",
+    "ms7_thumb_m2_s1.png": "dfdc1380ab27553bbb0b380d6242dceb36b5e4b7cd163fe359ca2e30c9d010db",
+    "ms7_thumb_m2_s2.png": "35afec603e961c60d04521d285f9f28815f71ce00a4307f1e03e981b48364995",
+    "ms7_thumb_m2_s3.png": "eddc3b57a343a62cd1bcd26fd6ddd7b62907f6f4ef6bd4d8bda9895f36e78683",
+    "ms7_thumb_m2_s4.png": "35f290c4f10558da19cc18d436ce0b36efc315b4524268ba99d74b1d06011733",
+    "ms7_thumb_m2_s5.png": "53826cc5896410d2c43fa7be661797d5a2ce0199d36e6fd2999b3f80660123f1"
   },
   "scenes": [
     {
@@ -92620,6 +92630,1006 @@
           ]
         ]
       }
+    },
+    {
+      "key": "s1xlv.ms7_m2_shaft",
+      "base_id": 0,
+      "texture": "ms7_m2_shaft.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        628
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          1256,
+          436
+        ]
+      ],
+      "bases": [
+        80,
+        598
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            238,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1793,
+            1,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            1793,
+            1,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            215,
+            452,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            215,
+            452,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            211,
+            209,
+            -572,
+            -221,
+            0,
+            0
+          ],
+          [
+            429,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            429,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            625,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            625,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            821,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            821,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            625,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            625,
+            452,
+            193,
+            177,
+            -902,
+            -234,
+            0,
+            0
+          ],
+          [
+            1265,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1265,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1441,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1441,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1617,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1617,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1441,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ],
+          [
+            1441,
+            1,
+            173,
+            212,
+            -1083,
+            -227,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          [
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ],
+          [
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms7_m2_tunnel1",
+      "base_id": 0,
+      "texture": "ms7_m2_tunnel1.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        660
+      ],
+      "terrain": [
+        [
+          0,
+          434
+        ],
+        [
+          765,
+          436
+        ],
+        [
+          781,
+          433
+        ],
+        [
+          800,
+          421
+        ],
+        [
+          835,
+          414
+        ],
+        [
+          874,
+          395
+        ],
+        [
+          957,
+          362
+        ],
+        [
+          986,
+          344
+        ],
+        [
+          1008,
+          337
+        ],
+        [
+          1062,
+          326
+        ],
+        [
+          1096,
+          322
+        ],
+        [
+          1320,
+          322
+        ]
+      ],
+      "bases": [
+        80,
+        580
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            302,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms7_m2_tunnel2",
+      "base_id": 0,
+      "texture": "ms7_m2_tunnel2.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1331
+      ],
+      "terrain": [
+        [
+          0,
+          321
+        ],
+        [
+          228,
+          321
+        ],
+        [
+          256,
+          333
+        ],
+        [
+          310,
+          374
+        ],
+        [
+          365,
+          391
+        ],
+        [
+          464,
+          393
+        ],
+        [
+          550,
+          389
+        ],
+        [
+          598,
+          395
+        ],
+        [
+          995,
+          395
+        ],
+        [
+          1018,
+          399
+        ],
+        [
+          1094,
+          390
+        ],
+        [
+          1142,
+          363
+        ],
+        [
+          1158,
+          350
+        ],
+        [
+          1213,
+          326
+        ],
+        [
+          1366,
+          323
+        ],
+        [
+          1398,
+          328
+        ],
+        [
+          1453,
+          359
+        ],
+        [
+          1501,
+          370
+        ],
+        [
+          1526,
+          396
+        ],
+        [
+          1546,
+          408
+        ],
+        [
+          1603,
+          426
+        ],
+        [
+          1955,
+          427
+        ],
+        [
+          1974,
+          436
+        ],
+        [
+          1984,
+          436
+        ],
+        [
+          2019,
+          434
+        ],
+        [
+          2042,
+          418
+        ],
+        [
+          2061,
+          413
+        ],
+        [
+          2080,
+          399
+        ],
+        [
+          2109,
+          393
+        ],
+        [
+          2138,
+          377
+        ],
+        [
+          2154,
+          352
+        ],
+        [
+          2160,
+          348
+        ],
+        [
+          2211,
+          344
+        ],
+        [
+          2250,
+          329
+        ],
+        [
+          2278,
+          321
+        ],
+        [
+          2662,
+          321
+        ]
+      ],
+      "bases": [
+        80,
+        1294
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            626,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms7_m2_descent",
+      "base_id": 0,
+      "texture": "ms7_m2_descent.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        704
+      ],
+      "terrain": [
+        [
+          0,
+          436
+        ],
+        [
+          704,
+          436
+        ],
+        [
+          797,
+          423
+        ],
+        [
+          1408,
+          423
+        ]
+      ],
+      "bases": [
+        64,
+        664
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            390,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "front": []
+      }
+    },
+    {
+      "key": "s1xlv.ms7_m2_boss",
+      "base_id": 0,
+      "texture": "ms7_m2_boss.webp",
+      "resolution": 2,
+      "bounds": [
+        0,
+        1638
+      ],
+      "terrain": [
+        [
+          0,
+          434
+        ],
+        [
+          200,
+          434
+        ],
+        [
+          376,
+          346
+        ],
+        [
+          584,
+          346
+        ],
+        [
+          768,
+          434
+        ],
+        [
+          968,
+          434
+        ],
+        [
+          1323,
+          348
+        ],
+        [
+          1536,
+          346
+        ],
+        [
+          1872,
+          436
+        ],
+        [
+          2096,
+          436
+        ],
+        [
+          2496,
+          385
+        ],
+        [
+          2664,
+          385
+        ],
+        [
+          3064,
+          436
+        ],
+        [
+          3276,
+          436
+        ]
+      ],
+      "bases": [
+        38,
+        1603
+      ],
+      "graphics": {
+        "rects": [
+          [
+            1,
+            1,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            452,
+            1020,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1805,
+            222,
+            448,
+            -3054,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            452,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            903,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            903,
+            1020,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ],
+          [
+            1249,
+            1805,
+            222,
+            448,
+            -3054,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1354,
+            1020,
+            448,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1024,
+            1354,
+            1020,
+            448,
+            -1018,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1805,
+            1020,
+            448,
+            -2036,
+            0,
+            0,
+            0
+          ],
+          [
+            1474,
+            1805,
+            222,
+            448,
+            -3054,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            2256,
+            1020,
+            169,
+            0,
+            -279,
+            0,
+            0
+          ],
+          [
+            1024,
+            2256,
+            1020,
+            169,
+            -1018,
+            -279,
+            0,
+            0
+          ],
+          [
+            1,
+            2428,
+            1020,
+            130,
+            -2036,
+            -318,
+            0,
+            0
+          ],
+          [
+            1024,
+            2428,
+            222,
+            82,
+            -3054,
+            -366,
+            0,
+            0
+          ]
+        ],
+        "back": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ],
+          [
+            4
+          ],
+          [
+            5
+          ],
+          [
+            6
+          ],
+          [
+            7
+          ],
+          [
+            8
+          ],
+          [
+            9
+          ],
+          [
+            10
+          ],
+          [
+            11
+          ],
+          [
+            12
+          ],
+          [
+            13
+          ],
+          [
+            14
+          ],
+          [
+            15
+          ]
+        ],
+        "front": []
+      },
+      "parallax": [
+        250,
+        250,
+        250,
+        250,
+        500,
+        500,
+        500,
+        500,
+        750,
+        750,
+        750,
+        750,
+        1000,
+        1000,
+        1000,
+        1000
+      ]
     }
   ],
   "music": [],
@@ -97315,6 +98325,794 @@
                 210,
                 240,
                 300
+              ],
+              "stamina": 60
+            }
+          ]
+        },
+        {
+          "key": "s1xlv.ura4.m7",
+          "title": "Mission 7 (Metal Slug 7 Mission 2)",
+          "map_position": [
+            760,
+            590
+          ],
+          "name": {
+            "EN": "SCRAP ISLAND (SOUTH)",
+            "JP": "スクラップアイランド（南）",
+            "KR": "스크랩 아일랜드 (남)",
+            "ES": "ISLA CHATARRA (SUR)",
+            "PT": "ILHA DA SUCATA (SUL)",
+            "FR": "ÎLE DE LA FERRAILLE (SUD)",
+            "DE": "SCHROTTINSEL (SÜD)",
+            "IT": "ISOLA DEI ROTTAMI (SUD)",
+            "ZS": "废品岛（南）",
+            "ZT": "廢品島（南）",
+            "RU": "ОСТРОВ МЕТАЛЛОЛОМА (ЮГ)"
+          },
+          "stages": [
+            {
+              "key": "s1xlv.ura4.m7.s1",
+              "title": "MS7 M2-1 mine shaft floor",
+              "template": 1011,
+              "scene": "s1xlv.ms7_m2_shaft",
+              "music": "s1xlv.bgm_ms7_m2",
+              "map_position": [
+                -96,
+                8
+              ],
+              "thumbnail": "ms7_thumb_m2_s1.png",
+              "enemy_base_hp": 30000,
+              "strength_steps": 5,
+              "difficulty": 3,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 2,
+                  "level": 40
+                },
+                {
+                  "unit": 8,
+                  "level": 40
+                },
+                {
+                  "unit": 3,
+                  "level": 40
+                },
+                {
+                  "unit": 148,
+                  "level": 40
+                },
+                {
+                  "unit": 187,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 161,
+                  "enemy": 3
+                },
+                {
+                  "tick": 292,
+                  "enemy": 1
+                },
+                {
+                  "tick": 423,
+                  "enemy": 4
+                },
+                {
+                  "tick": 554,
+                  "enemy": 0
+                },
+                {
+                  "tick": 685,
+                  "enemy": 3
+                },
+                {
+                  "tick": 816,
+                  "enemy": 2
+                },
+                {
+                  "tick": 947,
+                  "enemy": 4
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 450,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 430,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 2
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 3
+                }
+              ],
+              "rank_times": [
+                90,
+                105,
+                120,
+                135,
+                150
+              ],
+              "stamina": 30
+            },
+            {
+              "key": "s1xlv.ura4.m7.s2",
+              "title": "MS7 M2-2 mine tunnel (west)",
+              "template": 1011,
+              "scene": "s1xlv.ms7_m2_tunnel1",
+              "music": "s1xlv.bgm_ms7_m2",
+              "map_position": [
+                -51,
+                -32
+              ],
+              "thumbnail": "ms7_thumb_m2_s2.png",
+              "enemy_base_hp": 40000,
+              "strength_steps": 5,
+              "difficulty": 3,
+              "reward_msp": 6000,
+              "enemies": [
+                {
+                  "unit": 2,
+                  "level": 40
+                },
+                {
+                  "unit": 8,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.di_cokka_mk3",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.girida_o_mk2",
+                  "level": 40
+                },
+                {
+                  "unit": 162,
+                  "level": 40
+                },
+                {
+                  "unit": 25,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.mole_missile",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 131,
+                  "enemy": 1
+                },
+                {
+                  "tick": 232,
+                  "enemy": 4
+                },
+                {
+                  "tick": 333,
+                  "enemy": 2
+                },
+                {
+                  "tick": 434,
+                  "enemy": 0
+                },
+                {
+                  "tick": 535,
+                  "enemy": 6
+                },
+                {
+                  "tick": 636,
+                  "enemy": 1
+                },
+                {
+                  "tick": 737,
+                  "enemy": 5
+                },
+                {
+                  "tick": 838,
+                  "enemy": 4
+                },
+                {
+                  "tick": 939,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1040,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1141,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1242,
+                  "enemy": 4
+                },
+                {
+                  "tick": 1343,
+                  "enemy": 6
+                },
+                {
+                  "tick": 1444,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1545,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1646,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1747,
+                  "enemy": 5
+                },
+                {
+                  "tick": 1848,
+                  "enemy": 4
+                },
+                {
+                  "tick": 1949,
+                  "enemy": 3
+                },
+                {
+                  "tick": 2050,
+                  "enemy": 6
+                }
+              ],
+              "loop": 2160,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 480,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 460,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 5
+                }
+              ],
+              "rank_times": [
+                90,
+                105,
+                120,
+                135,
+                150
+              ],
+              "placed": [
+                {
+                  "enemy": 1,
+                  "x": 1020
+                },
+                {
+                  "enemy": 4,
+                  "x": 1060
+                },
+                {
+                  "enemy": 4,
+                  "x": 1100
+                }
+              ],
+              "stamina": 35
+            },
+            {
+              "key": "s1xlv.ura4.m7.s3",
+              "title": "MS7 M2-3 mine tunnel (east, gate)",
+              "template": 1011,
+              "scene": "s1xlv.ms7_m2_tunnel2",
+              "music": "s1xlv.bgm_ms7_m2",
+              "map_position": [
+                -6,
+                8
+              ],
+              "thumbnail": "ms7_thumb_m2_s3.png",
+              "enemy_base_hp": 50000,
+              "strength_steps": 6,
+              "difficulty": 4,
+              "reward_msp": 7000,
+              "enemies": [
+                {
+                  "unit": 2,
+                  "level": 40
+                },
+                {
+                  "unit": 8,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.di_cokka_mk3",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.girida_o_mk2",
+                  "level": 40
+                },
+                {
+                  "unit": 162,
+                  "level": 40
+                },
+                {
+                  "unit": 6,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.mole_missile",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 117,
+                  "enemy": 6
+                },
+                {
+                  "tick": 204,
+                  "enemy": 1
+                },
+                {
+                  "tick": 291,
+                  "enemy": 4
+                },
+                {
+                  "tick": 378,
+                  "enemy": 2
+                },
+                {
+                  "tick": 465,
+                  "enemy": 6
+                },
+                {
+                  "tick": 552,
+                  "enemy": 0
+                },
+                {
+                  "tick": 639,
+                  "enemy": 1
+                },
+                {
+                  "tick": 726,
+                  "enemy": 5
+                },
+                {
+                  "tick": 813,
+                  "enemy": 4
+                },
+                {
+                  "tick": 900,
+                  "enemy": 6
+                },
+                {
+                  "tick": 987,
+                  "enemy": 3
+                }
+              ],
+              "loop": 1080,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 900,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 880,
+                  "spawn": 4
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 3
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 5
+                }
+              ],
+              "rank_times": [
+                120,
+                135,
+                150,
+                165,
+                180
+              ],
+              "placed": [
+                {
+                  "enemy": 3,
+                  "x": 2340
+                },
+                {
+                  "enemy": 4,
+                  "x": 2420
+                },
+                {
+                  "enemy": 6,
+                  "x": 2460
+                },
+                {
+                  "enemy": 6,
+                  "x": 2500
+                }
+              ],
+              "stamina": 40
+            },
+            {
+              "key": "s1xlv.ura4.m7.s4",
+              "title": "MS7 M2-4 mine rail descent",
+              "template": 1011,
+              "scene": "s1xlv.ms7_m2_descent",
+              "music": "s1xlv.bgm_ms7_m2",
+              "map_position": [
+                39,
+                -32
+              ],
+              "thumbnail": "ms7_thumb_m2_s4.png",
+              "enemy_base_hp": 60000,
+              "strength_steps": 6,
+              "difficulty": 4,
+              "reward_msp": 8000,
+              "enemies": [
+                {
+                  "unit": 2,
+                  "level": 40
+                },
+                {
+                  "unit": 8,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.di_cokka_mk3",
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.girida_o_mk2",
+                  "level": 40
+                },
+                {
+                  "unit": 162,
+                  "level": 40
+                },
+                {
+                  "unit": 276,
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 0
+                },
+                {
+                  "tick": 134,
+                  "enemy": 1
+                },
+                {
+                  "tick": 238,
+                  "enemy": 2
+                },
+                {
+                  "tick": 342,
+                  "enemy": 0
+                },
+                {
+                  "tick": 446,
+                  "enemy": 4
+                },
+                {
+                  "tick": 550,
+                  "enemy": 1
+                },
+                {
+                  "tick": 654,
+                  "enemy": 3
+                },
+                {
+                  "tick": 758,
+                  "enemy": 5
+                },
+                {
+                  "tick": 862,
+                  "enemy": 0
+                },
+                {
+                  "tick": 966,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1070,
+                  "enemy": 2
+                },
+                {
+                  "tick": 1174,
+                  "enemy": 5
+                },
+                {
+                  "tick": 1278,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1382,
+                  "enemy": 4
+                },
+                {
+                  "tick": 1486,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1590,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1694,
+                  "enemy": 0
+                },
+                {
+                  "tick": 1798,
+                  "enemy": 1
+                },
+                {
+                  "tick": 1902,
+                  "enemy": 5
+                },
+                {
+                  "tick": 2006,
+                  "enemy": 2
+                },
+                {
+                  "tick": 2110,
+                  "enemy": 4
+                },
+                {
+                  "tick": 2214,
+                  "enemy": 0
+                },
+                {
+                  "tick": 2318,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2422,
+                  "enemy": 3
+                },
+                {
+                  "tick": 2526,
+                  "enemy": 0
+                },
+                {
+                  "tick": 2630,
+                  "enemy": 1
+                },
+                {
+                  "tick": 2734,
+                  "enemy": 5
+                },
+                {
+                  "tick": 2838,
+                  "enemy": 2
+                },
+                {
+                  "tick": 2942,
+                  "enemy": 4
+                },
+                {
+                  "tick": 3046,
+                  "enemy": 0
+                },
+                {
+                  "tick": 3150,
+                  "enemy": 1
+                },
+                {
+                  "tick": 3254,
+                  "enemy": 3
+                },
+                {
+                  "tick": 3358,
+                  "enemy": 5
+                },
+                {
+                  "tick": 3462,
+                  "enemy": 0
+                },
+                {
+                  "tick": 3566,
+                  "enemy": 1
+                },
+                {
+                  "tick": 3670,
+                  "enemy": 2
+                },
+                {
+                  "tick": 3774,
+                  "enemy": 0
+                },
+                {
+                  "tick": 3878,
+                  "enemy": 4
+                },
+                {
+                  "tick": 3982,
+                  "enemy": 1
+                },
+                {
+                  "tick": 4086,
+                  "enemy": 3
+                },
+                {
+                  "tick": 4190,
+                  "enemy": 5
+                }
+              ],
+              "loop": 4320,
+              "triggers": [
+                {
+                  "when": "front",
+                  "value": 480,
+                  "spawn": 0
+                },
+                {
+                  "when": "front",
+                  "value": 460,
+                  "spawn": 1
+                },
+                {
+                  "when": "base_hp",
+                  "value": 50,
+                  "spawn": 2
+                },
+                {
+                  "when": "base_hp",
+                  "value": 49,
+                  "spawn": 5
+                }
+              ],
+              "rank_times": [
+                90,
+                105,
+                120,
+                135,
+                150
+              ],
+              "placed": [
+                {
+                  "enemy": 5,
+                  "x": 1150
+                }
+              ],
+              "stamina": 50
+            },
+            {
+              "key": "s1xlv.ura4.m7.s5",
+              "title": "MS7 M2-5 Crablops rail bridge",
+              "template": 1011,
+              "scene": "s1xlv.ms7_m2_boss",
+              "music": "s1xlv.bgm_ms7_m1_boss",
+              "map_position": [
+                84,
+                8
+              ],
+              "thumbnail": "ms7_thumb_m2_s5.png",
+              "enemy_base_hp": 80000,
+              "strength_steps": 7,
+              "difficulty": 5,
+              "reward_msp": 10000,
+              "enemies": [
+                {
+                  "unit": 239,
+                  "level": 40
+                },
+                {
+                  "unit": 325,
+                  "level": 40
+                },
+                {
+                  "unit": 2,
+                  "level": 40
+                },
+                {
+                  "unit": 45,
+                  "level": 40
+                },
+                {
+                  "unit": 162,
+                  "level": 40
+                },
+                {
+                  "unit": "s1xlv.mole_missile",
+                  "level": 40
+                }
+              ],
+              "waves": [
+                {
+                  "tick": 30,
+                  "enemy": 2
+                },
+                {
+                  "tick": 414,
+                  "enemy": 5
+                },
+                {
+                  "tick": 798,
+                  "enemy": 3
+                },
+                {
+                  "tick": 1182,
+                  "enemy": 5
+                },
+                {
+                  "tick": 1566,
+                  "enemy": 4
+                }
+              ],
+              "loop": 1920,
+              "triggers": [
+                {
+                  "when": "base_hp",
+                  "value": 75,
+                  "spawn": 0
+                },
+                {
+                  "when": "base_hp",
+                  "value": 35,
+                  "spawn": 0
+                }
+              ],
+              "rank_times": [
+                280,
+                295,
+                310,
+                325,
+                340
+              ],
+              "placed": [
+                {
+                  "enemy": 0,
+                  "x": 2880
+                },
+                {
+                  "enemy": 1,
+                  "x": 2600
+                }
               ],
               "stamina": 60
             }

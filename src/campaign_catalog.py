@@ -141,6 +141,13 @@ class Catalog:
                             if len(point)!=2:raise ValueError('子弹墙的点要求 [x, y]')
                             integer(point[0],-2000,40000);integer(point[1],-2000,2000)
             elif 'water' in scene or 'bullet_walls' in scene:raise ValueError('水花与子弹墙需要战场边界')
+            # parallax：背景图层视差（2026-10-28 起，需核心 stage_parallax）。逐个 graphics.back 层的卷动比例，千分比 0–1000
+            # （1000 为与镜头同速，缺省；比例 f 的层随镜头移动 f 倍的距离，图层宽度须覆盖 1136 + f ×（关宽 − 1136））。
+            parallax=scene.get('parallax')
+            if parallax is not None:
+                if 'graphics' not in scene or not isinstance(parallax,list) or len(parallax)!=len(scene['graphics'].get('back',[])):
+                    raise ValueError('parallax 须与 graphics.back 逐层对应')
+                for v in parallax:integer(v,0,1000)
         for music in self.music.values():
             if music.get('file') not in self.assets or not music['file'].endswith('.msdf') or not self.assets[music['file']].startswith(b'OggS'):
                 raise ValueError('音乐要求包含 Vorbis 数据的 .msdf 文件')
