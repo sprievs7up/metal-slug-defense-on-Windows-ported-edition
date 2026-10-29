@@ -46,6 +46,7 @@ class TrialProbe(OriginalProbe):
         self.audio_options=AudioOptions(self)
     def step_frame(self):
         super().step_frame()
+        self.world_level_rules.update()
         self.event_trial.update()
         self.campaign.update()
         self.ura_world.update()
@@ -103,7 +104,7 @@ import lab_runtime
 lab_runtime.install()
 lab_runtime.install_platform()
 def create_player(self_test=False,audio_mode=None,fullscreen=None):
-    player.TITLE='MSD WINDOWS S1XLV · 26.10.9'
+    player.TITLE='MSD WINDOWS S1XLV · 26.10.10'
     session=player.Player(self_test=self_test,audio_mode=audio_mode,fullscreen=fullscreen)
     session.guest_root=ROOT/('ui_test_guest' if self_test else config['profile'])
     session.status_file=ROOT/('ui_test_status.json' if self_test else 'event_trial_status.json')
@@ -112,7 +113,7 @@ def create_player(self_test=False,audio_mode=None,fullscreen=None):
     return session
 if __name__=='__main__':
     try:
-        parser=argparse.ArgumentParser(description='MSD WINDOWS S1XLV 26.10.9')
+        parser=argparse.ArgumentParser(description='MSD WINDOWS S1XLV 26.10.10')
         parser.add_argument('--self-test',action='store_true')
         parser.add_argument('--mute',action='store_true')
         parser.add_argument('--windowed',action='store_true')

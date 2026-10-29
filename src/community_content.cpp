@@ -886,6 +886,23 @@ static void stage_back_draw(Context& c){
  }
  old_stage_back_draw(c);c.r[9]=r9;
 }
+// 背景图层换帧间隔（2026-10-29，MS7 任务 3 第 3、4 关；核心 r108）：drawBack 的逐层块 0x1e1466 读入场景计数器（场景 +0x1c，每次 update
+// 加 1）并右移 1 位，随后调用取余函数，余数 + 1 为层表中的图块下标（0x1e147c）；各层因此每 2 次更新换 1 帧（30 FPS 时每秒 15 帧）。第 3、4 关
+// 横向循环的塔层每次换帧左移 3 个逻辑单位，实机显得卡顿（用户指出）。场景效果记录标记位 3 时，字 22 为表的背景层数、字 23 为逐层每帧保持的
+// 更新次数（int32，1–8，2 同原生）：本块执行后（取余调用尚未执行）把被除数改为 计数器 ÷ 该值。当前层表项地址为 r6（同 stage_parallax）。
+// 只改绘制，不影响对战模拟与回滚。
+static Block old_stage_back_frame;static uint32_t stage_frame_hooks=0u;
+static void stage_back_frame(Context& c){
+ old_stage_back_frame(c);
+ uint32_t st=c.r[4],r=scene_fx(c,st);
+ if(!r||!(rd<uint32_t>(c,r)&8u))return;
+ uint32_t base=rd<uint32_t>(c,rd<uint32_t>(c,st+4u));
+ if(c.r[6]<base)return;
+ uint32_t idx=(c.r[6]-base)>>2;
+ if(idx>=rd<uint32_t>(c,r+88u))return;
+ int32_t n=rd<int32_t>(c,rd<uint32_t>(c,r+92u)+4u*idx);
+ if(n>=1&&n<=8&&n!=2)c.r[0]=rd<uint32_t>(c,st+0x1cu)/uint32_t(n);
+}
 static void stage_front_draw(Context& c){if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);old_stage_front_draw(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_stage_scale_version(){return stage_scale_hooks==2u?1u:0u;}
 // 自制战场的地形跟随（2026-10-20，里世界 4 实机反馈：坡道上被击退的单位只横向位移、偏离地形线，向上坡被推开后可能卡住）。
@@ -2372,10 +2389,11 @@ void msd_retained_count(Context& c,uint32_t uid){
 }
 extern "C" __declspec(dllexport) uint32_t msd_community_retained_weapon_version(){return 1u;}
 // ---------- 自制场景的水花与子弹墙（2026-10-22，MS6 任务 3；核心 r76）----------
-// 头部 +184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（宿主 install_scene_fx），无此类场景时为 0。记录 22 个字：
-//  0 标记（位 0 水花，位 1 子弹墙，位 2 背景图层视差）；1–4 水花左界、右界、起水高度、画线；5–8 水花颜色 r、g、b 与染色强度（float）；
-//  9 已建立 WaterFunc 的场景对象；10–17 WaterFunc 存储（0x20 字节）；18 子弹墙多边形数；19 多边形数据（每个：点数 n，再 n 对 x、y）；
-//  20 视差表的背景层数；21 视差表（int32 千分比，见上文 stage_parallax，2026-10-28 核心 r102）。
+// 头部 +184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（宿主 install_scene_fx），无此类场景时为 0。记录 24 个字：
+//  0 标记（位 0 水花，位 1 子弹墙，位 2 背景图层视差，位 3 背景图层换帧间隔）；1–4 水花左界、右界、起水高度、画线；5–8 水花颜色 r、g、b
+//  与染色强度（float）；9 已建立 WaterFunc 的场景对象；10–17 WaterFunc 存储（0x20 字节）；18 子弹墙多边形数；19 多边形数据（每个：点数 n，
+//  再 n 对 x、y）；20 视差表的背景层数；21 视差表（int32 千分比，见上文 stage_parallax，2026-10-28 核心 r102）；22 换帧间隔表的背景层数；
+//  23 换帧间隔表（int32，每帧保持的更新次数，见上文 stage_back_frame，2026-10-29 核心 r108；此前记录为 22 个字）。
 // 水花：原生水面场景（BattleStage1_3、2_4、3_1、5_1_2 等）在构造时建 WaterFunc（共用效果 402 的精灵），setup 中 waterSetup(2.0, 左界, 右界,
 // 起水高度, 画线)，drawFront 末尾 waterDraw(镜头 x, 帧)：按每个地面单位的 x 画 7 帧水花（宽单位画多处），只画 y 不小于起水高度的单位，纵向
 // 位置固定为画线。自制场景为通用 BattleStageBase（update 0x1e13c2，drawFront 0x1e14c4，析构 0x1e1398）。setup 时 BattleSpriteFactory
@@ -2453,6 +2471,7 @@ static void fx_bullet_begin(Context& c){
 static Block old_fx_bullet;static void fx_bullet(Context& c){fx_bullet_begin(c);old_fx_bullet(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_scene_fx_version(){return scene_fx_hooks==4u?1u:0u;}
 extern "C" __declspec(dllexport) uint32_t msd_community_stage_parallax_version(){return stage_scale_hooks==2u&&scene_fx_hooks==4u?1u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_stage_frame_rate_version(){return stage_frame_hooks==1u&&scene_fx_hooks==4u?1u:0u;}
 // ---------- 鼹鼠弹（2026-10-26，行为库 v22：mole_missile v1，标记 4194304；基准 133 BattleAction_Bike_P；核心 r97，R1 r98）----------
 // MS7 / MSXX 任务 2 首领 Crablops 绝招放出的鼹鼠弹做成单位（MSA / MSD 原生只有 CRABLOPS 的弹体 BulletAction_CrabMecha_Mogura，
 // 无生命与受击框；核查与方案 docs/ms7/MS7_MOLE_MISSILE_CHECK_2026-10-26.md）。本单位的 Bike_P::update（0x18258c）由下列流程执行，
@@ -2627,6 +2646,32 @@ static bool ps_hit(Context& c){
 static Block old_pierce_attack;static void pierce_attack(Context& c){if(ps_attack(c))return;old_pierce_attack(c);}
 static Block old_pierce_hit;static void pierce_hit(Context& c){if(ps_hit(c))return;old_pierce_hit(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_piercing_shots_version(){return pierce_hooks==2u?1u:0u;}
+// ---------- 受击召唤（2026-10-29，行为库 v26：summon_on_hit v1，标记 16777216、字 132 冷却 tick；基准 64 MummyGate；核心 r105 / r106）----------
+// 原生 MummyGate::damageAction（0x1016f4f4，r0 动作、r1 对象）只预约受击状态 60 后转交基类；summonUnit（0x101aed26，r0 动作、r1 对象）
+// 按数据行子单位字 41 生成一个单位（虫穴为改写出场脚本的二輪戰車，每次 1 个发射者 + 5 只小虫）；update（0x101aed78）在待机状态
+// 以对象 +0x1c 计量定时召唤。带此标记的单位：受击时若冷却（对象 +0x30）为 0、已建成（+0x24 非 0）、不在建造 / 损毁状态且生命 > 0，
+// 以嵌套调用执行 summonUnit 并把冷却置为字 132；update 每次把冷却减 1（首帧清零，排除对象池遗留）。
+// 原生定时计量 +0x1c 只在待机状态 30 / 40 递减、计量 ≤ 0 时召唤并重装（状态 37）；受击状态 60 中不递减，受击会推迟定时召唤。
+// 带此标记的单位在状态 60 中计量照常递减（r106），到点时若仍在受击状态，则在回到待机的第一帧召唤；两种召唤并存。
+// 状态全部在客体内存中（回滚安全）。
+static constexpr uint32_t SH_FLAG=16777216u,SH_SUMMON=0x101aed27u;
+static uint32_t summon_hit_hooks=0u;
+static void sh_damage(Context& c){
+ uint32_t action=c.r[0],obj=c.r[1],s=zspec(c,obj);if(!s||!(zw(c,s,0)&SH_FLAG))return;
+ uint32_t state=rd<uint32_t>(c,obj+0x7cu);
+ if(!rd<uint32_t>(c,obj+0x24u)||state==141u||state>=100u||rd<int32_t>(c,obj+0x308u)<=0||rd<uint32_t>(c,obj+0x30u))return;
+ wr<uint32_t>(c,obj+0x30u,zw(c,s,132u));
+ msd_guest_call(c,SH_SUMMON,action,obj,0u,0u,nullptr);
+}
+static void sh_update(Context& c){
+ uint32_t obj=c.r[1],s=zspec(c,obj);if(!s||!(zw(c,s,0)&SH_FLAG))return;
+ if(!rd<uint32_t>(c,obj+0x24u)){wr<uint32_t>(c,obj+0x30u,0u);return;}
+ uint32_t n=rd<uint32_t>(c,obj+0x30u);if(n)wr<uint32_t>(c,obj+0x30u,n-1u);
+ if(c.r[2]==60u){int32_t g=rd<int32_t>(c,obj+0x1cu);if(g>0)wr<int32_t>(c,obj+0x1cu,g-1);}
+}
+static Block old_sh_damage;static void summon_hit_damage(Context& c){sh_damage(c);old_sh_damage(c);}
+static Block old_sh_update;static void summon_hit_update(Context& c){sh_update(c);old_sh_update(c);}
+extern "C" __declspec(dllexport) uint32_t msd_community_summon_on_hit_version(){return summon_hit_hooks==2u?1u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

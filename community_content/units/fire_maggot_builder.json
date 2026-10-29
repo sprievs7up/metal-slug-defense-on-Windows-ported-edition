@@ -1,0 +1,126 @@
+{
+  "key": "s1xlv.fire_maggot_builder",
+  "base_id": 95,
+  "faction": 4,
+  "identity": "Independent Army",
+  "shop_price": 90,
+  "available_from_start": true,
+  "ap": 110,
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 95,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "textures": [
+    "donou.obm"
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      414,
+      770,
+      38,
+      26
+    ],
+    "anchor": [
+      -6,
+      -18
+    ]
+  },
+  "animations": {},
+  "behaviors": [
+    {
+      "name": "build_structure",
+      "version": 1,
+      "params": {
+        "structure": "s1xlv.fire_maggot",
+        "construction_time_multiplier": [
+          1,
+          1
+        ]
+      }
+    }
+  ],
+  "localization": {
+    "ZS": {
+      "name": "火焰蛆虫",
+      "description": "普通攻击：扑咬     特殊攻击：突击\n全身带火的橘红色蛆虫成群而来，\n碰到的东西都会烧起来。"
+    },
+    "ZT": {
+      "name": "火焰蛆蟲",
+      "description": "普通攻擊：撲咬     特殊攻擊：突擊\n全身帶火的橘紅色蛆蟲成群而來，\n碰到的東西都會燒起來。"
+    },
+    "JP": {
+      "name": "ファイアマゴット",
+      "description": "通常攻撃：とびつき     特殊攻撃：突撃\n炎をまとった橙色のマゴットの群れ。\n触れたものは燃え上がる。"
+    },
+    "KR": {
+      "name": "파이어 매곳",
+      "description": "일반 공격: 덤벼들기     특수 공격: 돌격\n불길을 두른 주황색 구더기 떼.\n닿는 것은 모두 불타오른다."
+    },
+    "EN": {
+      "name": "FIRE MAGGOT",
+      "description": "STAND. ATK : Pounce     SPEC. ATK : Charge\nA swarm of orange maggots wreathed in flame.\nWhatever they touch bursts into fire."
+    },
+    "ES": {
+      "name": "LARVA DE FUEGO",
+      "description": "ATQ. ESTÁND. : Abalanzarse    ATQ. ESPEC. : Embestida\nUn enjambre de larvas naranjas envueltas en llamas.\nTodo lo que tocan arde."
+    },
+    "PT": {
+      "name": "LARVA DE FOGO",
+      "description": "ATQ. PADR. : Bote   ATQ. ESPEC. : Investida\nUm enxame de larvas laranja envoltas em chamas.\nTudo o que tocam pega fogo."
+    },
+    "FR": {
+      "name": "ASTICOT DE FEU",
+      "description": "ATT. STAND : Bond   ATT. SPÉ : Charge\nUn essaim d'asticots orange enveloppés de flammes.\nTout ce qu'ils touchent s'embrase."
+    },
+    "DE": {
+      "name": "FEUERMADE",
+      "description": "STANDARDANGR. : Sprung     SPEZIALANGR. : Ansturm\nEin Schwarm orangefarbener Maden in Flammen.\nAlles, was sie berühren, fängt Feuer."
+    },
+    "IT": {
+      "name": "LARVA DI FUOCO",
+      "description": "ATC STAND.: Balzo   ATC SPEC.: Carica\nUno sciame di larve arancioni avvolte dalle fiamme.\nTutto ciò che toccano prende fuoco."
+    },
+    "RU": {
+      "name": "ОГНЕННАЯ ЛИЧИНКА",
+      "description": "СТАНД. АТАК: Прыжок   СПЕЦ. АТАК: Натиск\nРой оранжевых личинок, охваченных пламенем.\nВсё, чего они касаются, вспыхивает."
+    }
+  }
+}

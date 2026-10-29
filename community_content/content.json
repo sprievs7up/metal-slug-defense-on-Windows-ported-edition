@@ -70,7 +70,12 @@
     "s1xlv.mcsnl_five_future": 1079,
     "s1xlv.mcsnl_five_future_wing": 1080,
     "s1xlv.sandbag_future_builder": 1081,
-    "s1xlv.sandbag_future": 1082
+    "s1xlv.sandbag_future": 1082,
+    "s1xlv.fire_maggot_builder": 1083,
+    "s1xlv.fire_maggot": 1084,
+    "s1xlv.bug_hive_builder": 1085,
+    "s1xlv.bug_hive": 1086,
+    "s1xlv.bug_hive_chariot": 1087
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -145,7 +150,9 @@
     "mole_missile.obm": "fe61f9df4154acf675964c6725740cf62f7a5a96c0628634f872215622bbd8c1",
     "mcsnl_five_future.obm": "6a524d4dbad5c9fac34d749ea8143c40fe0917d5813b537df40f8063ffaaf2ab",
     "mcsnl_five_future_wing.obm": "a4e893a001d5ed5cd89a20b8ef902203e109e99a98922536bdf4034c5eec5f54",
-    "sandbag_future.obm": "7eb8179653f7bf75362b45dbf6877d11df013c5248bb89b5df9479c25eeca348"
+    "sandbag_future.obm": "7eb8179653f7bf75362b45dbf6877d11df013c5248bb89b5df9479c25eeca348",
+    "fire_maggot.obm": "f7f3e3541cb7c73a2439909fd407e62d00a5e9842c762602ac5de7d8ccbd749b",
+    "bug_hive.obm": "d8b06d4a96786f0c0915e8f16994d02281f70fa14251685c57a8f91b6149710b"
   },
   "stock_sprites": {
     "381": "tyra_elson_sprite.json",
@@ -679,6 +686,15 @@
       "loop": [
         9.884626,
         100.894104
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms7_m3",
+      "file": "bgm_ms7_m3.msdf",
+      "type": "bgm",
+      "loop": [
+        54.104399,
+        132.955011
       ]
     }
   ]

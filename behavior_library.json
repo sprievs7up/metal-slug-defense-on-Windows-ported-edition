@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "library_version": 25,
+  "library_version": 26,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位",
     "rational": "[分子, 分母] 正整数倍率",
@@ -16,7 +16,8 @@
       "version": 1,
       "base_classes": [
         77,
-        5
+        5,
+        95
       ],
       "params": {
         "structure": {
@@ -91,6 +92,73 @@
       "doc": {
         "ZS": "召唤箱类单位：按计量周期召唤指定的可选单位。首次计量（状态词 38）与后续间隔（状态词 39，含计量零值的一帧）先按 interval_multiplier、再按 interval_additional_multiplier 调整。",
         "EN": "Summoning structures periodically summon the given selectable unit. The first gauge (status word 38) and later intervals (status word 39, including the zero-gauge frame) are scaled by interval_multiplier, then by interval_additional_multiplier."
+      }
+    },
+    {
+      "name": "summon_internal_unit",
+      "version": 1,
+      "base_classes": [
+        64
+      ],
+      "params": {
+        "unit": {
+          "type": "unit_key",
+          "required": true,
+          "internal": true
+        },
+        "interval_multiplier": {
+          "type": "rational",
+          "default": [
+            1,
+            1
+          ],
+          "min": [
+            1,
+            100
+          ],
+          "max": [
+            100,
+            1
+          ]
+        },
+        "interval_additional_multiplier": {
+          "type": "rational",
+          "default": [
+            1,
+            1
+          ],
+          "min": [
+            1,
+            100
+          ],
+          "max": [
+            100,
+            1
+          ]
+        }
+      },
+      "doc": {
+        "ZS": "召唤箱类单位：按计量周期召唤指定的内部单位（internal_only，写入数据行子单位字 41；例如只改写出场脚本的原版单位副本）。计量倍率同 summon_units：首次计量（状态词 38）与后续间隔（状态词 39，含计量零值的一帧）先按 interval_multiplier、再按 interval_additional_multiplier 调整。不可与 summon_units 同时使用。",
+        "EN": "Summoning structures periodically summon the given internal unit (internal_only, written to child word 41 of the data row; for example a copy of an original unit with rewritten entry scripts). The gauges are scaled as in summon_units: the first gauge (status word 38) and later intervals (status word 39, including the zero-gauge frame) by interval_multiplier, then by interval_additional_multiplier. Cannot be combined with summon_units."
+      }
+    },
+    {
+      "name": "summon_on_hit",
+      "version": 1,
+      "base_classes": [
+        64
+      ],
+      "params": {
+        "cooldown": {
+          "type": "int",
+          "default": 120,
+          "min": 0,
+          "max": 3600
+        }
+      },
+      "doc": {
+        "ZS": "召唤箱类单位受到攻击时立即召唤一次（召唤对象同 summon_units / summon_internal_unit，须同时使用其一），之后 cooldown tick 内的攻击不再召唤，冷却结束后再受攻击时召唤；原有的定时召唤照常进行，互不影响。建造中与损毁时不召唤。",
+        "EN": "Summoning structures summon once immediately when attacked (the unit given by summon_units or summon_internal_unit, one of which is required); attacks within the next cooldown ticks do not summon, and the next attack after the cooldown summons again. The periodic summons continue independently. No summons while under construction or destroyed."
       }
     },
     {

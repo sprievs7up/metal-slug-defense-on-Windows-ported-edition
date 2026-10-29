@@ -1,4 +1,4 @@
-# 单位行为目录 / Unit behavior catalog（行为库版本 25）
+# 单位行为目录 / Unit behavior catalog（行为库版本 26）
 
 本文件由 `content_tool.py list-behaviors --markdown` 从 `behavior_library.json` 生成，请勿手工修改。
 Generated from `behavior_library.json` by `content_tool.py list-behaviors --markdown`; do not edit by hand.
@@ -11,7 +11,7 @@ Generated from `behavior_library.json` by `content_tool.py list-behaviors --mark
 
 ## build_structure（v1）
 
-- 适用的原版基准单位 / base_id: 77, 5
+- 适用的原版基准单位 / base_id: 77, 5, 95
 
 工兵类单位：出击后修筑指定的内部单位（如召唤箱）。修筑时间按倍率调整（状态词 38，向上取整）；兵种浏览、出兵格与属性面板显示修筑完成后的单位。
 
@@ -35,6 +35,32 @@ Summoning structures periodically summon the given selectable unit. The first ga
 | `unit` | unit_key | required: true; internal: false |
 | `interval_multiplier` | rational | default: [1, 1]; min: [1, 100]; max: [100, 1] |
 | `interval_additional_multiplier` | rational | default: [1, 1]; min: [1, 100]; max: [100, 1] |
+
+## summon_internal_unit（v1）
+
+- 适用的原版基准单位 / base_id: 64
+
+召唤箱类单位：按计量周期召唤指定的内部单位（internal_only，写入数据行子单位字 41；例如只改写出场脚本的原版单位副本）。计量倍率同 summon_units：首次计量（状态词 38）与后续间隔（状态词 39，含计量零值的一帧）先按 interval_multiplier、再按 interval_additional_multiplier 调整。不可与 summon_units 同时使用。
+
+Summoning structures periodically summon the given internal unit (internal_only, written to child word 41 of the data row; for example a copy of an original unit with rewritten entry scripts). The gauges are scaled as in summon_units: the first gauge (status word 38) and later intervals (status word 39, including the zero-gauge frame) by interval_multiplier, then by interval_additional_multiplier. Cannot be combined with summon_units.
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `unit` | unit_key | required: true; internal: true |
+| `interval_multiplier` | rational | default: [1, 1]; min: [1, 100]; max: [100, 1] |
+| `interval_additional_multiplier` | rational | default: [1, 1]; min: [1, 100]; max: [100, 1] |
+
+## summon_on_hit（v1）
+
+- 适用的原版基准单位 / base_id: 64
+
+召唤箱类单位受到攻击时立即召唤一次（召唤对象同 summon_units / summon_internal_unit，须同时使用其一），之后 cooldown tick 内的攻击不再召唤，冷却结束后再受攻击时召唤；原有的定时召唤照常进行，互不影响。建造中与损毁时不召唤。
+
+Summoning structures summon once immediately when attacked (the unit given by summon_units or summon_internal_unit, one of which is required); attacks within the next cooldown ticks do not summon, and the next attack after the cooldown summons again. The periodic summons continue independently. No summons while under construction or destroyed.
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `cooldown` | int | default: 120; min: 0; max: 3600 |
 
 ## spawn_child_unit（v1）
 

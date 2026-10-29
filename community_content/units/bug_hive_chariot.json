@@ -1,0 +1,242 @@
+{
+  "key": "s1xlv.bug_hive_chariot",
+  "base_id": 167,
+  "faction": 4,
+  "identity": "Independent Army",
+  "available_from_start": true,
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "shop_price": 50,
+  "ap": 40,
+  "production_reference_id": 167,
+  "menu_reference_id": 167,
+  "internal_only": true,
+  "textures": [
+    "chariot_out.obm"
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      138,
+      619,
+      20,
+      14
+    ],
+    "anchor": [
+      -15,
+      -18
+    ]
+  },
+  "animations": {
+    "9": [
+      {
+        "opcode": 22,
+        "values": [
+          21,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          23,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          25,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          28,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          31,
+          0,
+          15,
+          10
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          150
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "20": [
+      {
+        "opcode": 22,
+        "values": [
+          21,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          23,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          25,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          28,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          31,
+          0,
+          15,
+          20
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          150
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ]
+  },
+  "localization": {
+    "ZS": {
+      "name": "二轮战车",
+      "description": "普通攻击： 突击   特殊攻击：-\n群体行动的大型虫子。\n拥有会爆炸的体液，只要接触到敌人就会自爆。"
+    },
+    "ZT": {
+      "name": "二輪戰車",
+      "description": "普通攻擊： 突擊   特殊攻擊：-\n群體行動的大型蟲子。\n擁有會爆炸的體液，只要接觸到敵人就會自爆。"
+    },
+    "JP": {
+      "name": "チャリオット",
+      "description": "通常攻撃： 突撃   特殊攻撃：-\n群れで行動する大型の虫。\n爆発性の体液を持っており、敵に接触すると自爆する。"
+    },
+    "KR": {
+      "name": "채리엇",
+      "description": "일반 공격: 돌진    특수 공격: -\n무리지어 행동하는 대형 벌레\n폭발성 체액을 지니고 있으며, 적에게 접촉하면 자폭한다."
+    },
+    "EN": {
+      "name": "CHARIOT",
+      "description": "STAND. ATK : Stampede    SPEC. ATK : -\nGiant insects which only moves in groups.They can make explode \ntheir enemies in pieces with their dangerous saliva. "
+    },
+    "ES": {
+      "name": "CARRO",
+      "description": "ATQ ESTÁND.: Estampida　ATQ ESPEC.: - \nInsectos gigantes que solo se mueven en grupos. Pueden hacer\nexplotar a sus enemigos en pedazos con su peligrosa saliva."
+    },
+    "PT": {
+      "name": "CARRUAGEM",
+      "description": "ATQ. PADR. : Debandada   ATQ. ESPEC. : -\nInsetos gigantes que se movem em nuvem. Possuem um líquido\nexplosivo que detona ao entrar em contato com o inimigo."
+    },
+    "FR": {
+      "name": "CHARIOT",
+      "description": "ATT. STAND : Charge   SPEC. ATK : -\nInsectes géants ne se déplaçant qu'en groupe. \nLeur salive venimeuse peut réduire n'importe quel ennemi en pièces."
+    },
+    "DE": {
+      "name": "CHARIOT",
+      "description": "STAND. ATK : Stampede    SPEC. ATK : -\nGiant insects which only moves in groups.They can make explode \ntheir enemies in pieces with their dangerous saliva. "
+    },
+    "IT": {
+      "name": "CARRO",
+      "description": "ATC STAND.: Stampede    ATC SPEC.: -\nInsetti giganti che agiscono in gruppo.\nPossono far esplodere i nemici con la loro saliva."
+    },
+    "RU": {
+      "name": "КОЛЕСНИЦА",
+      "description": "СТАНД. АТАК: Табун   СПЕЦ. АТАК: -\nОгромные насекомые, передвигающиеся только группами.\nМогут разрывать своих врагов на куски при помощи опасной слюны."
+    }
+  }
+}

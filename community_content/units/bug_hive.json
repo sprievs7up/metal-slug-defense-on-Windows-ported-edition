@@ -1,0 +1,1869 @@
+{
+  "key": "s1xlv.bug_hive",
+  "base_id": 64,
+  "faction": 4,
+  "identity": "Independent Army",
+  "shop_price": 130,
+  "available_from_start": true,
+  "ap": 120,
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 77,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "menu_reference_id": 77,
+  "internal_only": true,
+  "textures": [
+    "bug_hive.obm"
+  ],
+  "sprite_descriptor": "bug_hive_descriptor.json",
+  "icon": {
+    "page": 1,
+    "rect": [
+      454,
+      770,
+      45,
+      40
+    ],
+    "anchor": [
+      -5,
+      -5
+    ]
+  },
+  "animations": {
+    "0": [
+      {
+        "opcode": 19,
+        "values": [
+          100,
+          100
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          31,
+          -2,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          10
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "1": [
+      {
+        "opcode": 19,
+        "values": [
+          100,
+          100
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          31,
+          -2,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          10
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "2": [
+      {
+        "opcode": 19,
+        "values": [
+          100,
+          100
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          31,
+          -2,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          10
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "3": [
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "4": [
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "5": [
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "6": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "7": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          13
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "8": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "9": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          13
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "10": [
+      {
+        "opcode": 11,
+        "values": [
+          15,
+          -2,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "11": [
+      {
+        "opcode": 0,
+        "values": [
+          8
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          8
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          8
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "12": [
+      {
+        "opcode": 0,
+        "values": [
+          18
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          13
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          18
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          13
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          18
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "13": [
+      {
+        "opcode": 12,
+        "values": [
+          19,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          290
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          20
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          34
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          36
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          38
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          40
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          42
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "14": [
+      {
+        "opcode": 13,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          20,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          290
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          20
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          34
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          36
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          38
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          40
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          42
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "15": [
+      {
+        "opcode": 0,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "16": [
+      {
+        "opcode": 0,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "17": [
+      {
+        "opcode": 0,
+        "values": [
+          10
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "18": [
+      {
+        "opcode": 0,
+        "values": [
+          15
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          10
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          15
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          10
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          15
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "19": [
+      {
+        "opcode": 12,
+        "values": [
+          21,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          22,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          23,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          25,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          26,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          27,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          28,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          29,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          30,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "20": [
+      {
+        "opcode": 13,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          21,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          22,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          23,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          25,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          26,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          27,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          28,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          29,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          30,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "21": [
+      {
+        "opcode": 7,
+        "values": [
+          400,
+          -1200,
+          0,
+          200
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          44
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          48
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          52
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          56
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "22": [
+      {
+        "opcode": 7,
+        "values": [
+          -400,
+          -2000,
+          0,
+          320
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          44
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          48
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          52
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          56
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "23": [
+      {
+        "opcode": 7,
+        "values": [
+          -800,
+          -800,
+          0,
+          80
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          60
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          64
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          68
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          72
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "24": [
+      {
+        "opcode": 7,
+        "values": [
+          400,
+          -1600,
+          0,
+          160
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          60
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          64
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          68
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          72
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "25": [
+      {
+        "opcode": 7,
+        "values": [
+          -400,
+          -400,
+          0,
+          80
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          60
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          64
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          68
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          72
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "26": [
+      {
+        "opcode": 7,
+        "values": [
+          400,
+          -800,
+          0,
+          80
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          76
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          80
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          84
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          88
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "27": [
+      {
+        "opcode": 7,
+        "values": [
+          -800,
+          -2400,
+          0,
+          400
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          76
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          80
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          84
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          88
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "28": [
+      {
+        "opcode": 7,
+        "values": [
+          -200,
+          -2400,
+          0,
+          320
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          92
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          96
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          100
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          104
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "29": [
+      {
+        "opcode": 7,
+        "values": [
+          1200,
+          -1200,
+          0,
+          160
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          92
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          96
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          100
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          104
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "30": [
+      {
+        "opcode": 7,
+        "values": [
+          800,
+          -1600,
+          0,
+          200
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          92
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          96
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          100
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          104
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "31": [
+      {
+        "opcode": 19,
+        "values": [
+          100,
+          100
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          13
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ]
+  },
+  "behaviors": [
+    {
+      "name": "summon_internal_unit",
+      "version": 1,
+      "params": {
+        "unit": "s1xlv.bug_hive_chariot",
+        "interval_multiplier": [
+          14,
+          11
+        ]
+      }
+    },
+    {
+      "name": "summon_on_hit",
+      "version": 1,
+      "params": {
+        "cooldown": 120
+      }
+    }
+  ],
+  "localization": {
+    "ZS": {
+      "name": "虫穴",
+      "description": "普通攻击：‐     特殊攻击：‐\n骷髅状的虫巢，\n不时会放出「二轮战车」。"
+    },
+    "ZT": {
+      "name": "蟲穴",
+      "description": "普通攻擊：‐     特殊攻擊：‐\n骷髏狀的蟲巢，\n不時會放出「二輪戰車」。"
+    },
+    "JP": {
+      "name": "バグネスト",
+      "description": "通常攻撃：‐     特殊攻撃：‐\nドクロのような形をした虫の巣。\n時おり「チャリオット」を放つ。"
+    },
+    "KR": {
+      "name": "벌레 둥지",
+      "description": "일반 공격: -     특수 공격: -\n해골 모양의 벌레 둥지.\n이따금 \"채리엇\"을 내보낸다."
+    },
+    "EN": {
+      "name": "BUG NEST",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nA skull-shaped insect nest.\nNow and then \"CHARIOT\" swarm out of it."
+    },
+    "ES": {
+      "name": "NIDO DE INSECTOS",
+      "description": "ATQ. ESTÁND. : -    ATQ. ESPEC. : -\nUn nido de insectos con forma de calavera.\nDe vez en cuando salen enjambres de \"CARRO\"."
+    },
+    "PT": {
+      "name": "NINHO DE INSETOS",
+      "description": "ATQ. PADR. : -   ATQ. ESPEC. : -\nUm ninho de insetos em forma de caveira.\nDe vez em quando saem enxames de \"CARRUAGEM\"."
+    },
+    "FR": {
+      "name": "NID D'INSECTES",
+      "description": "ATT. STAND : -   ATT. SPÉ : -\nUn nid d'insectes en forme de crâne.\nDe temps à autre, des essaims de \"CHARIOT\" en sortent."
+    },
+    "DE": {
+      "name": "INSEKTENNEST",
+      "description": "STANDARDANGR. : -     SPEZIALANGR. : -\nEin schädelförmiges Insektennest.\nAb und zu schwärmen \"CHARIOT\" aus."
+    },
+    "IT": {
+      "name": "NIDO DI INSETTI",
+      "description": "ATC STAND.: -   ATC SPEC.: -\nUn nido di insetti a forma di teschio.\nDi tanto in tanto ne escono sciami di \"CARRO\"."
+    },
+    "RU": {
+      "name": "ГНЕЗДО ЖУКОВ",
+      "description": "СТАНД. АТАК: -   СПЕЦ. АТАК: -\nГнездо насекомых в форме черепа.\nВремя от времени из него вылетают рои \"КОЛЕСНИЦА\"."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "colors": 250,
+  "page": [
+    256,
+    256
+  ],
+  "rects": 21,
+  "frame_words": 108,
+  "scripts": 32,
+  "icon_size": [
+    45,
+    40
+  ],
+  "unit_ids": {
+    "s1xlv.bug_hive_builder": 1085,
+    "s1xlv.bug_hive": 1086,
+    "s1xlv.bug_hive_chariot": 1087
+  },
+  "icon_rect": [
+    454,
+    770,
+    45,
+    40
+  ]
+}

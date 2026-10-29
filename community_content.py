@@ -283,6 +283,9 @@ def check_references(u,by_key):
     if landing is not None and (u['base_id']!=160 or landing not in by_key or by_key[landing].get('internal_only')):raise ValueError('Invalid paratrooper landing reference')
     summoned=u.get('summoned_unit_key')
     if summoned is not None and (u['base_id']!=64 or summoned not in by_key or summoned==u['key'] or by_key[summoned].get('internal_only')):raise ValueError('Invalid mummy gate summon reference')
+    # 2026-10-29 行为库 v26：召唤箱召唤内部单位（summon_internal_unit），不与可选单位召唤同用。
+    internal=u.get('summoned_internal_key')
+    if internal is not None and (u['base_id']!=64 or internal not in by_key or internal==u['key'] or not by_key[internal].get('internal_only') or summoned is not None):raise ValueError('Invalid internal summon reference')
     preview=u.get('preview_unit_key')
     if preview is not None and (preview!=child or preview not in by_key):raise ValueError('Invalid unit preview reference')
     thrown=u.get('throw_child_key')
@@ -519,6 +522,7 @@ class CommunityContent:
         # R1 行为 v2（悬停点与追踪俯冲）需核心 r98（版本 2）。
         # 2026-10-27 贯穿子弹（piercing_shots，标记 8388608）：BattleBulletDefault::attackAction 的 2 个块（核心 r100）。
         if any(u['zombie_spec']['flags']&8388608 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_piercing_shots_version') or p.uc.lib.msd_community_piercing_shots_version()<1):raise RuntimeError('Native core lacks piercing shots')
+        if any(u['zombie_spec']['flags']&16777216 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_summon_on_hit_version') or p.uc.lib.msd_community_summon_on_hit_version()<1):raise RuntimeError('Native core lacks summon on hit')
         if any(u['zombie_spec']['flags']&4194304 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_mole_missile_version') or p.uc.lib.msd_community_mole_missile_version()<2 or not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks mole missile behavior')
         self.ready=False
 
@@ -768,7 +772,7 @@ class CommunityContent:
                 value=struct.unpack_from('<i',row,off)[0]
                 if value>0:struct.pack_into('<i',row,off,(2*value*a+b)//(2*b))
             struct.pack_into('<i',row,0x378,u['faction']);rows+=row
-            child_key=u.get('child_unit_key') or u.get('summoned_unit_key') or u.get('throw_child_key') or u.get('second_form_key')
+            child_key=u.get('child_unit_key') or u.get('summoned_unit_key') or u.get('summoned_internal_key') or u.get('throw_child_key') or u.get('second_form_key')
             if child_key:
                 child=next(entry['id'] for entry in self.units if entry['key']==child_key)
                 struct.pack_into('<I',rows,len(rows)-0x390+0xa4,child)
@@ -938,7 +942,8 @@ class CommunityContent:
         else:fields+=(0,)
         # 头部偏移 176/180：按生命计算的修筑类单位表（每项 UnitID、百分比、下限）与项数；无此类单位时为 0。
         fields+=self.install_engineer_hp(action_rows,units)
-        # 头部偏移 184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（水花 water、子弹墙 bullet_walls、背景图层视差 parallax）；无此类场景时为 0。
+        # 头部偏移 184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（水花 water、子弹墙 bullet_walls、背景图层视差 parallax、
+        # 背景图层换帧间隔 frame_updates）；无此类场景时为 0。
         fields+=(self.install_scene_fx(stage_rows),)
         p.write(HEADER,struct.pack('<%dI'%len(fields),*fields));self.ready=True
         self.map_initial_choices_applied=not (self.manifest.get('missions') or self.manifest.get('campaign_choices'))
@@ -946,24 +951,28 @@ class CommunityContent:
         p.log('COMMUNITY_REGISTERED',n,'unit IDs',[u['id'] for u in self.units])
 
     def install_scene_fx(self,stage_rows):
-        """场景效果记录（src/community_content.cpp 的 scene_fx 钩子），每个 22 个字：0 标记（位 0 水花，位 1 子弹墙，位 2 背景图层视差）；
-        1–4 水花左界、右界、起水高度、画线（同原生 WaterFunc::waterSetup 的四个整数，逻辑坐标）；5–8 水花颜色 r、g、b 与染色强度（float，0–1，
-        GraphicsOpt::setSpriteFog）；9 已建立 WaterFunc 的场景对象（核心写入）；10–17 WaterFunc 存储（核心使用）；18 子弹墙多边形数；
-        19 多边形数据（每个多边形：点数 n，再 n 对 x、y，int32）；20 视差表的背景层数；21 视差表（逐背景层的卷动比例，int32 千分比，
-        1000 为与镜头同速；2026-10-28 起，核心 stage_parallax）。"""
+        """场景效果记录（src/community_content.cpp 的 scene_fx 钩子），每个 24 个字：0 标记（位 0 水花，位 1 子弹墙，位 2 背景图层视差，
+        位 3 背景图层换帧间隔）；1–4 水花左界、右界、起水高度、画线（同原生 WaterFunc::waterSetup 的四个整数，逻辑坐标）；5–8 水花颜色 r、g、b
+        与染色强度（float，0–1，GraphicsOpt::setSpriteFog）；9 已建立 WaterFunc 的场景对象（核心写入）；10–17 WaterFunc 存储（核心使用）；
+        18 子弹墙多边形数；19 多边形数据（每个多边形：点数 n，再 n 对 x、y，int32）；20 视差表的背景层数；21 视差表（逐背景层的卷动比例，
+        int32 千分比，1000 为与镜头同速；2026-10-28 起，核心 stage_parallax）；22 换帧间隔表的背景层数；23 换帧间隔表（逐背景层每帧保持的
+        更新次数，int32，原生为 2；2026-10-29 起，核心 stage_back_frame，此前记录为 22 个字）。"""
         p=self.p
-        if not any('water' in s or 'bullet_walls' in s or 'parallax' in s for s in stage_rows):return 0
+        if not any('water' in s or 'bullet_walls' in s or 'parallax' in s or 'frame_updates' in s for s in stage_rows):return 0
         if not hasattr(p.uc.lib,'msd_community_scene_fx_version') or p.uc.lib.msd_community_scene_fx_version()!=1:
             raise RuntimeError('Native core lacks scene water / bullet wall hooks (scene_fx)')
         if any('parallax' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_parallax_version')
                                                         or p.uc.lib.msd_community_stage_parallax_version()!=1):
             raise RuntimeError('Native core lacks scene layer parallax (stage_parallax)')
+        if any('frame_updates' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_frame_rate_version')
+                                                             or p.uc.lib.msd_community_stage_frame_rate_version()!=1):
+            raise RuntimeError('Native core lacks scene layer frame rates (stage_back_frame)')
         f32=lambda v:struct.unpack('<I',struct.pack('<f',v))[0]
         pointers=[]
         for s in stage_rows:
-            water,walls,parallax=s.get('water'),s.get('bullet_walls'),s.get('parallax')
-            if not water and not walls and not parallax:pointers.append(0);continue
-            words=[0]*22
+            water,walls,parallax,frames=s.get('water'),s.get('bullet_walls'),s.get('parallax'),s.get('frame_updates')
+            if not water and not walls and not parallax and not frames:pointers.append(0);continue
+            words=[0]*24
             if water:
                 words[0]|=1;words[1:5]=[*water['range'],water['min_y'],water['draw_y']]
                 words[5:9]=[f32(v/255) for v in (*water['color'],water.get('strength',230))]
@@ -973,7 +982,10 @@ class CommunityContent:
             if parallax:
                 words[0]|=4;words[20]=len(parallax)
                 words[21]=self.alloc(struct.pack('<%di'%len(parallax),*parallax))
-            pointers.append(self.alloc(struct.pack('<22I',*(w&0xffffffff for w in words))))
+            if frames:
+                words[0]|=8;words[22]=len(frames)
+                words[23]=self.alloc(struct.pack('<%di'%len(frames),*frames))
+            pointers.append(self.alloc(struct.pack('<24I',*(w&0xffffffff for w in words))))
         return self.alloc(struct.pack('<%dI'%len(pointers),*pointers))
 
     def install_engineer_hp(self,action_rows,units):
@@ -1051,6 +1063,8 @@ class CommunityContent:
             # 2026-10-26：121–131 鼹鼠弹（mole_missile v1，核心 r97）：悬停、钻入、地下潜行、钻出、冲刺、爆炸、绝招爆炸、损毁动作，
             # 冲刺速度（世界单位 × 10 / tick）、悬停点的前方距离与离地高度（R1，核心 r98；136 字，132–135 保留）
             for i,v in enumerate(spec.get('mole',[])):words[121+i]=v
+            # 2026-10-29：132 受击召唤的冷却 tick（summon_on_hit，核心 r105）
+            words[132]=spec.get('hit_summon_cooldown',0)
             pointers.append(self.alloc(struct.pack('<136I',*words)))
         return self.alloc(struct.pack('<'+'I'*len(pointers),*pointers))
 

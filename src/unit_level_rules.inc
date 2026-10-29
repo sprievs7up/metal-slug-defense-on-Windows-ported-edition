@@ -84,8 +84,28 @@ static void limit_break(Context& c){
  }
  old_limit_break(c);
 }
+// 头目区域（世界 1–3 区域 12–15）救出率达到 100% 时，战斗结算 BattleEndGetPrisoner 在有头目、俘虏星期为 −1 时
+// 调用 SetAreaEnableSaveData(世界, 区域, false) 写入全部关卡开放位，此后不依赖头目出现时段。
+// RAID（raidInit，S 评级关卡不经战斗通关，雷達救出 1 名）在同一情形只置结果状态，头目转到下一区域后
+// 该区域在地图上不再显示（AGENTS 第 300 节）。块 0x216cf2 只在救出率由未满变为 100% 时进入，r0–r3 在块内重新赋值：
+// 条件成立时经 lr 进入原生 SetAreaEnableSaveData（含存档写入，不作嵌套调用），返回本块后继续原生流程。
+static Block old_raid_complete;
+static bool raid_enable_pending=false;
+static void raid_complete(Context& c){
+ if(raid_enable_pending){raid_enable_pending=false;old_raid_complete(c);return;}
+ uint32_t app=c.r[5],world=rd<uint32_t>(c,app+0xb1ecu),area=rd<uint32_t>(c,app+0xb1f0u),boss=0u,prisoner=0u,weekday=0u;
+ if(msd_guest_call(c,0x10165fe7u,world,area,0u,0u,&boss)&&boss!=0xffffffffu
+  &&msd_guest_call(c,0x10165ffbu,world,area,0u,0u,&prisoner)
+  &&msd_guest_call(c,0x10166905u,prisoner,0u,0u,0u,&weekday)&&weekday==0xffffffffu){
+  raid_enable_pending=true;
+  c.r[0]=world;c.r[1]=area;c.r[2]=0u;c.r[3]=0u;c.r[14]=0x10216cf3u;c.pc=0x10166545u;return;
+ }
+ old_raid_complete(c);
+}
+extern "C" __declspec(dllexport) uint32_t msd_raid_boss_area_rules_version(){return 1u;}
 extern "C" __declspec(dllexport) void msd_enable_world_level_rules(){
  static bool installed=false;if(installed)return;installed=true;
  old_world_upgrade=find_block(0x101ed29fu);register_block(0x101ed29fu,world_upgrade);
  old_limit_break=find_block(0x101eeae5u);register_block(0x101eeae5u,limit_break);
+ old_raid_complete=find_block(0x10216cf3u);register_block(0x10216cf3u,raid_complete);
 }

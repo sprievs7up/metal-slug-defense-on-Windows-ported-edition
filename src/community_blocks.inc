@@ -1889,6 +1889,7 @@ if((old_hunter_death_slot=find_block(0x101de017u))){register_block(0x101de017u,h
 if((old_hunter_ground=find_block(0x1016d8e9u))){register_block(0x1016d8e9u,hunter_ground);++hunter_hooks;}
 if((old_stage_back_draw=find_block(0x101e147du))){register_block(0x101e147du,stage_back_draw);++stage_scale_hooks;}
 if((old_stage_front_draw=find_block(0x101e1519u))){register_block(0x101e1519u,stage_front_draw);++stage_scale_hooks;}
+if((old_stage_back_frame=find_block(0x101e1467u))){register_block(0x101e1467u,stage_back_frame);++stage_frame_hooks;}
 if((old_ground_follow_update=find_block(0x101dd875u))){register_block(0x101dd875u,ground_follow_update);++ground_follow_hooks;}
 if((old_spawn_ground_height=find_block(0x101df40du))){register_block(0x101df40du,spawn_ground_height);++ground_follow_hooks;}
 if((old_child_left=find_block(0x101de249u))){register_block(0x101de249u,child_left);++ground_follow_hooks;}
@@ -1931,4 +1932,6 @@ if((old_mole_update=find_block(0x1018258du))){register_block(0x1018258du,mole_up
 if((old_mole_attack=find_block(0x101780e1u))){register_block(0x101780e1u,mole_attack);++mole_hooks;}
 if((old_pierce_attack=find_block(0x10177755u))){register_block(0x10177755u,pierce_attack);++pierce_hooks;}
 if((old_pierce_hit=find_block(0x1017777du))){register_block(0x1017777du,pierce_hit);++pierce_hooks;}
+if((old_sh_damage=find_block(0x1016f4f5u))){register_block(0x1016f4f5u,summon_hit_damage);++summon_hit_hooks;}
+if((old_sh_update=find_block(0x101aed79u))){register_block(0x101aed79u,summon_hit_update);++summon_hit_hooks;}
 }

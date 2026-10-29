@@ -148,6 +148,13 @@ class Catalog:
                 if 'graphics' not in scene or not isinstance(parallax,list) or len(parallax)!=len(scene['graphics'].get('back',[])):
                     raise ValueError('parallax 须与 graphics.back 逐层对应')
                 for v in parallax:integer(v,0,1000)
+            # frame_updates：背景图层换帧间隔（2026-10-29 起，需核心 stage_back_frame）。逐个 graphics.back 层每帧保持的更新次数 1–8
+            # （原生各层为 2，即 30 FPS 时每秒 15 帧；1 为每次更新换帧）。
+            frames=scene.get('frame_updates')
+            if frames is not None:
+                if 'graphics' not in scene or not isinstance(frames,list) or len(frames)!=len(scene['graphics'].get('back',[])):
+                    raise ValueError('frame_updates 须与 graphics.back 逐层对应')
+                for v in frames:integer(v,1,8)
         for music in self.music.values():
             if music.get('file') not in self.assets or not music['file'].endswith('.msdf') or not self.assets[music['file']].startswith(b'OggS'):
                 raise ValueError('音乐要求包含 Vorbis 数据的 .msdf 文件')
