@@ -420,7 +420,7 @@ def internal_fields(resolved):
         fields['throw_child_key'] = v['rider_unit']
     # 2026-11-01 Fall Climber（行为库 v31 / 行为 v1，核心 r115，基准 192 侵略者类，ZSpec 标记 134217728，字 53–103，与 elder_centipede /
     # invader_king / iron_death_worm 互斥）：动作号、骨架几何、步伐与起伏、光球与绝招移动、部件判定范围的参数（second_form 写 1 / 0，单位号经
-    # 子单位字；手落地音效 climber_sounds 由加载器换为 SoundID 写入字 104 / 105；R6 光球水平飞行距离、R7 腕点与 R10 连射冷却、R14 绝招移动段受伤百分比 climber_more 写入字 106–111）；
+    # 子单位字；手落地音效 climber_sounds 由加载器换为 SoundID 写入字 104 / 105；R6 光球水平飞行距离、R7 腕点与 R10 连射冷却、R14 绝招移动段、R15 蓄力与激光段受伤百分比 climber_more 写入字 106–112）；
     # 第一形态以 second_form_key 引用第二形态（STATUS 显示两形态生命之和、开战预载）。不击退（核心按标记处理）。
     if 'fall_climber' in resolved:
         v = resolved['fall_climber']
@@ -464,7 +464,7 @@ def internal_fields(resolved):
             'head_y',
             'head_width',
             'head_height',
-        )] + v['upper_box'] + v['lower_box'] + v['body_box'], climber_sounds=list(v['step_sounds']), climber_more=[v['shot_distance'], v['wrist_x'], v['wrist_y'], v['burst_shots'], v['burst_cooldown'], v['special_move_damage_taken']])
+        )] + v['upper_box'] + v['lower_box'] + v['body_box'], climber_sounds=list(v['step_sounds']), climber_more=[v['shot_distance'], v['wrist_x'], v['wrist_y'], v['burst_shots'], v['burst_cooldown'], v['special_move_damage_taken'], v['special_laser_damage_taken']])
         if v['second_form']:
             fields['second_form_key'] = v['second_form']
     # 2026-10-31 R9 落地延续生命（行为库 v30，核心 r112，基准 160）：ZSpec 标记 67108864，无参数字。

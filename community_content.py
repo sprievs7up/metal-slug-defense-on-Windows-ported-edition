@@ -539,7 +539,7 @@ class CommunityContent:
         # 2026-10-31 R9 落地延续生命（landing_keeps_hp，标记 67108864）：summonZakoBazooka 生成子单位之后的 1 个块（核心 r112）。
         if any(u['zombie_spec']['flags']&67108864 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_landing_hp_version') or p.uc.lib.msd_community_landing_hp_version()<1):raise RuntimeError('Native core lacks landing HP carry-over')
         # 2026-11-01 Fall Climber（fall_climber，标记 134217728）：侵略者类的块与三遍裁切绘制、部件判定（核心 r115）。
-        if any(u['zombie_spec']['flags']&134217728 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_fall_climber_version') or p.uc.lib.msd_community_fall_climber_version()<2):raise RuntimeError('Native core lacks fall climber behavior')
+        if any(u['zombie_spec']['flags']&134217728 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_fall_climber_version') or p.uc.lib.msd_community_fall_climber_version()<3):raise RuntimeError('Native core lacks fall climber behavior')
         if any(u['zombie_spec']['flags']&4194304 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_mole_missile_version') or p.uc.lib.msd_community_mole_missile_version()<2 or not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks mole missile behavior')
         self.ready=False
 
@@ -1090,7 +1090,7 @@ class CommunityContent:
             # 2026-11-01：53–103 Fall Climber（fall_climber v1，核心 r115；与 elder_centipede / invader_king / iron_death_worm 互斥）：形态、
             # 各动作号、光球脚本、有无第二形态，骨架几何、步伐、起伏、绝招移动与光球的参数，上臂、前臂与机体的判定范围（见行为库说明）；
             # 104 / 105 左右手落地音效（R4，只有 1 个时两手共用，0 为无）；106 光球水平飞行距离（R6）；107 / 108 腕点（R7）；109 / 110 每几颗光球后冷却与冷却 tick（R10）；
-            # 111 第二形态绝招移动段的受伤百分比（R14，核心 r116）
+            # 111 / 112 第二形态绝招移动段 / 蓄力与激光段的受伤百分比（R14 核心 r116 / R15 核心 r117）
             for i,v in enumerate(spec.get('climber',[])):words[53+i]=v&0xffffffff
             steps=[self.sound_ids[k] for k in spec.get('climber_sounds',[])]
             if steps:words[104]=steps[0];words[105]=steps[-1]

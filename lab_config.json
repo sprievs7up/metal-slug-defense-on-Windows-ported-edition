@@ -1,61 +1,25 @@
 {
   "schema": 1,
-  "stage_id": 13095,
+  "stage_id": 13012,
   "enemy_deck": [
-    [
-      1091,
-      40
-    ],
-    [
-      1029,
-      40
-    ],
-    [
-      3,
-      40
-    ],
-    [
-      6,
-      40
-    ],
-    [
-      1028,
-      40
-    ],
-    [
-      1027,
-      40
-    ],
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
     null,
     null,
     null,
     null
   ],
   "player_deck": [
-    [
-      1091,
-      40
-    ],
-    [
-      1029,
-      40
-    ],
-    [
-      3,
-      40
-    ],
-    [
-      6,
-      40
-    ],
-    [
-      1028,
-      40
-    ],
-    [
-      1027,
-      40
-    ],
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
     null,
     null,
     null,

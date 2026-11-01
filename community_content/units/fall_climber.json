@@ -15470,6 +15470,7 @@
         "burst_shots": 20,
         "burst_cooldown": 180,
         "special_move_damage_taken": 15,
+        "special_laser_damage_taken": 10,
         "upper_length": 648,
         "lower_length": 885,
         "shoulder_x": -557,

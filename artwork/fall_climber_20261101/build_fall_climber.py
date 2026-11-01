@@ -640,6 +640,7 @@ def behavior_params(form):
          'hand_x': t(R.HAND_X), 'gait': 120, 'lift': 36, 'bob': 8, 'bob_up': 12, 'bob_high': 16, 'bob_down': 12, 'bob_low': 16,
          'rise': R.RISE, 'dash_speed': 80, 'dash_ahead': 100, 'shot_rise': 30, 'shot_speed': 80, 'shot_distance': 700, 'burst_shots': 20, 'burst_cooldown': 180,
          'special_move_damage_taken': 15,   # R14（用户）：第二形态绝招移动段受到的伤害 −85%（核心 r116）
+         'special_laser_damage_taken': 10,   # R15（用户）：第二形态绝招蓄力与激光段受到的伤害 −90%（核心 r117）
          'upper_length': t(a['L1']), 'lower_length': t(a['L2']), 'shoulder_x': t(a['S'][0]), 'shoulder_y': t(a['S'][1]),
          'elbow_x': t(a['E'][0]), 'elbow_y': t(a['E'][1]), 'elbow_sign': a['sign'], 'muzzle_x': t(mx), 'muzzle_y': t(my - peek),
          'hand_width': hand.width, 'hand_height': hand.height, 'head_x': head[0], 'head_y': head[1], 'head_width': head[2],
