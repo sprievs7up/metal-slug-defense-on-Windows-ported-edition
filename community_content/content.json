@@ -75,7 +75,12 @@
     "s1xlv.fire_maggot": 1084,
     "s1xlv.bug_hive_builder": 1085,
     "s1xlv.bug_hive": 1086,
-    "s1xlv.bug_hive_chariot": 1087
+    "s1xlv.bug_hive_chariot": 1087,
+    "s1xlv.rebel_bomb_bike": 1088,
+    "s1xlv.rebel_bomb_bike_rider": 1089,
+    "s1xlv.rebel_bomb_bike_rocketeer": 1090,
+    "s1xlv.fall_climber": 1091,
+    "s1xlv.fall_climber_form2": 1092
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -152,7 +157,13 @@
     "mcsnl_five_future_wing.obm": "a4e893a001d5ed5cd89a20b8ef902203e109e99a98922536bdf4034c5eec5f54",
     "sandbag_future.obm": "7eb8179653f7bf75362b45dbf6877d11df013c5248bb89b5df9479c25eeca348",
     "fire_maggot.obm": "f7f3e3541cb7c73a2439909fd407e62d00a5e9842c762602ac5de7d8ccbd749b",
-    "bug_hive.obm": "d8b06d4a96786f0c0915e8f16994d02281f70fa14251685c57a8f91b6149710b"
+    "bug_hive.obm": "d8b06d4a96786f0c0915e8f16994d02281f70fa14251685c57a8f91b6149710b",
+    "rebel_bomb_bike.obm": "3bd4d6b3450a12c764792276814fbc3695943d1eeb7368deaa6b69851a40a325",
+    "rebel_bomb_bike_rider.obm": "4fcfd517ff895c69ba9a72dc97d106e5645bac203c39c99c4e96b112861e3489",
+    "fall_climber_0.obm": "f99f0a5121a00f1365c502379a46d61e3cbc769daeb732c381caea103936b98a",
+    "fall_climber_1.obm": "73ecc40df03f6fcf45bef3c3c6c48a4b80129dc9f81ba44359978ad89eb12a15",
+    "fall_climber_2.obm": "54b977d6e9753c46160e4267cd7edc83224b4fa8eae3b9d25cdd4850ca38355d",
+    "fall_climber_3.obm": "125f2c7fa0f4a6f6ac09fd47f9a79a2a792d089ffa8d25f696ee8828fb5422ce"
   },
   "stock_sprites": {
     "381": "tyra_elson_sprite.json",
@@ -696,6 +707,39 @@
         54.104399,
         132.955011
       ]
+    },
+    {
+      "key": "s1xlv.bgm_ms7_m4",
+      "file": "bgm_ms7_m4.msdf",
+      "type": "bgm",
+      "loop": [
+        103.863016,
+        206.69839
+      ]
+    },
+    {
+      "key": "s1xlv.fall_climber_step1",
+      "file": "fall_climber_step1.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.fall_climber_step2",
+      "file": "fall_climber_step2.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.fall_climber_charge",
+      "file": "fall_climber_charge.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.fall_climber_laser",
+      "file": "fall_climber_laser.msdf",
+      "type": "se",
+      "volume": 100
     }
   ]
 }

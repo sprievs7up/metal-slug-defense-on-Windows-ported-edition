@@ -1,11 +1,12 @@
 # IRON SENTINEL（钢铁哨兵，MSA 数据重做）
 
-2026-10-21 重新加入本体。《合金弹头6》第 2 关首领，图集、动作记录与音效取自《Metal Slug Attack》（MSA）7.13.0 的 UnitID 287（第一形态）与 288（第二形态）。稳定键 `s1xlv.iron_sentinel`（UnitID 1062，叛军，敌我双方均可使用）与内部单位 `s1xlv.iron_sentinel_form2`（UnitID 1063，只由 1062 召唤）。本文件取代 `IRON_SENTINEL_2026-10-20.md` 记录的 R1–R4 版本；方案与数值对照见 `docs/ms6/IRON_SENTINEL_MSA_PORT_PLAN_2026-10-21.md`、`docs/ms6/IRON_SENTINEL_MSA_STATS_2026-10-21.md`。需要核心 r74（`msd_community_iron_slider_version() == 1`，10 个钩子；r73 为前 7 个）与行为库版本 12。
+2026-10-21 重新加入本体。《合金弹头6》第 2 关首领，图集、动作记录与音效取自《Metal Slug Attack》（MSA）7.13.0 的 UnitID 287（第一形态）与 288（第二形态）。稳定键 `s1xlv.iron_sentinel`（UnitID 1062，叛军，敌我双方均可使用）与内部单位 `s1xlv.iron_sentinel_form2`（UnitID 1063，只由 1062 召唤）。本文件取代 `IRON_SENTINEL_2026-10-20.md` 记录的 R1–R4 版本；方案与数值对照见 `docs/ms6/IRON_SENTINEL_MSA_PORT_PLAN_2026-10-21.md`、`docs/ms6/IRON_SENTINEL_MSA_STATS_2026-10-21.md`。需要核心 r74（`msd_community_iron_slider_version() == 1`，10 个钩子；r73 为前 7 个）与行为库版本 12；R13 起需要核心 r110（版本 2，12 个钩子）与行为 `iron_slider_second_form` v2（行为库 28）。
 
 ## 1. 依据与用户决定
 
 - MSA 数据：`F:\egg\research\metal_slug_attack\`（官方 APK 与 2022-11-09 数据转储，AGENTS 第 177、178 节）；动作记录 0x49fda20（矩形 318、帧 319、受击框 2、攻击框 11、脚本 142），图集 `iron_slider_out.obm`（2048×1024）与 `ironiso_1_out.obm`（256×256）；导出工具 `scripts/msa_unit.py`，结果 `decoded/units/0287/`。
 - MSD 1.46 原生库保留未发布的 IRON SLIDER（UnitID 394 / 395）：动作类 `BattleAction_IronSlider` / `_2` 与 6 个弹体类仍在核心中，运行时 394 / 395 的动作表项与描述符被换成普通兵。原生描述符 0x977c4c 的图集名、矩形与帧表与 MSA 记录逐项相同，脚本为较早版本（115 条，无音效指令）。
+- 用户要求（2026-10-30，R13，历史遗留问题）：第二形态阵亡后为闪烁加局部爆炸后消失，应为爆炸消失；爆炸须覆盖最后的图案区域，并加入炸碎后的碎片（第 3.9 节）。
 - 用户决定（2026-10-21）：
   - 按 MSA 方式在运行时由斜置部件旋转为水平；
   - 不按 MSA 缩小到 75%，部件以 100% 绘制；
@@ -118,6 +119,21 @@
 - 原生 `BattleObjectManager::draw` 把双方单位、弹体与效果对象按 +0xf0 升序排序后依次绘制（`qsortComp`：+0xf0 相同时按 +0x60 建立次序），值小者先画、在下层。单位的 +0xf0 由 `BattleObject::initialize` 写入，取数据行 +0x340（`BattleUnitStatus` 字 42；`GetMenuUnitDrawPrio` 同取此字加 100），实测存为 (字 42 + 100) × 2^20 再加建立次序。原版多数单位为 0，大型单位为负值（BIG SHIEE、DRAGON NOSUKE −90，JUPITER KING −80，REBEL GIGANT −78，IRON NOKANA −70）。基准 394 / 395 未发布，此字为 0，本单位因此按建立次序与其他单位交错，画在较早建立的单位之上。
 - 宿主新增单位字段 `draw_priority`（−1000 至 1000）写入该字；本单位两形态取 −90。原生 `BattleObjectManager::setHeadPositionUnit` 也读取 +0xf0（推定为前缘位置相同时的比较），未见其他用途。
 
+### 3.9 第二形态的损毁：爆炸消失与碎块（R13，2026-10-30，核心 r110）
+
+- 修改前：原生 `BattleAction_IronSlider_2::update` 的状态 100 / 110 / 120 首帧播放槽 97（钩子 1 换成 21）并在 8 处放共用爆炸 0xff04，之后每 3–12 tick 在 x −120…118、y −238…40（世界单位）随机放 1 个 0xff03（1/16 为 0xff04），动画结束时在 9 处放 0xff04 后移除；这些位置按较早版本的较小车体设计，横向只到 −80…140，本单位 100% 绘制的车体约为 −380…382（残骸 −400…292），左后部与车头不在爆炸范围内。MSA 槽 21 为车体部件 10 tick → 残骸（帧 634 / 636）30 tick → 闪烁 4 次后结束。原生没有碎片（原版 THE IRON、BIG SHIEE 等损毁时以 `addEffectHahen` 放破片，IRON SLIDER 不放）。
+- 核心 r110（`src/community_content.cpp` 钩子 11、12）：
+  - 钩子 11：状态分派处（0x101996a8）在损毁状态不执行原生爆炸；首帧经原生块 0x10199716 尾调用 `setAnimationID(97)`，之后经原生状态 140 的块 0x10199966（动画结束时移除）。
+  - 钩子 12：第二形态 `createObject` 把编号 ≥ 0xff00 的共用效果交给原生 `BattleUnitDefault::createObject`（`addEffect`，与原版单位脚本中的 op12 相同）；碎块脚本 154–158 以 `addEffectFallOut` 建立（`BattleActionEffect_FallOut`：`adjustHitGround` 判定下落到地形高度时移除，同第一形态的残片 72 / 73），并在同一位置以 `addEffectHahen` 向前、向后各放 2 个原生破片（共用效果 402 的动画 11 / 12，速度取 THE IRON 损毁的值：横向 1–8、向上 3–16，重力 0.8）。`addEffectHahen` 经 `randEffect` 调用宿主导入 lrand48，钩子内的嵌套调用会放弃（AGENTS 第 203 节），三次调用因此以延续块 0x10180f3f 在客体流程中依次执行（返回地址与参数暂存于客体栈）。
+  - 导出 `msd_community_iron_slider_version()` 在 12 个钩子都登记时为 2，宿主要求 ≥ 2。
+- 槽 21（`build_iron_sentinel_msa.py` 的 `DEATH_EVENTS`、`DEBRIS`；坐标为描述符单位，世界单位为其 2 倍，1280×720 画面中 1 世界单位约 1.125 像素）：
+  - 第 0–9 tick 车体部件，第 10–43 tick 残骸（不闪烁），第 44 tick 结束，原生随即移除单位。
+  - 入场：第 0–4 tick 18 个 0xff04 按车体部件的不透明范围（x −190…191、y −150…20，`opaque_extent.py`）错位排布，第 7、8 tick 2 个遮住第 10 tick 换上的残骸塔部（残骸比车体部件高约 37）。
+  - 第 13–37 tick 每 3 tick 1 个（0xff03 7 个、0xff04 2 个），位置按残骸范围排定。
+  - 第 38–41 tick 17 个 0xff04 覆盖残骸的不透明范围（x −200…146、y −187…26），另有 2 个大型单位爆炸 0xff17；0xff04 首帧为白闪，约 3 tick 展开（宽约 ±31、自锚点向上约 55），第 44 tick 单位移除时残骸已被遮住。
+  - 第 40 tick 5 个碎块（帧 84 第二形态顶盖、帧 398 / 400 MSA 记录中未使用的破损机壳各 2 个；锚点均在图案中心）：根层以 op7 抛出（向上 8–16、横向 2–7 世界单位每 tick，重力 0.8），子层每 2 tick 转 1/16 或 1/32 周；每个碎块另放 4 个原生破片（共 20 个）。
+  - 同一 tick 整齐成行的排布在画面中为横条，首帧白闪连成一片（第一次试做），改为错位、略有起伏并把生成时刻分散在 3–4 tick 内。
+
 ## 4. 验证（2026-10-21，r73，隔离存档，墙钟前移，未计算 SHA-256）
 
 脚本与记录：`verification/iron_sentinel_msa_20261021/`。
@@ -179,6 +195,14 @@
 
 - **R12**（2026-10-25，社区意见，单位数据与宿主修改，核心 r93；`verification/community_balance_20261025/`）：重新生成后只有两个单位文件的 `hp_multiplier` 改变（[4,5] / [1,1] → [6,5] / [3,5]）并新增 `draw_priority` −90，图集、描述符、音效与 `content.json` 逐字节不变；宿主新增单位字段 `draw_priority`（第 3.8 节）。STATUS Lv1 / 10 / 20 / 30 / 40 为 18000 / 36000 / 54000 / 72000 / 90000（两形态之和不变，`runs/ui_is2_*`）；LAB 中第一形态生命上限 60000，第一形态生命改为 1 后受击转为第二形态，上限 30000；两形态对象 +0xf0 的优先级部分为 −90（修改前 0）。同一场景（我方步兵 4 个之后出本单位，敌方步兵 5 个生命保持，`runs/drawv_before_*` / `drawv_after_*`，同一宿主与核心只换内容目录）：修改前与本单位重叠的敌方步兵被本单位遮住，修改后画在本单位之上（第 700、880 帧，`draw_compare.png`）；另一场景中本单位的 +0xf0 不小于部分步兵的帧修改前 477 / 892、修改后 0 / 892（`ana_draw.json`）。动作演示范围不变，按新签名 8f5ecbe389117a18 并入两份 `unit_viewer_bounds.json`。`content_tool.py validate`、`check_body_offline.py` 10/10、`check_ura4_offline.py` 19/19、单元测试 21/22（另 1 项为既有的 `msd_aot` 导出检查）通过。以本单位为敌方的关卡为任务 2 第 5 关（`s1xlv.ura4.m2.s5`）。
 - R12 同步（AGENTS 第 2.2、2.3 节持续授权，`verification/community_balance_20261025/deploy_cb.py`，记录 `deployment.json`、`sync/`）：两个固定运行目录覆盖宿主、核心源码、两份 `core_runtime.json` 与 `lab_runtime.py`、4 个单位文件与 5 份文档（覆盖前与修改前副本逐字节相同），两份 `unit_viewer_bounds.json` 以目标为底本替换 3 项，新增核心 r93（旧核心保留）；同步后逐字节一致，保护文件 131、341 个不变，同步时无 Python 进程。两目录自身程序（`MSD_VERIFY_ROOT`，`run_installed.sh`、`cmp_installed.py`）validate 通过、内容摘要与工作区相同，5 个 LAB 场景与工作区逐帧相同，STATUS 相同。运行中的游戏需重启加载。
+- **R13**（2026-10-30，核心 r110，行为库 28；`verification/iron_sentinel_death_20261030/`，隔离存档，墙钟前移，未计算 SHA-256）：
+  - 生成：两个单位文件只有槽 21、脚本 101 / 102 与第二形态行为版本（1 → 2）改变，新增脚本 154–163；描述符只有脚本数改变（154 → 164）；图集、音效与 `content.json` 不变（生成脚本把 `content.json` 写成 CRLF，内容相同，已还原原文件）。修改前副本 `before/`。
+  - LAB（`run_death.sh`，敌方 BIG SHIEE，本单位停在 x 458；第 350 帧强制第二形态损毁）：第 350 帧进入状态 100、动作 21，第 394 帧移除（44 帧）。截图 `main2_a.png` / `main2_b.png`：入场爆炸覆盖车体部件，第 360 帧换上的残骸被遮住；第 388–391 帧最后一组依次白闪展开，第 392–393 帧残骸全部被爆炸覆盖，第 394 帧单位在爆炸中移除；顶盖与破损机壳旋转飞出、落地消失，原生破片飞散（`main_shards.png` 为第一次试做的截图）。敌方侧（`--swap`，`swap2.png`）镜像正确；据点被毁路径（钩子 8，第一形态生命仍大于 0，`basekill2.png`）第二形态第 337 帧进入损毁、第 381 帧移除。
+  - 音效（`r110_sound`，无敌方单位）：LAB 音效分派统计（`SE_STATS`）中，脚本排定的每个 tick 都有爆炸音效请求，同一 tick 的重复请求合并、播放 1 次（音效 203）。
+  - N1 回滚（`n1_death.py`，`--base-hp 2000000`，3600 帧）：参照与随机回滚（1057 次，重算 4683 帧）逐帧一致（语义差 0、深度差 0，`n1_compare.json`），其中第 2771–2814 帧为一次完整的第二形态损毁。
+  - 界面（`driver_ui_isentinel.py`）7 项通过；动作演示图像范围按新签名 3a18880627ed0886 并入两份 `unit_viewer_bounds.json`（待机实测范围不变 [−432, −424.8, 432, 51.2]，攻击取待机范围，其余条目不变）。`content_tool.py validate`、单元测试 21/22（另 1 项为既有的 `msd_aot` 导出检查）通过，`lab_probe.jsonl` 未变。
+  - 修改前即有的现象（未处理）：打开本单位的 ACTION 页时原生停止 2 次（`AOT stopped`，pc 0x10143d7b，`Graphics::drawImageSE` 读取地址 9），现场测量攻击动作的图像范围因此失败；以固定运行目录 `dist/MSD_Windows` 自身的 r109 与修改前内容（`MSD_VERIFY_ROOT`）运行同一驱动，停止的位置与次数相同。ACTION 演示画面与 r109 相同，各项检查通过。
+- R13 同步（2026-10-30，用户实机确认“效果很好”后要求同步；AGENTS 第 2.2、2.3 节，`sync_r13.py`，记录 `deployment_r13.json`、覆盖前副本 `sync_r13/`）：两个固定运行目录各覆盖 17 项（16 项覆盖前等于本次修改前的版本，其中 `src/community_content.cpp` 与工作区的 7 段差异均为本次改动；本文件等于 HEAD），新增核心 r110 两处与 MS7 任务 4 方案文档，`src/behavior_manifest.inc` 目标没有、不新建；同步后逐字节一致，保护文件不变，同步时无游戏进程。各目录自身程序（`MSD_VERIFY_ROOT`）：`content_tool.py validate` 内容摘要与工作区相同；损毁场景 450 帧与工作区逐帧相同（`run_installed.sh`、`cmp_installed.json`）；界面 7 项通过。本条补写后，本文件与方案文档单独再同步。
 
 ## 5. 限制与待决定
 
@@ -189,3 +213,4 @@
 - 火箭的爆炸距离取字 26（推定与 MSA 的 VALS_DISTANCE 对应，依据为 `getStatusParam` StatusID 0x16）。
 - 未覆盖：两机联机；实际编队与关卡中的平衡；MSA 属性抗性与伤害下限 2（MSD 无对应属性，未实施）。
 - R4 的生成目录 `artwork/iron_sentinel_20261020/` 保留。
+- R13：损毁的爆炸与碎块按脚本排定的固定位置与时刻放出（原生破片的速度为随机）；碎块碰到地形即消失，不弹跳、不另放爆炸；爆炸排布、碎块大小与时长待用户实机评估。单位菜单 ACTION 页的原生停止为修改前即有的现象（第 4 节 R13），原因未查。

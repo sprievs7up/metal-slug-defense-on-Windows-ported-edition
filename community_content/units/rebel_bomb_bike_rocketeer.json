@@ -1,0 +1,720 @@
+{
+  "key": "s1xlv.rebel_bomb_bike_rocketeer",
+  "base_id": 162,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "available_from_start": true,
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "shop_price": 10,
+  "ap": 35,
+  "production_reference_id": 162,
+  "menu_reference_id": 162,
+  "internal_only": true,
+  "textures": [
+    "missile_zako_out.obm"
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      691,
+      424,
+      39,
+      37
+    ],
+    "anchor": [
+      -5,
+      -8
+    ]
+  },
+  "animations": {
+    "13": [
+      {
+        "opcode": 23,
+        "values": [
+          809
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          98
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          100
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          102
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          104
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          106
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          108
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          110
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          112
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          114
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          116
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          118
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          120
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "14": [
+      {
+        "opcode": 23,
+        "values": [
+          807
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          98
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          100
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          102
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          104
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          106
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          108
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          110
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          112
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          114
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          116
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          118
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          120
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "15": [
+      {
+        "opcode": 23,
+        "values": [
+          808
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          283
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          54
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          56
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          58
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          60
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          62
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          64
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          66
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          68
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          70
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          72
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          74
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          76
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          78
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          80
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          82
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          84
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          86
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          88
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          90
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          92
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          94
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          96
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ]
+  },
+  "localization": {
+    "EN": {
+      "name": "ROCKET BOMB SOLDIER",
+      "description": "STAND. ATK : Rocket Bomb     SPEC. ATK : Rocket Bomb\nInfantry from Morden’s Army who throw pencil-type missile bombshells."
+    },
+    "JP": {
+      "name": "ロケット爆弾兵",
+      "description": "通常攻撃：ロケット爆弾    特殊攻撃：ロケット爆弾\nペンシルロケット型の爆弾を投げるモーデン軍の歩兵。"
+    },
+    "KR": {
+      "name": "로켓 폭탄병",
+      "description": "일반 공격: 로켓 폭탄          특수 공격: 로켓 폭탄\n펜슬 미사일형 폭탄을 투척하는 모덴군 보병."
+    },
+    "ES": {
+      "name": "SOLDADO CON MISIL",
+      "description": "ATQ ESTÁND. : Misil   ATQ ESPEC. : Misil\nLa infantería de la Armada de Morden que\nlanza misiles explosivos con forma de lápiz. "
+    },
+    "PT": {
+      "name": "SOLDADO C/ FOGUETE",
+      "description": "ATQ. PADR. : Bomba-Foguete   ATQ. ESPEC. : Bomba Foguete\n Infantaria do Exército de Morden que atira mísseis em forma de lápis."
+    },
+    "FR": {
+      "name": "SOLDAT ROQUETTE",
+      "description": "ATT. STAND : Fusée roquette ATK SPEC. : Fusée roquette\nInfanterie de l'Armée de Morden qui lance des missiles.\n"
+    },
+    "DE": {
+      "name": "ROCKET BOMB SOLDIER",
+      "description": "STAND. ATK : Rocket Bomb     SPEC. ATK : Rocket Bomb\nInfantry from Morden’s Army who throw pencil-type missile bombshells."
+    },
+    "IT": {
+      "name": "SOLDATO BOMBA MISSILE",
+      "description": "ATC STAND.: Bomba Missile   ATC SPEC.: Bomba Missile\nFanteria dell'Esercito di Morden, lanciano missili a forma di matita."
+    },
+    "ZT": {
+      "name": "沖天火箭彈兵",
+      "description": "普通攻擊：火箭炸彈    特殊攻擊：火箭炸彈\n會擲出沖天炮型的炸彈的莫丁軍步兵。"
+    },
+    "ZS": {
+      "name": "冲天火箭弹兵",
+      "description": "普通攻击：火箭炸弹    特殊攻击：火箭炸弹\n会掷出冲天炮型的炸弹的莫丁军步兵。"
+    },
+    "RU": {
+      "name": "СОЛДАТ РАКЕТНАЯ БОМБА",
+      "description": "СТАНД. АТАК: Ракетная бомба   СПЕЦ. АТАК: Ракетная бомба\nПехота Морденовскй армии, \nкоторая запускает ракетные бомбы карандашного типа."
+    }
+  },
+  "behaviors": [
+    {
+      "name": "death_by_attribute",
+      "version": 1,
+      "params": {
+        "explosion_animation": 14,
+        "fire_animation": 15
+      }
+    }
+  ]
+}

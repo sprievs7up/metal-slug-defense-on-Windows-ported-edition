@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "library_version": 26,
+  "library_version": 31,
   "param_types": {
-    "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位",
+    "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位；规格写 native 时也可填原版 UnitID（1–399）",
     "rational": "[分子, 分母] 正整数倍率",
     "int": "整数，min/max 含端点",
     "int_list": "整数列表；length 为固定长度，或以 min_length/max_length 给出长度范围；min/max 作用于每个元素",
@@ -190,12 +190,13 @@
         "landing_unit": {
           "type": "unit_key",
           "required": true,
-          "internal": false
+          "internal": "any",
+          "native": true
         }
       },
       "doc": {
-        "ZS": "空降中的内部单位：落地后转换为指定的可选单位（替代原生固定的 UnitID 45）。",
-        "EN": "Falling paratrooper (internal unit) turns into the given selectable unit on landing, replacing the native fixed UnitID 45."
+        "ZS": "空降中的内部单位：落地后转换为指定的可选单位、内部单位（2026-10-31 起）或原版单位（UnitID 1–399）（替代原生固定的 UnitID 45）。",
+        "EN": "Falling paratrooper (internal unit) turns into the given selectable unit, internal unit (since 2026-10-31) or original unit (UnitID 1–399) on landing, replacing the native fixed UnitID 45."
       }
     },
     {
@@ -580,6 +581,21 @@
       }
     },
     {
+      "name": "landing_keeps_hp",
+      "version": 1,
+      "base_classes": [
+        160
+      ],
+      "requires_behaviors": [
+        "para_drop_transform"
+      ],
+      "params": {},
+      "doc": {
+        "ZS": "空降 / 被投出的内部单位落地时，把当前生命交给 para_drop_transform 生成的单位（不超过其最大生命，至少 1）：落地前受到的伤害延续到落地后。本单位的生命按 hp_multiplier 设为与落地单位同等级的生命时，即为“分离时起单独记录生命”（2026-10-31 机动兵的骑手：基准 160 的生命 × 4/3 = 原版 162 冲天火箭弹兵）。",
+        "EN": "When the falling or thrown internal unit lands, its current HP is handed to the unit created by para_drop_transform (capped at that unit's max HP, at least 1), so damage taken before landing carries over. With hp_multiplier set so that this unit matches the landing unit's HP at the same level, HP is tracked separately from the moment of separation (2026-10-31 RIDER SOLDIER rider: base 160 HP x 4/3 = original 162 ROCKET BOMB SOLDIER)."
+      }
+    },
+    {
       "name": "no_death_splash",
       "version": 1,
       "base_classes": [
@@ -708,7 +724,8 @@
       "name": "death_by_attribute",
       "version": 1,
       "base_classes": [
-        221
+        221,
+        162
       ],
       "params": {
         "explosion_animation": {
@@ -743,8 +760,8 @@
         }
       },
       "doc": {
-        "ZS": "按攻击属性区分死亡动作（原住民（鸟）类）：原生的死亡状态 100（普通）、110（爆炸属性击杀）、120（火焰属性击杀）都播放槽 12；带此行为时 110 改为 explosion_animation、120 改为 fire_animation，100 仍为槽 12（同叛军步兵等小兵的三种死亡）。动作播完后单位消失。三个 *_variant_animation 非 0 时为对应死亡的另一版本（通常只换死亡语音）：死亡时单位横坐标取整为奇数则播放该版本，偶数则播放前者；只由当时的位置决定，回放与联机时双方结果相同。",
-        "EN": "Death animation by attack attribute (NATIVE(BIRD) class): the native death states 100 (normal), 110 (killed by an explosive attack) and 120 (killed by fire) all play slot 12. With this behaviour state 110 plays explosion_animation and 120 plays fire_animation, while 100 keeps slot 12, like the three deaths of rebel infantry. The unit disappears when the animation ends. A non-zero *_variant_animation is another version of that death (usually only the death voice differs): it plays when the unit's x coordinate, truncated to an integer, is odd at death, and the base version plays when it is even. The choice depends only on the position at that moment, so replays and both sides of an online match agree."
+        "ZS": "按攻击属性区分死亡动作（原住民（鸟）类）：原生的死亡状态 100（普通）、110（爆炸属性击杀）、120（火焰属性击杀）都播放槽 12；带此行为时 110 改为 explosion_animation、120 改为 fire_animation，100 仍为槽 12（同叛军步兵等小兵的三种死亡）。动作播完后单位消失。三个 *_variant_animation 非 0 时为对应死亡的另一版本（通常只换死亡语音）：死亡时单位横坐标取整为奇数则播放该版本，偶数则播放前者；只由当时的位置决定，回放与联机时双方结果相同。另适用于原版冲天火箭弹兵类（基准 162，BattleAction_MissileZako）：原生死亡状态 100 / 110 播放槽 13、120 播放槽 15（2026-10-31，机动兵落地的 162 副本按此换用普通兵的三种死亡语音）；带此行为时 110 改为 explosion_animation、120 改为 fire_animation，100 仍为槽 13。",
+        "EN": "Death animation by attack attribute (NATIVE(BIRD) class): the native death states 100 (normal), 110 (killed by an explosive attack) and 120 (killed by fire) all play slot 12. With this behaviour state 110 plays explosion_animation and 120 plays fire_animation, while 100 keeps slot 12, like the three deaths of rebel infantry. The unit disappears when the animation ends. A non-zero *_variant_animation is another version of that death (usually only the death voice differs): it plays when the unit's x coordinate, truncated to an integer, is odd at death, and the base version plays when it is even. The choice depends only on the position at that moment, so replays and both sides of an online match agree. Also available for the original ROCKET BOMB SOLDIER class (base 162, BattleAction_MissileZako): its native death states 100 / 110 play slot 13 and 120 plays slot 15 (2026-10-31: the 162 copy that the RIDER SOLDIER rider lands as uses this to get the three rebel infantry death voices); with this behaviour 110 plays explosion_animation and 120 plays fire_animation, while 100 keeps slot 13."
       }
     },
     {
@@ -792,7 +809,7 @@
     },
     {
       "name": "iron_slider_second_form",
-      "version": 1,
+      "version": 2,
       "base_classes": [
         395
       ],
@@ -801,8 +818,8 @@
       ],
       "params": {},
       "doc": {
-        "ZS": "钢铁哨兵第二形态：单位以原生保留的 BattleAction_IronSlider_2 运行（UnitID 395），出场时设为免击退（原生与 MSA 相同）；脚本编号同 MSA（待机 17、行走 18、巨型导弹 19、损毁 21），三种攻击都发射巨型导弹（脚本编号 24）。只用于由 iron_slider 召唤的内部单位。",
-        "EN": "Iron Sentinel second form: the unit runs on the native BattleAction_IronSlider_2 (UnitID 395) and is immune to knockback from its first update (as in both the native class and MSA); scripts use the MSA numbering (standby 17, walk 18, giant missile 19, destruction 21) and all three attacks launch the giant missile (script id 24). Only for the internal unit summoned by iron_slider."
+        "ZS": "钢铁哨兵第二形态：单位以原生保留的 BattleAction_IronSlider_2 运行（UnitID 395），出场时设为免击退（原生与 MSA 相同）；脚本编号同 MSA（待机 17、行走 18、巨型导弹 19、损毁 21），三种攻击都发射巨型导弹（脚本编号 24）。损毁（状态 100–120）只播放槽 21、播完移除，不放原生按较小车体固定位置的爆炸；脚本中 op12 的共用效果（0xff00 起）由原生 addEffect 建立，脚本 154–158 为碎块：以 FallOut 效果建立（落地时移除），并在同处向前、向后各迸出 2 个原生破片（addEffectHahen）（v2，2026-10-30）。只用于由 iron_slider 召唤的内部单位。",
+        "EN": "Iron Sentinel second form: the unit runs on the native BattleAction_IronSlider_2 (UnitID 395) and is immune to knockback from its first update (as in both the native class and MSA); scripts use the MSA numbering (standby 17, walk 18, giant missile 19, destruction 21) and all three attacks launch the giant missile (script id 24). Destruction (states 100-120) only plays slot 21 and removes the unit when it ends, without the native explosions at fixed points sized for the smaller native body; shared effects (0xff00 and up) placed by op12 in the scripts are created by the native addEffect, and scripts 154-158 are debris: they are created as fall-out effects (removed on touching the ground), each throwing 2 native shards (addEffectHahen) forward and 2 backward from the same point (v2, 2026-10-30). Only for the internal unit summoned by iron_slider."
       }
     },
     {
@@ -1227,7 +1244,7 @@
     },
     {
       "name": "iron_death_worm",
-      "version": 4,
+      "version": 5,
       "base_classes": [
         192
       ],
@@ -1336,11 +1353,17 @@
           "default": 12,
           "min": 0,
           "max": 1023
+        },
+        "special_knockback_tick": {
+          "type": "int",
+          "default": 60,
+          "min": 0,
+          "max": 1023
         }
       },
       "doc": {
-        "ZS": "钢铁死亡蠕虫（MSA 7.13.0 IRON DEATH WORM 的匿名类 BattleAction_IronDeathWarm，按 MSD 原生侵略者类实现，流程按 MSA 底层代码）：不步行，不击退（MSA 全部动作关闭击退）。出击后由地下钻出（emerge_animation），其间不近距攻击、不发动绝招；待机为 neutral_animation；移动为钻入地下（burrow_animation），之后以地下行进动作（underground_animation，地面上只见土环与扬尘，不设受击框）按移速向敌方前线推移，转入待机、近距攻击或绝招时在原处钻出，为近距攻击钻出后接着掘削；近距攻击为掘削（near_attack_animation），攻击框存在期间每 tick都可再次命中同一目标（MSA EveryTimeAtk），抛出的碎块（debris_first_animation 起 debris_count 个弹体脚本）落地后按惯性弹跳、滚动（显示 debris_roll_first_animation 起与各碎块对应的动作），落地 debris_fuse tick 后或碰到敌方单位时爆炸（debris_burst_animation，伤害同碎块，碰到的目标不重复结算），播完移除；绝招为钻入（dive_animation，钻离地面飞向空中）→ 移到前线前方绝招投射距离（状态词 33）之内生命最低的敌方单位处（没有时为前线处）→ 自上方钻下（drill_animation）→ 回到原处（敌方前线已越过原处时为前线之后）钻出（绝招中的钻出，含绝招开始时在地下先于原处钻出，用 special_emerge_animation），钻入与钻击各自结算。受击与攻击按部件判定：精灵描述符受击框 / 攻击框表中某条之后第 5 值为 0x57445054 的各条为该框的部件，动作脚本设定该框时，受到的攻击与本单位对敌方单位的攻击按部件矩形判定（外框仍供原生的其他用途）。损毁为 dive_animation → 自本方舞台外侧（−220 / 舞台宽度 + 220）横穿（death_move_animation，穿过敌方单位、不可接触、不可选为目标）至舞台中央 → 爆炸（death_burst_animation）后移除；爆炸中建立的损毁碎块（dead_body_first_animation 起每隔一个共 dead_body_count 个）下落到地形高度减当前帧高的一半时改播其后一个动作，播完移除。绘制时优先级低于 6 的层按地面裁切，6 以上的层（地面土环与空中碎屑）不裁切。单位菜单的动作演示中绝招钻到原处前方 250，结束后回到原处。动作切换在客体流程中执行。",
-        "EN": "Iron Death Worm (the anonymous BattleAction_IronDeathWarm of MSA 7.13.0 IRON DEATH WORM, implemented on the native Invader class following the MSA code): the unit does not walk and is never knocked back (MSA disables knockback in every action). After deployment it emerges from the ground (emerge_animation) and can neither attack at close range nor use the special meanwhile; it idles with neutral_animation; moving burrows into the ground (burrow_animation) and advances underground at the movement speed with underground_animation (only the dirt ring and dust show above the ground; no hit box), emerging in place when it switches to idle, the near attack or the special, and drilling right away when it emerges for the near attack; the near attack is the drill (near_attack_animation), whose attack box can hit the same target again every tick while it exists (MSA EveryTimeAtk), and whose thrown debris (debris_count bullet scripts from debris_first_animation) bounce and roll on landing (showing the matching animation from debris_roll_first_animation) and explode debris_fuse ticks after landing or on touching an enemy unit (debris_burst_animation, same damage as the debris, a target already touched is not settled again), being removed afterwards; the special dives (dive_animation, leaving the ground upwards), moves to the enemy unit with the lowest life within the special projection distance (status word 33) beyond the front line (the front line when there is none), drills down from above (drill_animation) and emerges back at its original position (behind the front line when the enemy front has passed it; the emergences within the special, including emerging in place when the special starts underground, use special_emerge_animation), the dive and the drill being settled separately. Hits are judged by parts: in the sprite descriptor hit / attack box tables, the entries following a box whose fifth value is 0x57445054 are its parts, and while an animation script has set that box, attacks it receives and its attacks on enemy units are judged against the part rectangles (the outer box still serves the other native uses). The destruction plays dive_animation, crosses from outside its own end of the stage (-220 / stage width + 220) to the stage centre (death_move_animation; passing through enemy units, untouchable and untargetable) and explodes (death_burst_animation) before removal; the wreckage created by the explosion (dead_body_count scripts every second one from dead_body_first_animation) falls until it reaches the terrain height minus half the current frame height, switches to the next animation and is removed when that ends. Layers with priority below 6 are clipped at the ground when drawn; layers of priority 6 and above (ground dirt and airborne debris) are not. In the unit menu action demo the special drills 250 ahead of the original position and returns afterwards. Animation changes run in the guest flow."
+        "ZS": "钢铁死亡蠕虫（MSA 7.13.0 IRON DEATH WORM 的匿名类 BattleAction_IronDeathWarm，按 MSD 原生侵略者类实现，流程按 MSA 底层代码）：不步行，不击退（MSA 全部动作关闭击退）。出击后由地下钻出（emerge_animation），其间不近距攻击、不发动绝招；待机为 neutral_animation；移动为钻入地下（burrow_animation），之后以地下行进动作（underground_animation，地面上只见土环与扬尘，不设受击框）按移速向敌方前线推移，转入待机、近距攻击或绝招时在原处钻出，为近距攻击钻出后接着掘削；近距攻击为掘削（near_attack_animation），攻击框存在期间每 tick都可再次命中同一目标（MSA EveryTimeAtk），抛出的碎块（debris_first_animation 起 debris_count 个弹体脚本）落地后按惯性弹跳、滚动（显示 debris_roll_first_animation 起与各碎块对应的动作），落地 debris_fuse tick 后或碰到敌方单位时爆炸（debris_burst_animation，伤害同碎块，碰到的目标不重复结算），播完移除；绝招为钻入（dive_animation，钻离地面飞向空中）→ 移到前线前方绝招投射距离（状态词 33）之内生命最低的敌方单位处（没有时为前线处）→ 自上方钻下（drill_animation）→ 回到原处（敌方前线已越过原处时为前线之后）钻出（绝招中的钻出，含绝招开始时在地下先于原处钻出，用 special_emerge_animation），钻入与钻击各自结算；两者的动作脚本中第 special_knockback_tick tick 之前的命中只结算伤害、不扣击退计量（缺省 60，即每 4 tick 一段时的最后一段才击退目标）。受击与攻击按部件判定：精灵描述符受击框 / 攻击框表中某条之后第 5 值为 0x57445054 的各条为该框的部件，动作脚本设定该框时，受到的攻击与本单位对敌方单位的攻击按部件矩形判定（外框仍供原生的其他用途）。损毁为 dive_animation → 自本方舞台外侧（−220 / 舞台宽度 + 220）横穿（death_move_animation，穿过敌方单位、不可接触、不可选为目标）至舞台中央 → 爆炸（death_burst_animation）后移除；爆炸中建立的损毁碎块（dead_body_first_animation 起每隔一个共 dead_body_count 个）下落到地形高度减当前帧高的一半时改播其后一个动作，播完移除。绘制时优先级低于 6 的层按地面裁切，6 以上的层（地面土环与空中碎屑）不裁切。单位菜单的动作演示中绝招钻到原处前方 250，结束后回到原处。动作切换在客体流程中执行。",
+        "EN": "Iron Death Worm (the anonymous BattleAction_IronDeathWarm of MSA 7.13.0 IRON DEATH WORM, implemented on the native Invader class following the MSA code): the unit does not walk and is never knocked back (MSA disables knockback in every action). After deployment it emerges from the ground (emerge_animation) and can neither attack at close range nor use the special meanwhile; it idles with neutral_animation; moving burrows into the ground (burrow_animation) and advances underground at the movement speed with underground_animation (only the dirt ring and dust show above the ground; no hit box), emerging in place when it switches to idle, the near attack or the special, and drilling right away when it emerges for the near attack; the near attack is the drill (near_attack_animation), whose attack box can hit the same target again every tick while it exists (MSA EveryTimeAtk), and whose thrown debris (debris_count bullet scripts from debris_first_animation) bounce and roll on landing (showing the matching animation from debris_roll_first_animation) and explode debris_fuse ticks after landing or on touching an enemy unit (debris_burst_animation, same damage as the debris, a target already touched is not settled again), being removed afterwards; the special dives (dive_animation, leaving the ground upwards), moves to the enemy unit with the lowest life within the special projection distance (status word 33) beyond the front line (the front line when there is none), drills down from above (drill_animation) and emerges back at its original position (behind the front line when the enemy front has passed it; the emergences within the special, including emerging in place when the special starts underground, use special_emerge_animation), the dive and the drill being settled separately; hits in either script before tick special_knockback_tick deal damage without reducing the knockback gauge (default 60: with one segment every 4 ticks, only the last segment knocks the target back). Hits are judged by parts: in the sprite descriptor hit / attack box tables, the entries following a box whose fifth value is 0x57445054 are its parts, and while an animation script has set that box, attacks it receives and its attacks on enemy units are judged against the part rectangles (the outer box still serves the other native uses). The destruction plays dive_animation, crosses from outside its own end of the stage (-220 / stage width + 220) to the stage centre (death_move_animation; passing through enemy units, untouchable and untargetable) and explodes (death_burst_animation) before removal; the wreckage created by the explosion (dead_body_count scripts every second one from dead_body_first_animation) falls until it reaches the terrain height minus half the current frame height, switches to the next animation and is removed when that ends. Layers with priority below 6 are clipped at the ground when drawn; layers of priority 6 and above (ground dirt and airborne debris) are not. In the unit menu action demo the special drills 250 ahead of the original position and returns afterwards. Animation changes run in the guest flow."
       }
     },
     {
@@ -1423,6 +1446,452 @@
       "doc": {
         "ZS": "鼹鼠弹（MS7 / MSXX 任务 2 首领 Crablops 放出的钻地飞弹；原生只有 CRABLOPS 的弹体，这里做成单位）：基准 133 SPECIAL FORCE (RIDER)（BattleAction_Bike_P）。出击后播放钻入动作（burrow_animation）并转入地下潜行（underground_animation）：不被选为目标、不阻挡、不被阻挡（身体状态 DontToche、AreaThrough、NoTarget、NockbackGuard），动作不设受击框，按移速前进。敌方前线进入普攻距离（状态词 7，检测距离）或发动绝招时在原处钻出（emerge_animation：以很小的前倾角高高升起、悬停，钻出中按地面裁切绘制），此后可被选为目标、不能再发动绝招；钻出动作播完时单位移到悬停点（出土点前方 launch_forward、离地 launch_height，世界单位；冲刺动作以弹体为原点），锁定前方最近的有效敌方单位（没有时取最近者，据点亦可），转入冲刺（dash_animation）：每 tick 朝目标受击框中心飞行 dash_speed / 10；目标在途中失效时不改锁，沿原路径直线飞行；攻击框接触对方单位或据点、到达目标点或触地即爆炸（explode_animation，绝招为 special_explode_animation），爆炸动作的攻击框按进入攻击时的攻击组结算（普攻词 22、绝招词 29），播完移除，不经死亡流程（对方不获得击毁奖励）。钻出后生命耗尽时播放 death_animation（不造成伤害）后移除。不击退。单位菜单的动作演示中待机为 neutral_animation，移动为地下潜行，攻击与绝招朝前方固定点的方向直飞至地面后爆炸。",
         "EN": "Mole missile (the drilling missile released by Crablops, boss of MS7 / MSXX Mission 2; natively only a CRABLOPS bullet, here a unit): base 133 SPECIAL FORCE (RIDER) (BattleAction_Bike_P). On deployment it plays burrow_animation and then travels underground (underground_animation): it is not targeted, does not block and is not blocked (body states DontToche, AreaThrough, NoTarget, NockbackGuard), the animation has no hit box, and it moves at its move speed. When the enemy front comes within the normal attack range (status word 7, the detection range) or its special is used, it emerges where it is (emerge_animation: it rises high at a slight forward angle and hovers, drawn clipped at the ground while emerging); from then on it can be targeted and can no longer use its special. When emerge_animation ends the unit moves to the hovering point (launch_forward ahead of the emerging point and launch_height above the ground, world units; the dash animation is centred on the missile), locks on to the nearest valid enemy ahead (otherwise the nearest one; the base counts) and dashes (dash_animation): each tick it flies dash_speed / 10 towards the centre of the target hit box; if the target becomes invalid on the way it keeps flying straight along its path without re-locking. It explodes when its attack box touches an enemy unit or base, when it reaches the target point or when it reaches the ground (explode_animation, special_explode_animation for the special). The explosion attack box uses the attack group active when the attack started (word 22 normal, word 29 special); afterwards the unit is removed without the death flow (no kill reward for the enemy). If its HP runs out after emerging it plays death_animation (no damage) and is removed. It is never knocked back. In the unit menu action viewer, idle is neutral_animation, moving is the underground travel, and the attack and special fly straight towards a fixed point ahead down to the ground and explode."
+      }
+    },
+    {
+      "name": "bomb_bike",
+      "version": 1,
+      "base_classes": [
+        133
+      ],
+      "requires_fields": [
+        "sprite_descriptor"
+      ],
+      "conflicts_with": [
+        "mole_missile"
+      ],
+      "params": {
+        "charge_animation": {
+          "type": "int",
+          "default": 23,
+          "min": 0,
+          "max": 1023
+        },
+        "dash_animation": {
+          "type": "int",
+          "default": 24,
+          "min": 0,
+          "max": 1023
+        },
+        "eject_animation": {
+          "type": "int",
+          "default": 25,
+          "min": 0,
+          "max": 1023
+        },
+        "flight_animation": {
+          "type": "int",
+          "default": 26,
+          "min": 0,
+          "max": 1023
+        },
+        "dash_speed": {
+          "type": "int",
+          "default": 60,
+          "min": 1,
+          "max": 400
+        },
+        "dash_accel": {
+          "type": "int",
+          "default": 40,
+          "min": 0,
+          "max": 400
+        },
+        "dash_cap": {
+          "type": "int",
+          "default": 120,
+          "min": 1,
+          "max": 400
+        },
+        "throw_range": {
+          "type": "int",
+          "default": 200,
+          "min": 0,
+          "max": 2000
+        },
+        "eject_speed": {
+          "type": "int",
+          "default": 80,
+          "min": 0,
+          "max": 400
+        },
+        "apex": {
+          "type": "int",
+          "default": 260,
+          "min": 0,
+          "max": 600
+        },
+        "gravity": {
+          "type": "int",
+          "default": 120,
+          "min": 1,
+          "max": 1000
+        },
+        "land_offset": {
+          "type": "int",
+          "default": 12,
+          "min": 0,
+          "max": 400
+        },
+        "dash_limit": {
+          "type": "int",
+          "default": 90,
+          "min": 1,
+          "max": 600
+        },
+        "charge_ticks": {
+          "type": "int",
+          "default": 44,
+          "min": 1,
+          "max": 600
+        },
+        "eject_ticks": {
+          "type": "int",
+          "default": 12,
+          "min": 1,
+          "max": 120
+        },
+        "max_throw": {
+          "type": "int",
+          "default": 120,
+          "min": 0,
+          "max": 2000
+        },
+        "rider_unit": {
+          "type": "unit_key",
+          "required": true,
+          "internal": true
+        }
+      },
+      "doc": {
+        "ZS": "自爆摩托（原作 Fanatic Biker）：基准 133 SPECIAL FORCE (RIDER)（BattleAction_Bike_P）。平骑与行驶中被击毁同原生 133。敌方前线进入普攻距离（状态词 7）或发动绝招时原地停住，播放蓄力动作（charge_animation，翘起与翘头蓄力）charge_ticks tick 后转入翘头冲刺（dash_animation）：每 tick 前进 dash_speed / 10，速度每 tick 加 dash_accel / 100，上限 dash_cap / 10（世界单位）；车头与前方最近的有效敌方单位（没有时取最近者，据点亦可）的前缘相距不超过 throw_range、或冲刺达到 dash_limit tick 时播放弃车动作（eject_animation，每 tick 前进 eject_speed / 10）。弃车 eject_ticks tick 后生成骑手（rider_unit：被投出的内部单位，基准 160，thrown_flight 与 para_drop_transform），本单位转为飞行的摩托（flight_animation）：保留原有生命，可被选为目标与受伤（生命耗尽时按原生状态 100 爆炸），不阻挡、不被击退；锁定前方最近的有效敌方单位，以车身中心离地 apex 为顶点、每 tick² 重力 gravity / 100 的抛物线飞向其前缘之后 land_offset 处（世界单位）；水平抛射距离（放出时车身中心到落点）不超过 max_throw（0 为不限）：目标更远（冲刺达到 dash_limit 时）或没有目标时落在 max_throw 处；攻击框接触对方单位（空中单位在原处，地面单位与据点则车身先移到离地 40）或据点、或车身落到离地 40 以下时预约状态 100，按原生 133 的流程爆炸（共用效果 0xff04、槽 18 的攻击框）。动作演示中不生成骑手，飞行落地后回到待机。不可与 mole_missile 同用（共用 ZSpec 字 121–131）。",
+        "EN": "Bomb biker (the original Fanatic Biker): base 133 SPECIAL FORCE (RIDER) (BattleAction_Bike_P). Riding and being destroyed while riding work as native 133. When the enemy front comes within the normal attack range (status word 7) or the special is used, it stops and plays charge_animation (pop-up and wheelie charge) for charge_ticks ticks, then wheelie-dashes (dash_animation): it moves dash_speed / 10 per tick, accelerating by dash_accel / 100 per tick up to dash_cap / 10 (world units). When its front is within throw_range of the front of the nearest valid enemy ahead (otherwise the nearest one; the base counts) or the dash reaches dash_limit ticks, it plays eject_animation (moving eject_speed / 10 per tick) for eject_ticks ticks, then spawns the rider (rider_unit: a thrown internal unit, base 160 with thrown_flight and para_drop_transform) and becomes the flying bike (flight_animation): it keeps its HP and can be targeted and damaged (exploding through the native state 100 when its HP runs out), does not block and is not knocked back; it locks on to the nearest valid enemy ahead and flies along a parabola with the bike centre peaking apex above the ground and gravity / 100 per tick squared, landing land_offset beyond the target front (world units). The horizontal throw distance (from the bike centre at release to the landing point) is capped at max_throw (0 = no cap): when the target is farther (after the dash reaches dash_limit) or there is no target, the bike lands max_throw ahead. When its attack box touches an enemy unit or base (in place for air units; for ground units and bases the bike first moves to 40 above the ground), or the bike centre falls below 40 above the ground, it reserves state 100 and explodes through the native 133 flow (shared effect 0xff04, the slot 18 attack box). In the action viewer no rider is spawned and the unit returns to idle after landing. Cannot be combined with mole_missile (they share ZSpec words 121–131)."
+      }
+    },
+    {
+      "name": "fall_climber",
+      "version": 1,
+      "base_classes": [
+        192
+      ],
+      "requires_fields": [
+        "sprite_descriptor"
+      ],
+      "conflicts_with": [
+        "elder_centipede",
+        "invader_king",
+        "iron_death_worm"
+      ],
+      "params": {
+        "form": {
+          "type": "int",
+          "default": 1,
+          "min": 1,
+          "max": 2
+        },
+        "neutral_animation": {
+          "type": "int",
+          "default": 6,
+          "min": 0,
+          "max": 1023
+        },
+        "move_animation": {
+          "type": "int",
+          "default": 7,
+          "min": 0,
+          "max": 1023
+        },
+        "attack_left_animation": {
+          "type": "int",
+          "default": 8,
+          "min": 0,
+          "max": 1023
+        },
+        "attack_right_animation": {
+          "type": "int",
+          "default": 9,
+          "min": 0,
+          "max": 1023
+        },
+        "change_animation": {
+          "type": "int",
+          "default": 10,
+          "min": 0,
+          "max": 1023
+        },
+        "charge_animation": {
+          "type": "int",
+          "default": 17,
+          "min": 0,
+          "max": 1023
+        },
+        "laser_animation": {
+          "type": "int",
+          "default": 18,
+          "min": 0,
+          "max": 1023
+        },
+        "death_animation": {
+          "type": "int",
+          "default": 19,
+          "min": 0,
+          "max": 1023
+        },
+        "orb_animation": {
+          "type": "int",
+          "default": 65,
+          "min": 0,
+          "max": 1023
+        },
+        "second_form": {
+          "type": "unit_key",
+          "default": null,
+          "internal": true
+        },
+        "hand_x": {
+          "type": "int",
+          "default": 1225,
+          "min": 0,
+          "max": 4000
+        },
+        "gait": {
+          "type": "int",
+          "default": 120,
+          "min": 1,
+          "max": 1000
+        },
+        "lift": {
+          "type": "int",
+          "default": 36,
+          "min": 0,
+          "max": 400
+        },
+        "bob": {
+          "type": "int",
+          "default": 8,
+          "min": 0,
+          "max": 100
+        },
+        "bob_up": {
+          "type": "int",
+          "default": 12,
+          "min": 1,
+          "max": 600
+        },
+        "bob_high": {
+          "type": "int",
+          "default": 16,
+          "min": 0,
+          "max": 600
+        },
+        "bob_down": {
+          "type": "int",
+          "default": 12,
+          "min": 1,
+          "max": 600
+        },
+        "bob_low": {
+          "type": "int",
+          "default": 16,
+          "min": 0,
+          "max": 600
+        },
+        "rise": {
+          "type": "int",
+          "default": 16,
+          "min": 0,
+          "max": 200
+        },
+        "dash_speed": {
+          "type": "int",
+          "default": 80,
+          "min": 1,
+          "max": 1000
+        },
+        "dash_ahead": {
+          "type": "int",
+          "default": 100,
+          "min": -1000,
+          "max": 1000
+        },
+        "shot_rise": {
+          "type": "int",
+          "default": 120,
+          "min": 0,
+          "max": 1000
+        },
+        "shot_speed": {
+          "type": "int",
+          "default": 80,
+          "min": 1,
+          "max": 1000
+        },
+        "shot_distance": {
+          "type": "int",
+          "default": 600,
+          "min": 1,
+          "max": 4000
+        },
+        "burst_shots": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 255
+        },
+        "burst_cooldown": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 3000
+        },
+        "upper_length": {
+          "type": "int",
+          "default": 648,
+          "min": 1,
+          "max": 4000
+        },
+        "lower_length": {
+          "type": "int",
+          "default": 562,
+          "min": 1,
+          "max": 4000
+        },
+        "shoulder_x": {
+          "type": "int",
+          "default": -557,
+          "min": -4000,
+          "max": 4000
+        },
+        "shoulder_y": {
+          "type": "int",
+          "default": 338,
+          "min": -4000,
+          "max": 4000
+        },
+        "elbow_x": {
+          "type": "int",
+          "default": -1166,
+          "min": -4000,
+          "max": 4000
+        },
+        "elbow_y": {
+          "type": "int",
+          "default": 559,
+          "min": -4000,
+          "max": 4000
+        },
+        "elbow_sign": {
+          "type": "int",
+          "default": -1,
+          "min": -1,
+          "max": 1
+        },
+        "wrist_x": {
+          "type": "int",
+          "default": -95,
+          "min": -4000,
+          "max": 4000
+        },
+        "wrist_y": {
+          "type": "int",
+          "default": -310,
+          "min": -4000,
+          "max": 4000
+        },
+        "muzzle_x": {
+          "type": "int",
+          "default": -355,
+          "min": -4000,
+          "max": 4000
+        },
+        "muzzle_y": {
+          "type": "int",
+          "default": 145,
+          "min": -4000,
+          "max": 4000
+        },
+        "hand_width": {
+          "type": "int",
+          "default": 73,
+          "min": 1,
+          "max": 400
+        },
+        "hand_height": {
+          "type": "int",
+          "default": 54,
+          "min": 1,
+          "max": 400
+        },
+        "head_x": {
+          "type": "int",
+          "default": -51,
+          "min": -400,
+          "max": 400
+        },
+        "head_y": {
+          "type": "int",
+          "default": -20,
+          "min": -400,
+          "max": 400
+        },
+        "head_width": {
+          "type": "int",
+          "default": 102,
+          "min": 1,
+          "max": 400
+        },
+        "head_height": {
+          "type": "int",
+          "default": 39,
+          "min": 1,
+          "max": 400
+        },
+        "upper_box": {
+          "type": "int_list",
+          "length": 4,
+          "default": [
+            -66,
+            -22,
+            21,
+            31
+          ],
+          "min": -400,
+          "max": 400
+        },
+        "lower_box": {
+          "type": "int_list",
+          "length": 4,
+          "default": [
+            -37,
+            -90,
+            10,
+            15
+          ],
+          "min": -400,
+          "max": 400
+        },
+        "body_box": {
+          "type": "int_list",
+          "length": 4,
+          "default": [
+            -72,
+            0,
+            72,
+            142
+          ],
+          "min": -400,
+          "max": 400
+        },
+        "step_sounds": {
+          "type": "sound_list",
+          "default": [],
+          "min_length": 0,
+          "max_length": 2
+        }
+      },
+      "doc": {
+        "ZS": "MS7 首领 Fall Climber（2026-11-01，核心 r115）：身体位于行走线以下，地面以上只有两手与一小部分头部。根动作只隐藏根层并挂子层：左手、左前臂、左肘护盖、左上臂（优先级 1–4）、右侧同（5–8）、机体组（10，其下各部件合计 11–17），子层偏移为游戏中的静止姿势；核心每 tick 改写机体组的纵向偏移（起伏：待机为 bob_up / bob_high / bob_down / bob_low 四段的周期，移动中随步伐，幅度 bob 像素）与两手、上臂、前臂、肘护盖的偏移和转角（两手按身体沿朝向的累计位移每前进 gait 世界单位各迈一步、后退时反向迈步，抬手 lift，手底放在该手所在处的地形上；肩—肘—腕以两段反向运动学连接，腕点为前臂上端、固定在手上（相对手底中点 wrist_x/y），上臂绕肩、前臂绕肘转，肘护盖取二者转角的平均；长度、静止姿势的肩与肘为 upper_length、lower_length、shoulder_x/y、elbow_x/y，均 × 10 的素材像素，原画朝左的左侧）。整机绘制，不按地形裁切。受击按整台机体判定：两手（hand_width × hand_height，底边中点为手的子层位置）、两上臂与两前臂（upper_box / lower_box 为原画朝左的左侧静止姿势下相对肩 / 肘的 [左, 上, 右, 下] 素材像素，按该段当前转角转动后取外接矩形，右侧镜像）、机体（body_box，含髋与爪）与头部（head_x/y/width/height），后两者随起伏。手落地时播放 step_sounds（左手第 1 个、右手第 2 个，只有 1 个时两手共用，可省略）。普攻：两门炮轮流播放 attack_left_animation / attack_right_animation，脚本 op22 发射 orb_animation 的光球：自炮口（muzzle_x/y，× 10，右炮镜像）竖直上升到地形以上 shot_rise，再以 shot_speed / 10 的速度转为朝前水平直线飞行；贯穿（命中后继续飞行，同一颗光球对同一目标只结算一次，同 piercing_shots；每发命中目标数取单位的状态词 24），在每个结算的目标处放共用小爆炸；水平飞出 shot_distance 世界单位、落地或超时时放共用小爆炸后消失。burst_shots 大于 0 时，每射出 burst_shots 颗光球，该次攻击结束后的等待改为 burst_cooldown tick（原生待机，期间不发动普攻；0 为不限）。form 2 的绝招：记下位置，以 dash_speed / 10 移到敌方前线 + 朝向 × dash_ahead，播放 charge_animation 与 laser_animation（脚本 op4 分段，每段新建攻击 ID），再移回原处。form 1 不发动绝招；生命耗尽且本方据点仍在时播放 change_animation，播完在原处生成 second_form（内部单位，form 2）并移除本单位；form 2 出场时播放 change_animation，机体由低 rise 像素升到静止位置；损毁或形态转换开始后骨架冻结（不再起伏、迈步）；form 2 损毁播放 death_animation（爆炸与抛出的碎块由脚本排定）后移除。不击退。",
+        "EN": "MS7 boss Fall Climber (2026-11-01, core r115): the body sits below the walk line, with only the hands and a little of the head above the ground. Root animations hide the root layer and mount sub-layers: the left hand, forearm, elbow cap and upper arm (priority 1-4), the same on the right (5-8) and the body group (10, its parts summing to 11-17), placed in the in-game rest pose. Every tick the core rewrites the body group vertical offset (bobbing: an idle cycle of bob_up / bob_high / bob_down / bob_low ticks, following the steps while moving, amplitude bob pixels) and the offsets and angles of the hands, upper arms, forearms and elbow caps (each hand takes one step per gait world units of body travel along the facing, stepping backwards when the body moves back, lifting lift; the hand bottom sits on the terrain under that hand; shoulder, elbow and wrist are joined by two-bone inverse kinematics, the wrist being the top of the forearm fixed on the hand (wrist_x/y from the hand bottom centre); the upper arm turns about the shoulder, the forearm about the elbow and the elbow cap by the mean of the two; lengths and the rest shoulder / elbow are upper_length, lower_length, shoulder_x/y, elbow_x/y, all in tenths of sprite pixels for the left side, art facing left). The whole machine is drawn without terrain clipping. Hits are judged against the whole machine: the hands (hand_width x hand_height, bottom centre at the hand layer), the upper arms and forearms (upper_box / lower_box: [left, top, right, bottom] in sprite pixels relative to the shoulder / elbow in the rest pose of the left side, art facing left; the bounding box after turning by the current angle of the segment, mirrored for the right side), the body (body_box, hips and claws included) and the head (head_x/y/width/height); the last two follow the bob. Each hand plays step_sounds when it lands (the first for the left hand, the second for the right; a single sound serves both; optional). Normal attack: the two guns alternate attack_left_animation / attack_right_animation; script op22 fires the orb_animation bullet from the muzzle (muzzle_x/y in tenths, the right gun mirrored), which rises straight up to shot_rise above the terrain and then turns to fly straight ahead, level, at shot_speed / 10. It pierces: it keeps flying after a hit and each orb hits a given target once (as piercing_shots; the hit count per shot is the unit status word 24), with the common small explosion on each target hit; after shot_distance world units of horizontal travel, on landing or on timeout it bursts and disappears. When burst_shots is above 0, after every burst_shots orbs the wait after that attack becomes burst_cooldown ticks (native neutral, no normal attack meanwhile; 0 means no limit). Form 2 special: remember the position, move at dash_speed / 10 to the enemy front line + facing x dash_ahead, play charge_animation and laser_animation (op4 segments, a new attack ID each) and move back. Form 1 cannot use its special; when its HP runs out while its own base stands it plays change_animation and then spawns second_form (internal unit, form 2) in place and removes itself; form 2 plays change_animation on entry while the body rises from rise pixels lower, and plays death_animation (explosions and thrown debris placed by the script) before removal; the rig freezes once the death or the form change starts. No knockback."
       }
     }
   ]

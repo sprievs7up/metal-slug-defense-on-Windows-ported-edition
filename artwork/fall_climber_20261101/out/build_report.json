@@ -1,0 +1,180 @@
+{
+  "tiles": 234,
+  "rects": 234,
+  "pages": [
+    [
+      512,
+      512
+    ],
+    [
+      512,
+      512
+    ],
+    [
+      1024,
+      1024
+    ],
+    [
+      1024,
+      512
+    ]
+  ],
+  "colors": [
+    28,
+    88,
+    31,
+    29
+  ],
+  "frames_words": 502,
+  "params1": {
+    "form": 1,
+    "neutral_animation": 6,
+    "move_animation": 7,
+    "attack_left_animation": 8,
+    "attack_right_animation": 9,
+    "change_animation": 10,
+    "charge_animation": 17,
+    "laser_animation": 18,
+    "death_animation": 19,
+    "orb_animation": 65,
+    "hand_x": 1225,
+    "gait": 120,
+    "lift": 36,
+    "bob": 8,
+    "bob_up": 12,
+    "bob_high": 16,
+    "bob_down": 12,
+    "bob_low": 16,
+    "rise": 16,
+    "dash_speed": 80,
+    "dash_ahead": 100,
+    "shot_rise": 30,
+    "shot_speed": 80,
+    "shot_distance": 700,
+    "burst_shots": 20,
+    "burst_cooldown": 180,
+    "upper_length": 648,
+    "lower_length": 885,
+    "shoulder_x": -557,
+    "shoulder_y": 338,
+    "elbow_x": -1165,
+    "elbow_y": 561,
+    "elbow_sign": -1,
+    "muzzle_x": -355,
+    "muzzle_y": 145,
+    "hand_width": 73,
+    "hand_height": 54,
+    "head_x": -51,
+    "head_y": -20,
+    "head_width": 102,
+    "head_height": 39,
+    "upper_box": [
+      -90,
+      -22,
+      22,
+      37
+    ],
+    "lower_box": [
+      -37,
+      -89,
+      4,
+      -13
+    ],
+    "body_box": [
+      -72,
+      0,
+      72,
+      142
+    ],
+    "step_sounds": [
+      "s1xlv.fall_climber_step1",
+      "s1xlv.fall_climber_step2"
+    ],
+    "wrist_x": -95,
+    "wrist_y": -310,
+    "second_form": "s1xlv.fall_climber_form2"
+  },
+  "params2": {
+    "form": 2,
+    "neutral_animation": 12,
+    "move_animation": 13,
+    "attack_left_animation": 14,
+    "attack_right_animation": 15,
+    "change_animation": 16,
+    "charge_animation": 17,
+    "laser_animation": 18,
+    "death_animation": 19,
+    "orb_animation": 65,
+    "hand_x": 1225,
+    "gait": 120,
+    "lift": 36,
+    "bob": 8,
+    "bob_up": 12,
+    "bob_high": 16,
+    "bob_down": 12,
+    "bob_low": 16,
+    "rise": 16,
+    "dash_speed": 80,
+    "dash_ahead": 100,
+    "shot_rise": 30,
+    "shot_speed": 80,
+    "shot_distance": 700,
+    "burst_shots": 20,
+    "burst_cooldown": 180,
+    "upper_length": 648,
+    "lower_length": 882,
+    "shoulder_x": -557,
+    "shoulder_y": 178,
+    "elbow_x": -1091,
+    "elbow_y": 545,
+    "elbow_sign": -1,
+    "muzzle_x": -355,
+    "muzzle_y": -15,
+    "hand_width": 75,
+    "hand_height": 55,
+    "head_x": -32,
+    "head_y": -24,
+    "head_width": 64,
+    "head_height": 32,
+    "upper_box": [
+      -85,
+      -22,
+      21,
+      50
+    ],
+    "lower_box": [
+      -42,
+      -87,
+      2,
+      -11
+    ],
+    "body_box": [
+      -72,
+      -18,
+      72,
+      128
+    ],
+    "step_sounds": [
+      "s1xlv.fall_climber_step1",
+      "s1xlv.fall_climber_step2"
+    ],
+    "wrist_x": -80,
+    "wrist_y": -310
+  },
+  "unit_ids": {
+    "s1xlv.fall_climber": 1091,
+    "s1xlv.fall_climber_form2": 1092
+  },
+  "icon_rect": [
+    550,
+    770,
+    40,
+    36
+  ],
+  "textures": [
+    "fall_climber_0.obm",
+    "fall_climber_1.obm",
+    "fall_climber_2.obm",
+    "fall_climber_3.obm"
+  ]
+}

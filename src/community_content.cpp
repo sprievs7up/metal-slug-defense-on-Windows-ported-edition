@@ -336,7 +336,7 @@ static void z_kill_sound(Context& c){
  if(s&&(zw(c,s,0)&8u)&&zw(c,s,23))msd_guest_call(c,Z_PLAY_SE,attacker,zw(c,s,23),0u,0u,nullptr);
 }
 static bool wd_guard(Context& c,uint32_t s,uint32_t o);   // 钢铁死亡蠕虫（后文）：不击退（MSA 全部动作 EnableNockBack(false)）
-HOOK(zombie_no_knockback,0x1016f485u, uint32_t s=zspec(c,c.r[4]);if(s&&((zw(c,s,0)&2u)||((zw(c,s,0)&2097152u)&&wd_guard(c,s,c.r[4])))){c.pc=0x1016f4a3u;return;})
+HOOK(zombie_no_knockback,0x1016f485u, uint32_t s=zspec(c,c.r[4]);if(s&&((zw(c,s,0)&2u)||(zw(c,s,0)&134217728u)||((zw(c,s,0)&2097152u)&&wd_guard(c,s,c.r[4])))){c.pc=0x1016f4a3u;return;})   // 134217728：Fall Climber 不击退
 HOOK(zombie_armor_hit,0x1016f4a3u, z_armor_hit(c);)
 HOOK(zombie_kill_sound,0x1016f44du, z_kill_sound(c);)
 static bool z_throws(Context& c,uint32_t obj){uint32_t s=zspec(c,obj);return s&&(zw(c,s,0)&16u);}
@@ -649,17 +649,24 @@ static bool l_ground(Context& c){
  msd_guest_call(c,Z_RESERVE_STATE,b,61u,0u,0u,nullptr);c.pc=c.r[14];return true;
 }
 static Block old_hunter_ground;static void hunter_ground(Context& c){if(l_ground(c))return;old_hunter_ground(c);}
+// 2026-10-31（r114，第 311 节 R11）：基准 162（BattleAction_MissileZako，原版冲天火箭弹兵）的死亡状态 100 / 110 请求槽 13、120 请求槽 15
+// （LAB ds162），带 death_by_attribute 时同样按状态换槽（100 仍为槽 13）。其余基准（221 原住民（鸟））为槽 12。
+static uint32_t death_native_slot(Context& c,uint32_t o,uint32_t st){
+ uint32_t p=record(c,rd<uint32_t>(c,o+0x128u));if(!p||rd<uint32_t>(c,p+4u)!=162u)return 12u;
+ return st==120u?15u:13u;
+}
 HOOK(hunter_death_slot,0x101de017u,
- if(c.r[1]==12u){uint32_t s=zspec(c,c.r[0]);
+ if(c.r[1]==12u||c.r[1]==13u||c.r[1]==15u){uint32_t s=zspec(c,c.r[0]);
   if(s&&(zw(c,s,0)&L_DEATH)){uint32_t st=rd<uint32_t>(c,c.r[0]+0x7cu);
+  if((st==100u||st==110u||st==120u)&&c.r[1]==death_native_slot(c,c.r[0],st)){
    bool odd=(int32_t(rd<float>(c,c.r[0]+0x8cu))&1)!=0;
-   uint32_t base=st==110u?zw(c,s,37):st==120u?zw(c,s,38):st==100u?12u:0u;
+   uint32_t base=st==110u?zw(c,s,37):st==120u?zw(c,s,38):c.r[1];
    uint32_t alt=st==100u?zw(c,s,39):st==110u?zw(c,s,40):st==120u?zw(c,s,41):0u;
-   if(odd&&alt)c.r[1]=alt;else if(base)c.r[1]=base;}}
+   if(odd&&alt)c.r[1]=alt;else if(base)c.r[1]=base;}}}
  )
 static uint32_t hunter_hooks=0u;
-// 版本 1：炸药与按属性的死亡；版本 2（r66）：三种死亡的另一版本（ZSpec 字 39–41）。
-extern "C" __declspec(dllexport) uint32_t msd_community_hunter_version(){return hunter_hooks==4u?2u:0u;}
+// 版本 1：炸药与按属性的死亡；版本 2（r66）：三种死亡的另一版本（ZSpec 字 39–41）；版本 3（r114）：按属性的死亡亦用于基准 162。
+extern "C" __declspec(dllexport) uint32_t msd_community_hunter_version(){return hunter_hooks==4u?3u:0u;}
 // 已登记的钩子数：首批 7 个全部找到时版本 1，另含前方最近敌人的 5 个时版本 2；宿主据此确认核心支持。
 static uint32_t zombie_hooks=0u;
 // 3：分档受击动作（标记 128，钩子数同 2）。4：另含雪地步兵类的分档入口（2026-10-13 冰车，共 13 个钩子）。
@@ -712,13 +719,25 @@ extern "C" __declspec(dllexport) uint32_t msd_community_engineer_hp_version(){re
 //    第二形态在被召唤的帧尚未更新、不绘制，原先这一帧画面中没有车体（闪现）。
 // 10 BulletAction_IronSlider_Atack_2::update 状态 40（巨型导弹自舞台上方斜落；原生与 MSA 只在进入下落时按对方最前方单位的位置
 //    定一次起点）：每 tick 按对方最前方单位当前的 x 重设水平速度，使导弹在该单位所在处落地（竖直速度不变，水平速度不超过竖直速度）。
-// 只读写客体对象内存，无静态状态（回滚快照随客体内存保存）。
+//  （以下 2026-10-30 R13，核心 r110：第二形态爆炸消失）
+// 11 BattleAction_IronSlider_2::update 的状态分派处（0x101996a8）：状态 100/110/120（损毁）不执行原生的爆炸（按较早版本的较小车体
+//    固定的位置：入场 8 个、每 3–12 tick 随机 1 个、动画结束时 9 个，覆盖不到 100% 绘制的车体两侧）。首帧经原生块 0x10199716 尾调用
+//    setAnimationID(97)（钩子 1 换成槽 21），之后经原生状态 140 的块 0x10199966：动画结束时移除。爆炸、残骸与碎块由槽 21 的脚本以 op12
+//    生成（artwork/iron_sentinel_msa_20261021/build_iron_sentinel_msa.py，R13）。
+// 12 第二形态 createObject 另处理两类编号：≥ 0xff00（共用效果）改由原生 BattleUnitDefault::createObject（参数相同，addEffect）建立；
+//    碎块 154–158 以 addEffectFallOut 建立（落地时移除，同第一形态的残片 72/73），并在同处以原生 addEffectHahen 向前、向后各迸出
+//    2 个破片（共用效果 402 的动画 11/12；速度取原生 THE IRON 损毁的值：横向 1–8、向上 3–16）。addEffectHahen 经 randEffect 调用宿主
+//    导入 lrand48，钩子内嵌套调用会放弃，三次调用因而在客体流程中执行：入口把返回地址与参数存入栈下 0x38 字节（+0x18 起：返回地址、
+//    动作、对象、x、y、z、编号、步骤），以延续块 0x10180f3f（原生 createObject 中 bl 指令的后半字，原生代码不会跳到此处）为返回地址
+//    依次调用，最后恢复栈并返回原调用者。
+// 只读写客体对象内存与客体栈，无静态状态（回滚快照随客体内存保存）。
 static constexpr uint32_t IS_VT1=0x1092db60u,IS_VT2=0x1092db90u;
 static constexpr uint32_t IS_ACT_2=0x109601f8u,IS_ACT_SP=0x10960200u,IS_ACT_L=0x10960204u,IS_ACT_S=0x10960208u,IS_ACT_SSUB=0x1096020cu;
 static constexpr uint32_t IS_ADD_EFFECT=0x10181cd4u,IS_FALLOUT=0x1018fd68u,IS_WIDTH=0x101ddb2eu,IS_HEIGHT=0x101ddb4au,
  IS_ATAN=0x1013fd60u,IS_COS=0x1013fc14u,IS_SIN=0x1013fc54u,IS_MOVE_X=0x101dde10u,IS_MOVE_Y=0x101dde4eu,
  IS_NOT_AIM=0x1017f728u,IS_SET_ANIM=0x101de016u,IS_KILL=0x101dd86cu,IS_STAGE=0x101e1ae0u,IS_ALTITUDE=0x101e1c72u,
- IS_MANAGER=0x10977f50u,IS_RESERVE=0x101dda28u,IS_TEAM_UNITS=0x101df318u;
+ IS_MANAGER=0x10977f50u,IS_RESERVE=0x101dda28u,IS_TEAM_UNITS=0x101df318u,
+ IS_UNIT_EFFECT=0x10181ec5u,IS_HAHEN=0x101920ecu,IS_CONT=0x10180f3fu,IS_DEBRIS=154u,IS_DEBRIS_COUNT=5u;
 static uint32_t iron_slider_hooks=0u;
 static uint32_t is_class(Context& c,uint32_t obj){
  uint32_t act=obj?rd<uint32_t>(c,obj+0x58u):0u;   // BattleObject::initialize：+0x58 动作对象、+0x5c 精灵、+0x70 队伍
@@ -770,15 +789,44 @@ static bool is_create1(Context& c){
  c.pc=c.r[14];return true;
 }
 static Block old_iron_slider_create1;static void iron_slider_create1(Context& c){if(is_create1(c))return;old_iron_slider_create1(c);}
+// 碎块的三次调用（钩子 12）：frame 为调用时的栈顶，其下 0x18 字节为栈参数，+0x18 起为保存区。
+static void is_debris_step(Context& c,uint32_t frame){
+ uint32_t step=rd<uint32_t>(c,frame+0x34u);
+ if(step>=3u){c.r[13]=frame+0x38u;c.pc=rd<uint32_t>(c,frame+0x18u);return;}
+ wr<uint32_t>(c,frame+0x34u,step+1u);
+ uint32_t z=rd<uint32_t>(c,frame+0x2cu);
+ if(step==0u){   // addEffectFallOut(动作, 对象, x, y, z, 编号, −1, −1)
+  const uint32_t stack[4]={z,rd<uint32_t>(c,frame+0x30u),0xffffffffu,0xffffffffu};
+  for(uint32_t i=0;i<4u;++i)wr<uint32_t>(c,frame+i*4u,stack[i]);
+ }else{          // addEffectHahen(动作, 对象, x, y, z, 个数, 横向速度下限, 上限, 向上速度下限, 上限)
+  const float speed[4]={step==1u?1.0f:-8.0f,step==1u?8.0f:-1.0f,3.0f,16.0f};
+  wr<uint32_t>(c,frame,z);wr<uint32_t>(c,frame+4u,2u);
+  for(uint32_t i=0;i<4u;++i)wr<float>(c,frame+8u+i*4u,speed[i]);
+ }
+ c.r[0]=rd<uint32_t>(c,frame+0x1cu);c.r[1]=rd<uint32_t>(c,frame+0x20u);c.r[2]=rd<uint32_t>(c,frame+0x24u);c.r[3]=rd<uint32_t>(c,frame+0x28u);
+ c.r[13]=frame;c.r[14]=IS_CONT;c.pc=(step==0u?IS_FALLOUT:IS_HAHEN)|1u;
+}
 static bool is_create2(Context& c){
  if(!active(c)||rd<uint32_t>(c,c.r[0])!=IS_VT2)return false;
- if(c.r[2]==24u){
-  uint32_t sp=c.r[13];const uint32_t stack[4]={rd<uint32_t>(c,sp+4u),24u,IS_ACT_2,40u};
+ uint32_t id=c.r[2],sp=c.r[13];
+ if(id==24u){
+  const uint32_t stack[4]={rd<uint32_t>(c,sp+4u),24u,IS_ACT_2,40u};
   msd_guest_call_stack(c,IS_NOT_AIM,c.r[0],c.r[1],c.r[3],rd<uint32_t>(c,sp),stack,4u,nullptr);
+ }else if(id>=0xff00u){c.pc=IS_UNIT_EFFECT;return true;}
+ else if(id-IS_DEBRIS<IS_DEBRIS_COUNT){
+  uint32_t frame=sp-0x38u;
+  const uint32_t save[8]={c.r[14],c.r[0],c.r[1],c.r[3],rd<uint32_t>(c,sp),rd<uint32_t>(c,sp+4u),id,0u};
+  for(uint32_t i=0;i<8u;++i)wr<uint32_t>(c,frame+0x18u+i*4u,save[i]);
+  is_debris_step(c,frame);return true;
  }
  c.pc=c.r[14];return true;
 }
 static Block old_iron_slider_create2;static void iron_slider_create2(Context& c){if(is_create2(c))return;old_iron_slider_create2(c);}
+static void iron_slider_debris_cont(Context& c){is_debris_step(c,c.r[13]);}
+HOOK(iron_slider_death,0x101996a9u,
+ if(active(c)&&rd<uint32_t>(c,c.r[5])==IS_VT2&&(c.r[6]==100u||c.r[6]==110u||c.r[6]==120u)){
+  if(c.r[7]==0u){c.r[0]=c.r[4];c.r[1]=97u;c.pc=0x10199717u;}else c.pc=0x10199967u;
+  return;})
 HOOK(iron_slider_summon,0x101de225u,
  if(active(c)&&c.r[14]==0x101bdaddu){uint32_t child=is_status(c,c.r[0],40u);if(child>=U&&record(c,child))c.r[1]=child;})
 HOOK(iron_slider_offset,0x101de193u, if(active(c)&&(c.r[14]==0x101bdb0bu||c.r[14]==0x101996a9u))c.r[2]=0u;)
@@ -845,7 +893,7 @@ static void is_giant(Context& c){
  msd_guest_call(c,IS_MOVE_X,b,l_bits(vx),0u,0xffffffffu,nullptr);
 }
 HOOK(iron_slider_giant,0x10177b21u, is_giant(c);)
-extern "C" __declspec(dllexport) uint32_t msd_community_iron_slider_version(){return iron_slider_hooks==10u?1u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_iron_slider_version(){return iron_slider_hooks==12u?2u:0u;}
 // 高分辨率战场（2026-10-19，MS6 关卡移植 S0）：头部 +172 为自制场景（ID ≥ 138）逐场景的标记字节表，位 0 表示图集按 2 倍精灵比例制作。
 // BattleStageBase::drawBack / drawFront 的绘制块（0x1e147c / 0x1e1518）以 s16（BattleStageBase +0x10 的战斗缩放 2.0）作为 drawConv 的
 // 横纵缩放，纵向基准 s18（缩放 ×32）与横向镜头偏移 r9 在此前已算好。带标记的场景只把图块缩放减半：1 个图集像素对应 1 个逻辑单位，
@@ -1429,7 +1477,8 @@ static bool ik_update(Context& c);static bool ik_shot(Context& c);static bool ik
 static uint32_t ik_bullet_spec(Context& c,uint32_t b);static bool ik_beam_hits(Context& c,uint32_t b,uint32_t t);   // 侵略者之王（后文）
 static bool mm_clip(Context& c,uint32_t o);   // 鼹鼠弹（后文）：钻出动作中按地面裁切绘制
 static bool wd_update(Context& c);static bool wd_shot(Context& c);static bool wd_bullet_update(Context& c);static bool wd_create(Context& c);static uint32_t wd_unit(Context& c,uint32_t o);static bool wd_debris(Context& c,uint32_t b);   // 钢铁死亡蠕虫（后文）
-static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c)||wd_update(c))return;old_elder_update(c);}
+static bool fc_update(Context& c);static bool fc_shot(Context& c);static bool fc_bullet_update(Context& c);static uint32_t fc_unit(Context& c,uint32_t o);static bool fc_orb(Context& c,uint32_t b);static bool fc_hit_before(Context& c,uint32_t b,uint32_t t);   // Fall Climber（后文）
+static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c)||wd_update(c)||fc_update(c))return;old_elder_update(c);}
 static bool ec_shot(Context& c){
  uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=ec_unit(c,o);if(!s)return false;
  int32_t x=int32_t(c.r[3]),y=rd<int32_t>(c,c.r[13]);
@@ -1439,7 +1488,7 @@ static bool ec_shot(Context& c){
  }else if(script>=zw(c,s,70)&&script<zw(c,s,70)+zw(c,s,71))ec_fire(c,act,o,script,2u,40u,x,y);
  c.pc=c.r[14];return true;
 }
-static Block old_elder_shot;static void elder_shot(Context& c){if(ec_shot(c)||ik_shot(c)||wd_shot(c))return;old_elder_shot(c);}
+static Block old_elder_shot;static void elder_shot(Context& c){if(ec_shot(c)||ik_shot(c)||wd_shot(c)||fc_shot(c))return;old_elder_shot(c);}
 static bool ec_bullet_update(Context& c){
  uint32_t act=c.r[0],b=c.r[1],state=c.r[2],s=ec_bullet_spec(c,b);if(!s)return false;
  uint32_t kind=rd<uint32_t>(c,b+0x28u),age=rd<uint32_t>(c,b+0x2cu)+1u;wr<uint32_t>(c,b+0x2cu,age);
@@ -1457,10 +1506,11 @@ static bool ec_bullet_update(Context& c){
  }
  c.pc=c.r[14];return true;
 }
-static Block old_elder_bullet;static void elder_bullet(Context& c){if(ec_bullet_update(c)||ik_bullet_update(c)||wd_bullet_update(c))return;old_elder_bullet(c);}
+static Block old_elder_bullet;static void elder_bullet(Context& c){if(ec_bullet_update(c)||ik_bullet_update(c)||wd_bullet_update(c)||fc_bullet_update(c))return;old_elder_bullet(c);}
 static Block old_elder_attack;static void elder_attack(Context& c){
  uint32_t b=c.r[1],k=ec_bullet_spec(c,b)?rd<uint32_t>(c,b+0x28u):0u;
  if(k>=2u||wd_debris(c,b)){c.pc=EC_DEFAULT_ATTACK;return;}   // 钢铁死亡蠕虫的掘削碎块：结算后消失（MSA 默认弹体 attackAction 0x10e54b8）
+ if(fc_orb(c,b)){if(fc_hit_before(c,b,c.r[2])){c.r[0]=0u;c.pc=c.r[14];return;}c.pc=EC_DEFAULT_ATTACK;return;}   // Fall Climber 的光球：贯穿，同一目标只结算一次（R6）
  if(ik_bullet_spec(c,b)&&!ik_beam_hits(c,b,c.r[2])){c.r[0]=0u;c.pc=c.r[14];return;}   // 侵略者之王的激光：先按光束判定
  old_elder_attack(c);
 }
@@ -1899,6 +1949,7 @@ extern "C" __declspec(dllexport) uint32_t msd_community_invader_king_version(){r
 //    钻入、钻出与绝招一经开始即按动作顺序进行到底（状态在其间改变时不打断）。
 //    R5（用户 2026-10-25：钻入 / 钻出速度 200%，不影响大招的速度）：生成脚本把移动的钻入与平常的钻出换为 2 倍速的副本（字 105 / 106），
 //    绝招中的钻出（绝招开始时在地下先于原处钻出、钻击后回原处钻出）改用字 120（原速的钻出）。
+//    R7（用户 2026-10-29，方案 B2）：钻离与钻击中只有脚本第字 133 tick 起的命中扣击退计量（见 wd_knock）。
 //  2 Alien::shotBullet（MSA 0xef2f30）：掘削的碎块（字 113 起字 114 个弹体脚本）经 addBulletNotAim 发射，攻击 ID（+0x144）新建
 //    （MSA 碎块由自身的 op4 建立）；BulletAction_Alien::attackAction 改走 BattleBulletDefault::attackAction，结算后转入状态 60 消失（同 MSA
 //    默认弹体 attackAction 0x10e54b8；原生侵略者弹体只在动作号为 20 时结算）。单位菜单的动作演示中不发射。
@@ -2145,6 +2196,7 @@ static int32_t wd_parts(Context& c,uint32_t o,bool attack,WdBox* out){
  }
  return n;
 }
+static int32_t fc_parts(Context& c,uint32_t o,uint32_t s,WdBox* out);   // Fall Climber（后文）
 static uint32_t wd_part_hooks=0u;
 static Block old_wd_op3;static void wd_op3(Context& c){uint32_t o=c.r[0]-8u;if(wd_unit(c,o))wr<uint32_t>(c,o+WD_HIT_INDEX,rd<uint32_t>(c,c.r[6]+4u));old_wd_op3(c);}
 static Block old_wd_op4;static void wd_op4(Context& c){uint32_t o=c.r[0]-8u;if(wd_unit(c,o))wr<uint32_t>(c,o+WD_ATTACK_INDEX,rd<uint32_t>(c,c.r[6]+4u));old_wd_op4(c);}
@@ -2153,6 +2205,7 @@ static Block old_wd_hit_test;static void wd_hit_test(Context& c){
  bool empty=!rd<int32_t>(c,o+0xd4u)&&!rd<int32_t>(c,o+0xd8u);
  WdBox h[WD_MAX_PARTS],k[WD_MAX_PARTS];
  int32_t nh=!empty&&wd_unit(c,o)?wd_parts(c,o,false,h):0,na=a&&wd_unit(c,a)?wd_parts(c,a,true,k):0;
+ if(!empty&&!nh){uint32_t fs=fc_unit(c,o);if(fs){nh=fc_parts(c,o,fs,h);if(!nh){ret(c,0u);return;}}}   // Fall Climber：整台机体
  if(!nh&&!na){old_wd_hit_test(c);return;}
  if(empty){ret(c,0u);return;}
  if(!nh){int32_t ox=int32_t(rd<float>(c,o+0x8cu)),oy=int32_t(rd<float>(c,o+0x90u));
@@ -2161,14 +2214,334 @@ static Block old_wd_hit_test;static void wd_hit_test(Context& c){
  for(int32_t i=0;i<na;++i)for(int32_t j=0;j<nh;++j)if(k[i].l<h[j].r&&k[i].r>h[j].l&&k[i].t<h[j].b&&k[i].b>h[j].t){ret(c,1u);return;}
  ret(c,0u);
 }
+// R7（用户 2026-10-29，方案 B2）：BattleUnit::damage 的击退计量扣除处（0x101e0b5d，r4 目标、r5 攻击方、栈 +0x48 为扣除量；KT-21
+// 单次击退限制挂在同一处，依次执行）。钻离与钻击（字 108 / 109，含损毁钻入）每 4 tick 一段、各段原样扣第二参数 × 100 时，门槛为正的
+// 目标被所接触的第一段击退，击退动作中没有受击框，每个动作只受 1–2 段；改为脚本 tick（精灵 +0x3c 为已执行的 tick 数，减 1）小于
+// 字 133（行为参数 special_knockback_tick，缺省 60 即最后一段）的命中扣除量为 0，伤害照常结算。弹体（碎块）不经此限制。
+static uint32_t wd_knock_hooks=0u;
+static Block old_wd_knock;static void wd_knock(Context& c){
+ uint32_t a=c.r[5],s=active(c)&&a&&rd<uint32_t>(c,a)!=FS_BULLET_VPTR?wd_unit(c,a):0u;
+ if(s){
+  uint32_t anim=rd<uint32_t>(c,a+0xc4u),sprite=rd<uint32_t>(c,a+0x5cu);
+  if((anim==wd_w(c,s,WD_DIVE)||anim==wd_w(c,s,WD_DRILL))&&sprite&&rd<uint32_t>(c,sprite+0x3cu)<=zw(c,s,133u))wr<uint32_t>(c,c.r[13]+0x48u,0u);
+ }
+ old_wd_knock(c);
+}
 // 版本 2（r92）：按 MSA 底层代码核对后的流程、地下行进与损毁碎块；3（r94）：绝招分段；4（r95）：部件判定、碎块弹跳滚动后爆炸；
-// 5（r96）：绝招中的钻出用字 120
-extern "C" __declspec(dllexport) uint32_t msd_community_iron_death_worm_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u?5u:0u;}
+// 5（r96）：绝招中的钻出用字 120；6（r109）：钻离 / 钻击只在字 133 tick 起扣击退计量
+extern "C" __declspec(dllexport) uint32_t msd_community_iron_death_worm_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u&&wd_knock_hooks==1u?6u:0u;}
+// ---------- Fall Climber（2026-11-01，行为库 v31：fall_climber v1，标记 134217728；基准 192 BattleAction_Alien；核心 r115）----------
+// MS7 任务 4 首领（docs/MS7_M4_UNITS_2026-10-31.md 第 19 节；离线示意第 14 版由用户确认）。两个单位：第一形态（字 53 为 1）与第二形态
+// （字 53 为 2，内部单位）。参数存 ZSpec 字 53–110（与 elder_centipede / invader_king / iron_death_worm 互斥，按标记区分；带小数的值 × 10）。
+// 图像结构（artwork/fall_climber_20261101/build_fall_climber.py）：根动作只隐藏根层并挂子层——左手、左前臂、左肘护盖、左上臂（优先级 1–4）、
+// 右侧同（5–8）、机体组（10，其下挂髋、爪、机体、背枪、头部或玻璃罩、引擎、蒸汽、炮口火花、蓄力光球、激光；R7 起按整机图排序）。子层偏移
+// 为游戏中的静止姿势（头部露出 20、两手 ±122.5 落在行走线）；本段每 tick 改写：
+//  - 机体组的纵向偏移：起伏（待机为上升 / 高位 / 下沉 / 低位四段的周期，移动中随步伐，幅度相同，用户 R9–R10）与第二形态出场时的抬高；
+//  - 两手：按身体沿朝向的累计位移 s（对象 +0x1c，后退为负）的步伐（每前进字 65 世界单位两手各迈一步，前手在前半、后手在后半，抬手字 66；
+//    后退时步伐倒放，两手向后迈步，用户 2026-11-01 R5），停下时 0.3 秒内回到静止位置；手底放在该手所在处的地形上；
+//  - 上臂（绕肩）、前臂（绕肘）与肘护盖（绕肘，取二者转角的平均）的转角：肩随机体，肘以两段反向运动学求出，目标为腕点（前臂上端，
+//    固定在手上，字 107 / 108；R7 以前目标为手底、肘护盖与前臂合为一块，转动时前臂与手错开），写入相对静止姿势的转角（子层 +0x2c，度）。偏移与转角均为原画坐标（原画朝左；与当前朝向相反时由原生整体镜像）；
+//  - 手落地（前进时该手步伐过半处，后退时步伐起点处）时播放该手的音效（字 104 / 105，0 为无；用户 2026-11-01 R4）。
+// 子层的偏移在动作切换的同一 tick 写入：动作以嵌套调用 setAnimationID 切换（根动作第一 tick 不放音效），之后改写新建的子层。
+// 状态：
+//  - 出场：第一形态置不发动绝招（DontSpAttack，常置）；第二形态播放出场动作（头壳炸飞、两手冒蒸汽），机体由低 16 像素升到静止位置，
+//    播完待机。10 待机；20 原生 actionMove 前进（高度取地形）；30 / 40 普攻：两门炮轮流（伸出、蓄能、射出、缩回，脚本 op22 发射光球），
+//    播完进入攻击等待；50（第二形态）绝招：记下位置 → 以字 73 的速度移到“敌方前线 + 朝向 × 字 74”（不越过敌方据点前缘）→ 蓄力 → 向上
+//    大激光（攻击框为身体 ±120 的竖列，脚本每 4 tick 一条 op4，置身体状态 0x20 每段新建攻击 ID，攻击组 50）→ 移回原处（敌方前线越过原处时
+//    为前线之后）→ 绝招等待；移动中置穿过（AreaThrough）。80（击退）：不击退（zombie_no_knockback 同钢铁死亡蠕虫），预约回到 10。
+//  - 100–140：第一形态生命耗尽且本方据点仍在时播放转换（小爆炸、大爆炸），播完尾调用原生 ParaTrooper::summonZakoBazooka 在原处生成
+//    第二形态（原生以固定 UnitID 45 经 createChildObject 生成，paratrooper_landing 按落地映射表换成第二形态；登记 +0xfc、复制 +0xf0），
+//    下一帧移除本单位（同钢铁哨兵，避免第二形态尚未绘制的一帧）；其他情况（第二形态、据点被毁后的结束）播放损毁 / 爆炸动作后移除。
+// 光球（脚本 op22，字 62 的弹体脚本）：Alien::shotBullet 中以 addBulletNotAim 建立（攻击组 40，新建攻击 ID），放到当前炮口；之后自管运动：
+// 竖直上升，到该处地形以上字 75 世界单位的水平线以下 3 步时转弯，以字 76 的速度沿该水平线朝前直线飞行（瞄准线上前方 6 步处，每 tick 修正 1/3；
+// R6 以前到线后朝敌方最前方单位转向）。
+// R6 贯穿（用户 2026-11-01，同 5 连发马克斯奈尔 r100 的 piercing_shots）：经 BattleBulletDefault::attackAction 结算命中后不预约
+// 状态 60（0x10175e20 的块），光球继续飞行；同一颗光球对同一目标只结算一次（入口按已结算列表返回 0，另有原生受击 ID 环）；每发命中
+// 目标数取单位状态词 24（999）。每个结算的目标处放共用效果 0xff02；水平飞出字 106 世界单位、落地或超时时放 0xff02 后移除。
+// 判定：受击按部件（同钢铁死亡蠕虫 r95 的 hitTest 钩子），整台机体（用户 2026-11-01 R4）：两手（当前偏移，字 84 / 85 的大小）、两前臂与
+// 两上臂（字 96–99 / 92–95 为左侧静止姿势下相对肘 / 肩的范围，按该层当前转角转动后取外接矩形，右侧镜像）、机体（字 100–103，含髋与爪）
+// 与头部或玻璃罩（字 86–89），后两者随起伏；不按地面裁切。外框（受击框 1）供原生的其他用途。绘制同原生（整机，不按地形裁切，R4）。
+// 单位的状态只在客体对象内存：+0x1c 沿朝向的累计位移 s、+0x20 起伏、+0x24 绝招前的位置 x、+0x28 标记（1 已出场、2 已置不发动绝招、4 已置穿过、
+// 16 已置攻击 ID 重置、32 损毁已开始、64 下次用右炮、128 形态转换、256 已生成第二形态；第 16–23 位为连射冷却后已射出的光球数，R10）、+0x2c 绝招阶段、+0x30 本动作 tick、+0x34 出场抬高
+// 余量、+0x38 上一 tick 的 x、+0x3c 回到静止的比例、+0x40 起伏计时。光球：+0x24 阶段、+0x28 种类、+0x2c 存在 tick、+0x30 / +0x34 速度、
+// +0x38 转向高度、+0x20 发射处 x（R6）、+0x3c 已结算次数、+0x3d 已放命中效果的次数、+0x3e / +0x40 / +0x42 / +0x1c / +0x1e 已结算目标的
+// 实例号（+0x62；5 个之后只由受击 ID 环去重）。
+static constexpr uint32_t FC_FLAG=134217728u,FC_W=53u,FC_ORB_KIND=30u,FC_SUMMON=0x101af74bu,FC_ORB_LIFE=150u;
+static constexpr float FC_VIEW_DASH=200.0f;
+enum:uint32_t{FC_FORM,FC_NEUTRAL,FC_MOVE,FC_ATTACK_L,FC_ATTACK_R,FC_CHANGE,FC_CHARGE,FC_LASER,FC_DEATH,FC_ORB,FC_SECOND,
+ FC_HAND_X,FC_GAIT,FC_LIFT,FC_BOB,FC_BOB_UP,FC_BOB_HIGH,FC_BOB_DOWN,FC_BOB_LOW,FC_RISE,FC_DASH,FC_DASH_AHEAD,FC_SHOT_RISE,FC_SHOT_SPEED,
+ FC_L1,FC_L2,FC_SX,FC_SY,FC_EX,FC_EY,FC_SIGN,FC_MX,FC_MY,FC_HAND_W,FC_HAND_H,FC_HEAD_X,FC_HEAD_Y,FC_HEAD_W,FC_HEAD_H,
+ FC_UPPER_BOX,FC_LOWER_BOX=FC_UPPER_BOX+4u,FC_BODY_BOX=FC_LOWER_BOX+4u,FC_STEP=FC_BODY_BOX+4u,FC_SHOT_DIST=FC_STEP+2u,FC_WRIST_X,FC_WRIST_Y,FC_BURST,FC_BURST_CD};
+// 根层直接子层的优先级（R7，按整机图：手 < 前臂 < 肘护盖 < 上臂 < 机体组；[0] 左侧、[1] 右侧）
+static constexpr int32_t FC_P_GROUP=10,FC_P_HAND[2]={1,5},FC_P_FORE[2]={2,6},FC_P_CAP[2]={3,7},FC_P_UPPER[2]={4,8};
+static uint32_t fc_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&FC_FLAG)?s:0u;}
+static int32_t fc_w(Context& c,uint32_t s,uint32_t i){return int32_t(zw(c,s,FC_W+i));}
+static float fc_f(Context& c,uint32_t s,uint32_t i){return float(fc_w(c,s,i))*0.1f;}
+static uint32_t fc_orb_spec(Context& c,uint32_t b){
+ if(!active(c)||!head(c,168u)||!b||rd<uint32_t>(c,b)!=FS_BULLET_VPTR)return 0u;
+ uint32_t uid=rd<uint32_t>(c,b+0x128u);if(!record(c,uid))return 0u;
+ uint32_t s=rd<uint32_t>(c,head(c,168u)+(uid-U)*4u);
+ return s&&(zw(c,s,0)&FC_FLAG)&&rd<uint32_t>(c,b+0x28u)==FC_ORB_KIND?s:0u;
+}
+static bool fc_orb(Context& c,uint32_t b){return fc_orb_spec(c,b)!=0u;}
+// 原画坐标 → 世界坐标：当前朝向与原画朝向相同时 x 不镜像
+static int32_t fc_m(Context& c,uint32_t o){uint32_t sp=rd<uint32_t>(c,o+0x5cu);return sp&&rd<uint32_t>(c,sp+0x48u)!=rd<uint32_t>(c,sp+0x10u)?-1:1;}
+// 根层的直接子层（按优先级）
+static uint32_t fc_layer(Context& c,uint32_t o,int32_t prio){
+ uint32_t sprite=rd<uint32_t>(c,o+0x5cu);if(!sprite)return 0u;
+ uint32_t root=rd<uint32_t>(c,sprite+0x58u),st=rd<uint32_t>(c,sprite+0x54u);
+ for(uint32_t k=0;st&&k<1024u;++k){if(rd<uint32_t>(c,st+0x4cu)==root&&rd<int32_t>(c,st+0x28u)==prio)return st;st=rd<uint32_t>(c,st+0x50u);}
+ return 0u;
+}
+static float fc_ease(float p){p=std::max(0.0f,std::min(1.0f,p));return 0.5f-0.5f*std::cos(3.14159265f*p);}
+static float fc_deg(float x,float y){return std::atan2(y,x)*57.2957795f;}
+// 待机起伏的形状（周期内 tick）：上升、高位停留、下沉、低位停留；−1…1
+static float fc_bob_shape(Context& c,uint32_t s,uint32_t k){
+ float a=float(fc_w(c,s,FC_BOB_UP)),b=float(fc_w(c,s,FC_BOB_HIGH)),d=float(fc_w(c,s,FC_BOB_DOWN)),t=float(k);
+ if(t<a)return -1.0f+2.0f*fc_ease(t/a);
+ if(t<a+b)return 1.0f;
+ if(t<a+b+d)return 1.0f-2.0f*fc_ease((t-a-b)/d);
+ return -1.0f;
+}
+static void fc_ik(float sx,float sy,float hx,float hy,float l1,float l2,float sign,float& ex,float& ey){
+ float dx=hx-sx,dy=hy-sy,d0=std::sqrt(dx*dx+dy*dy);if(d0<1e-3f){ex=sx;ey=sy+l1;return;}
+ float d=std::max(std::fabs(l1-l2)+1e-3f,std::min(l1+l2-1e-3f,d0)),a=(l1*l1-l2*l2+d*d)/(2.0f*d),h=std::sqrt(std::max(0.0f,l1*l1-a*a));
+ float ux=dx/d0,uy=dy/d0,px=sx+a*ux,py=sy+a*uy;
+ float e1x=px-h*uy,e1y=py+h*ux;
+ float cr=dx*(e1y-sy)-dy*(e1x-sx);
+ if((cr>0.0f)==(sign>0.0f)){ex=e1x;ey=e1y;}else{ex=px+h*uy;ey=py-h*ux;}
+}
+static float fc_norm(float r){while(r<0.0f)r+=360.0f;while(r>=360.0f)r-=360.0f;return r;}
+static float fc_wrap(float r){r=fc_norm(r);return r>180.0f?r-360.0f:r;}   // −180…180（取平均转角前）
+// 每 tick 的骨架：步伐、起伏、子层偏移与转角
+static void fc_rig(Context& c,uint32_t o,uint32_t s,bool fast,bool frozen){   // frozen：损毁 / 转换中保持当前姿势（R7，只把姿势写到新建的子层）
+ float x=rd<float>(c,o+0x8cu),y=rd<float>(c,o+0x90u),last=rd<float>(c,o+0x38u),sv=rd<float>(c,o+0x1cu),settle=rd<float>(c,o+0x3cu);
+ float step=frozen?0.0f:(x-last)*float(ik_dir(c,o));bool moving=std::fabs(step)>0.01f;   // 沿朝向的位移（爬回时为负）
+ uint32_t clock=rd<uint32_t>(c,o+0x40u);
+ if(!frozen){
+  sv+=step;settle=moving?std::max(0.0f,settle-0.15f):std::min(1.0f,settle+0.1f);
+  wr<float>(c,o+0x1cu,sv);wr<float>(c,o+0x38u,x);wr<float>(c,o+0x3cu,settle);
+  wr<uint32_t>(c,o+0x40u,++clock);
+ }
+ float gw=float(fc_w(c,s,FC_GAIT)),amp=float(fc_w(c,s,FC_BOB));
+ uint32_t period=uint32_t(fc_w(c,s,FC_BOB_UP)+fc_w(c,s,FC_BOB_HIGH)+fc_w(c,s,FC_BOB_DOWN)+fc_w(c,s,FC_BOB_LOW));if(!period)period=1u;
+ float goal;
+ if(moving){float L=fast?gw:gw*0.5f,ph=sv/L;ph-=std::floor(ph);goal=-amp+2.0f*amp*(0.5f-0.5f*std::cos(6.2831853f*ph));}
+ else goal=amp*fc_bob_shape(c,s,clock%period);
+ float bob=rd<float>(c,o+0x20u);if(!frozen){bob+=(goal-bob)*0.5f;wr<float>(c,o+0x20u,bob);}
+ float dy=-bob+rd<float>(c,o+0x34u);   // 机体组的纵向偏移（原画坐标，向下为正）
+ if(uint32_t g=fc_layer(c,o,FC_P_GROUP))wr<float>(c,g+0x24u,dy);
+ int32_t m=fc_m(c,o);
+ float G=gw*0.5f,hand=fc_f(c,s,FC_HAND_X),lift=float(fc_w(c,s,FC_LIFT))*0.5f,l1=fc_f(c,s,FC_L1),l2=fc_f(c,s,FC_L2);
+ for(int32_t i=0;i<2;++i){
+  float side=i?1.0f:-1.0f,u=sv/gw-(i?0.5f:0.0f),fr=u-std::floor(u);
+  float off=G*(fc_ease(std::min(1.0f,fr*2.0f))-fr)-G*0.25f;
+  float hx=side*(hand+G*0.25f)-off,lf=fr<0.5f?lift*std::sin(3.14159265f*fr*2.0f):0.0f;
+  float land=step>0.0f?0.5f:0.0f;   // 手落地处：前进时步伐过半，后退时步伐起点
+  if(moving&&std::floor(u-land)!=std::floor(u-step/gw-land))   // 手落地：播放该手的音效
+   if(uint32_t sid=uint32_t(fc_w(c,s,FC_STEP+uint32_t(i))))msd_guest_call(c,Z_PLAY_SE,o,sid,0u,0u,nullptr);
+  hx=hx+(side*hand-hx)*settle;lf*=1.0f-settle;
+  float wx=x+2.0f*float(m)*hx,hy=(ik_ground(c,o,wx)-y)*0.5f-lf;
+  float sx=i?-fc_f(c,s,FC_SX):fc_f(c,s,FC_SX),sy=fc_f(c,s,FC_SY)+dy;   // 字 79 / 80 为左肩（静止姿势）；右侧镜像
+  float rex=i?-fc_f(c,s,FC_EX):fc_f(c,s,FC_EX),rey=fc_f(c,s,FC_EY),rsx=sx,rsy=fc_f(c,s,FC_SY),rhx=side*hand;
+  // R7：两段反向运动学以腕点（前臂上端，固定在手上：相对手底中点为字 107 / 108，左侧值、右侧镜像）为目标，前臂上端始终落在手上
+  float wdx=(i?-1.0f:1.0f)*fc_f(c,s,FC_WRIST_X),wdy=fc_f(c,s,FC_WRIST_Y),wx_=hx+wdx,wy_=hy+wdy;
+  float sign=float(fc_w(c,s,FC_SIGN))*(i?-1.0f:1.0f),ex,ey;
+  fc_ik(sx,sy,wx_,wy_,l1,l2,sign,ex,ey);
+  float ru=fc_wrap(fc_deg(ex-sx,ey-sy)-fc_deg(rex-rsx,rey-rsy)),rl=fc_wrap(fc_deg(wx_-ex,wy_-ey)-fc_deg(rhx+wdx-rex,wdy-rey));
+  int32_t k=i?1:0;
+  if(uint32_t st=fc_layer(c,o,FC_P_UPPER[k])){wr<float>(c,st+0x20u,sx);wr<float>(c,st+0x24u,sy);wr<float>(c,st+0x2cu,fc_norm(ru));}
+  if(uint32_t st=fc_layer(c,o,FC_P_HAND[k])){wr<float>(c,st+0x20u,hx);wr<float>(c,st+0x24u,hy);}
+  if(uint32_t st=fc_layer(c,o,FC_P_FORE[k])){wr<float>(c,st+0x20u,ex);wr<float>(c,st+0x24u,ey);wr<float>(c,st+0x2cu,fc_norm(rl));}
+  if(uint32_t st=fc_layer(c,o,FC_P_CAP[k])){wr<float>(c,st+0x20u,ex);wr<float>(c,st+0x24u,ey);wr<float>(c,st+0x2cu,fc_norm((ru+rl)*0.5f));}   // 肘护盖：上臂与前臂转角的平均
+ }
+}
+static bool fc_update(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],state=c.r[2],frame=c.r[3],s=fc_unit(c,o);if(!s)return false;
+ int32_t anim=int32_t(rd<uint32_t>(c,o+0xc4u)),pend=-1,d=ik_dir(c,o);
+ auto A=[&](uint32_t i){return fc_w(c,s,i);};
+ auto cur=[&]{return pend>=0?pend:anim;};
+ auto run=[&]{return pend>=0||rd<uint8_t>(c,o+0xc9u)!=0;};
+ auto set=[&](int32_t a){pend=a;wr<uint32_t>(c,o+0x30u,0u);};
+ bool viewer=z_viewer(c),first=frame==0u,f2=A(FC_FORM)==2;
+ uint32_t fl=rd<uint32_t>(c,o+0x28u),phase=rd<uint32_t>(c,o+0x2cu),tick=rd<uint32_t>(c,o+0x30u)+1u;wr<uint32_t>(c,o+0x30u,tick);
+ auto flag=[&](uint32_t bit,uint32_t fn,bool on){if(on!=((fl&bit)!=0u)){is_call(c,fn,o,on?1u:0u);fl=on?fl|bit:fl&~bit;}};
+ float x=rd<float>(c,o+0x8cu),dash=fc_f(c,s,FC_DASH);bool fast=false,summon=false;
+ auto go=[&](float tx,float v){float st=std::max(-v,std::min(v,tx-x));x+=st;ik_place(c,o,x,ik_ground(c,o,x));fast=true;return std::fabs(tx-x)<0.5f;};
+ if(!(fl&1u)){
+  fl|=1u;wr<float>(c,o+0x38u,x);
+  if(!f2){flag(2u,EC_DONT_SP,true);set(A(FC_NEUTRAL));}
+  else if(!viewer){wr<float>(c,o+0x34u,float(A(FC_RISE)));flag(2u,EC_DONT_SP,true);set(A(FC_CHANGE));}
+  else set(A(FC_NEUTRAL));
+ }
+ if(fl&256u){is_call(c,IS_KILL,o);c.pc=c.r[14];return true;}
+ if(state>=100u&&state<=140u){
+  if(!(fl&32u)){
+   fl|=32u;phase=0u;flag(4u,WD_AREA_THROUGH,false);
+   uint32_t base=viewer?0u:ik_base(c,rd<uint32_t>(c,o+0x70u)&1u);
+   bool change=!f2&&!viewer&&A(FC_SECOND)&&rd<int32_t>(c,o+0x308u)<=0&&(!base||rd<int32_t>(c,base+0x308u)>0);
+   if(change)fl|=128u;
+   set(f2?A(FC_DEATH):A(FC_CHANGE));
+  }else if(!run()){
+   if(fl&128u){fl|=256u;summon=true;}   // 在客体流程中生成第二形态（嵌套调用不能建立对象：operator new 不在嵌套可用的宿主导入中）
+   else is_call(c,IS_KILL,o);
+  }
+ }else if(f2&&cur()==A(FC_CHANGE)){
+  // 第二形态出场：机体抬高余量随动作递减，播完待机
+  float r=float(A(FC_RISE))*(1.0f-fc_ease(float(tick)/60.0f));wr<float>(c,o+0x34u,r);
+  if(!run()){wr<float>(c,o+0x34u,0.0f);flag(2u,EC_DONT_SP,false);set(A(FC_NEUTRAL));wr<uint32_t>(c,o+0x84u,10u);is_call(c,IS_RESERVE,o,10u,0u);}
+ }else if(phase>0u||((f2||viewer)&&state==50u&&first)){   // 动作演示中第一形态也演示第二形态的绝招
+  if(phase==0u){phase=1u;wr<int32_t>(c,o+0x24u,int32_t(x));if(!viewer)flag(4u,WD_AREA_THROUGH,true);set(A(FC_MOVE));}
+  if(phase==1u){
+   float tx=viewer?float(rd<int32_t>(c,o+0x24u))+float(d)*FC_VIEW_DASH:wd_clamp(c,o,wd_line(c,o)+float(d*A(FC_DASH_AHEAD)));
+   if(go(tx,dash)){phase=2u;set(A(FC_CHARGE));}
+  }else if(phase==2u){if(!run()){phase=3u;set(A(FC_LASER));}}
+  else if(phase==3u){if(!run()){phase=4u;set(A(FC_MOVE));}}
+  else{
+   float back=float(rd<int32_t>(c,o+0x24u));
+   if(!viewer){float f=wd_line(c,o)-float(d)*wd_width(c,o);back=wd_clamp(c,o,d>0?std::min(f,back):std::max(f,back));}
+   if(go(back,dash)){phase=0u;flag(4u,WD_AREA_THROUGH,false);is_call(c,EC_START_WAIT,act,o,50u);set(A(FC_NEUTRAL));}
+  }
+ }else switch(state){
+  case 10u:
+   if(first||(cur()!=A(FC_NEUTRAL)&&!run()))set(A(FC_NEUTRAL));
+   break;
+  case 20u:
+   if(viewer){if(cur()!=A(FC_NEUTRAL))set(A(FC_NEUTRAL));break;}
+   if(cur()!=A(FC_MOVE))set(A(FC_MOVE));
+   msd_guest_call(c,EC_ACTION_MOVE,act,o,l_bits(-1.0f),0u,nullptr);
+   {float g=ik_ground(c,o,rd<float>(c,o+0x94u));wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);}
+   break;
+  case 30u:case 40u:
+   if(first){bool right=(fl&64u)!=0u;fl^=64u;set(A(right?FC_ATTACK_R:FC_ATTACK_L));}
+   else if(!run()){
+    is_call(c,EC_START_WAIT,act,o,state);set(A(FC_NEUTRAL));
+    // R10：每射出 burst_shots 颗光球，本次攻击后的等待改为 burst_cooldown tick（原生待机的计时 +0xc0：START_WAIT 经 0x1ddf68 预约状态 10 后写入）
+    uint32_t n=(fl>>16)&255u;if(A(FC_BURST)>0&&n>=uint32_t(A(FC_BURST))){fl&=~0xff0000u;wr<uint32_t>(c,o+0xc0u,uint32_t(A(FC_BURST_CD)));}
+   }
+   break;
+  case 50u:
+   if(first){is_call(c,EC_START_WAIT,act,o,50u);set(A(FC_NEUTRAL));}   // 第一形态（不应出现）
+   break;
+  case 80u:
+   wr<uint32_t>(c,o+0x84u,10u);
+   break;
+  default:
+   break;
+ }
+ int32_t a=cur();
+ if(a==A(FC_LASER))wr<uint32_t>(c,o+0x88u,50u);
+ flag(16u,WD_ID_RESET,!viewer&&a==A(FC_LASER));
+ wr<uint32_t>(c,o+0x28u,fl);wr<uint32_t>(c,o+0x2cu,phase);
+ // 生成第二形态：尾调用原生 ParaTrooper::summonZakoBazooka（0x1af74a，r0 动作、r1 单位）：+0xfc 为 0 时以 createChildObject 生成固定的
+ // UnitID 45（paratrooper_landing 按落地映射表换成第二形态；等级取 getStatus(0)、偏移 0），登记 +0xfc 并复制 +0xf0，返回本 update 的调用者
+ if(summon){c.r[0]=act;c.r[1]=o;c.pc=FC_SUMMON;return true;}
+ if(pend>=0)is_call(c,IS_SET_ANIM,o,uint32_t(pend),1u,1u);   // 嵌套调用：新建的子层在本 tick 即可改写（根动作第一 tick 无音效）
+ if(!(fl&256u))fc_rig(c,o,s,fast,(fl&32u)!=0u);   // 损毁 / 转换开始后冻结骨架（R7：先停下再爆炸）
+ c.pc=c.r[14];return true;
+}
+// 当前普攻动作的炮：右炮动作为字 57
+static bool fc_right(Context& c,uint32_t o,uint32_t s){return int32_t(rd<uint32_t>(c,o+0xc4u))==fc_w(c,s,FC_ATTACK_R);}
+static bool fc_shot(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=fc_unit(c,o);if(!s)return false;
+ if(!z_viewer(c)&&int32_t(script)==fc_w(c,s,FC_ORB)){
+  uint32_t b=ec_fire(c,act,o,script,FC_ORB_KIND,40u,0,0);
+  if(b){
+   int32_t m=fc_m(c,o);uint32_t g=fc_layer(c,o,FC_P_GROUP);
+   float mx=fc_f(c,s,FC_MX)*(fc_right(c,o,s)?-1.0f:1.0f),my=fc_f(c,s,FC_MY)+(g?rd<float>(c,g+0x24u):0.0f);
+   float wx=rd<float>(c,o+0x8cu)+2.0f*float(m)*mx,wy=rd<float>(c,o+0x90u)+2.0f*my;
+   wd_debris_place(c,b,wx,wy);
+   wr<uint32_t>(c,b+0x24u,0u);wr<float>(c,b+0x30u,0.0f);wr<float>(c,b+0x34u,-fc_f(c,s,FC_SHOT_SPEED));
+   wr<float>(c,b+0x38u,ik_ground(c,o,wx)-float(fc_w(c,s,FC_SHOT_RISE)));
+   wr<uint16_t>(c,b+0x144u,uint16_t(is_call(c,WD_NEW_ID,IS_MANAGER,rd<uint32_t>(c,o+0x70u),0u)));
+   wr<float>(c,b+0x20u,wx);wr<uint32_t>(c,b+0x3cu,0u);   // 发射处 x；结算次数、已放效果次数与第一个实例号清零（对象池重用）
+   if(fc_w(c,s,FC_BURST)>0){uint32_t f=rd<uint32_t>(c,o+0x28u),n=std::min(255u,((f>>16)&255u)+1u);wr<uint32_t>(c,o+0x28u,(f&~0xff0000u)|(n<<16));}   // R10：连射计数
+  }
+ }
+ c.pc=c.r[14];return true;
+}
+static bool fc_bullet_update(Context& c){
+ uint32_t act=c.r[0],b=c.r[1],state=c.r[2],s=fc_orb_spec(c,b);if(!s)return false;
+ uint32_t age=rd<uint32_t>(c,b+0x2cu)+1u;wr<uint32_t>(c,b+0x2cu,age);
+ float x=rd<float>(c,b+0x8cu),y=rd<float>(c,b+0x90u),v=fc_f(c,s,FC_SHOT_SPEED);
+ auto burst=[&]{is_effect(c,act,b,0,0,0xff02u);is_call(c,IS_KILL,b);};
+ if(state==200u||age>FC_ORB_LIFE){is_call(c,IS_KILL,b);c.pc=c.r[14];return true;}
+ if(state==60u||state==59u){burst();c.pc=c.r[14];return true;}
+ {uint8_t hits=rd<uint8_t>(c,b+0x3cu);if(hits!=rd<uint8_t>(c,b+0x3du)){wr<uint8_t>(c,b+0x3du,hits);is_effect(c,act,b,0,0,0xff02u);}}   // 贯穿：新结算的目标处放命中效果
+ float vx=rd<float>(c,b+0x30u),vy=rd<float>(c,b+0x34u);
+ if(rd<uint32_t>(c,b+0x24u)==0u){
+  y-=v;if(y<=rd<float>(c,b+0x38u)+3.0f*v)wr<uint32_t>(c,b+0x24u,1u);   // 到水平线以下 3 步时开始转弯（R6）
+ }else{
+  float dir=rd<uint32_t>(c,b+0x78u)==0x5au?1.0f:-1.0f;   // 弹体朝向（90 为向右）：转为沿水平线（+0x38）朝前直线飞行，瞄准线上前方 6 步处
+  float dx=dir*6.0f*v,dy=rd<float>(c,b+0x38u)-y,dd=std::sqrt(dx*dx+dy*dy);
+  vx+=(dx/dd*v-vx)/3.0f;vy+=(dy/dd*v-vy)/3.0f;{float sp=std::sqrt(vx*vx+vy*vy);if(sp>1e-3f){vx=vx/sp*v;vy=vy/sp*v;}}
+  x+=vx;y+=vy;
+  if(std::fabs(x-rd<float>(c,b+0x20u))>=float(fc_w(c,s,FC_SHOT_DIST))||y>=float(stage_altitude(c,int32_t(x)))){wd_debris_place(c,b,x,y);burst();c.pc=c.r[14];return true;}
+ }
+ wr<float>(c,b+0x30u,vx);wr<float>(c,b+0x34u,vy);
+ wd_debris_place(c,b,x,y);
+ c.pc=c.r[14];return true;
+}
+// 贯穿（R6）：已结算的目标（弹体结算入口查询）；BattleBulletDefault::attackAction 命中后的块（0x10175e20，r5 弹体、r4 目标）记入列表并
+// 跳过 reserveChangeState(60)，照原生复制目标 +0xf0 后返回 1（0x10175e2a）
+static constexpr uint32_t FC_HIT_SLOT[5]={0x3eu,0x40u,0x42u,0x1cu,0x1eu},FC_PIERCE_CONTINUE=0x10175e2bu;
+static bool fc_hit_before(Context& c,uint32_t b,uint32_t t){
+ uint32_t n=std::min(5u,uint32_t(rd<uint8_t>(c,b+0x3cu))),inst=rd<uint16_t>(c,t+0x62u);
+ for(uint32_t i=0;i<n;++i)if(rd<uint16_t>(c,b+FC_HIT_SLOT[i])==inst)return true;
+ return false;
+}
+static bool fc_pierce(Context& c){
+ uint32_t b=c.r[5],t=c.r[4];if(!t||!fc_orb(c,b))return false;
+ uint32_t n=rd<uint8_t>(c,b+0x3cu);
+ if(n<5u)wr<uint16_t>(c,b+FC_HIT_SLOT[n],rd<uint16_t>(c,t+0x62u));
+ if(n<255u)wr<uint8_t>(c,b+0x3cu,uint8_t(n+1u));
+ c.pc=FC_PIERCE_CONTINUE;return true;
+}
+static Block old_fc_pierce_hit;static void fc_pierce_hit(Context& c){if(fc_pierce(c))return;old_fc_pierce_hit(c);}
+static uint32_t fc_hooks=0u;
+// 部件判定：整台机体（世界坐标，不按地面裁切）
+static int32_t fc_parts(Context& c,uint32_t o,uint32_t s,WdBox* out){
+ int32_t m=fc_m(c,o),n=0;float ux=rd<float>(c,o+0x8cu),uy=rd<float>(c,o+0x90u);
+ auto put=[&](float l,float t,float r,float bo){   // 原画坐标的矩形（原画朝左）→ 世界坐标
+  float wl=m>0?ux+2.0f*l:ux-2.0f*r,wr_=m>0?ux+2.0f*r:ux-2.0f*l;
+  out[n++]={int32_t(wl),int32_t(uy+2.0f*t),int32_t(wr_),int32_t(uy+2.0f*bo)};
+ };
+ // 手臂一段：相对层原点（肩 / 肘）的范围按该层转角（+0x2c，度，顺时针为正）转动后的外接矩形；右侧镜像
+ auto turned=[&](uint32_t st,uint32_t k,bool right){
+  float px=rd<float>(c,st+0x20u),py=rd<float>(c,st+0x24u),a=rd<float>(c,st+0x2cu)*0.0174532925f,ca=std::cos(a),sa=std::sin(a);
+  float bl=float(fc_w(c,s,k)),bt=float(fc_w(c,s,k+1u)),br=float(fc_w(c,s,k+2u)),bb=float(fc_w(c,s,k+3u));
+  if(right){float q=bl;bl=-br;br=-q;}
+  float l=1e9f,t=1e9f,r=-1e9f,b=-1e9f;
+  for(float x:{bl,br})for(float y:{bt,bb}){float qx=px+x*ca-y*sa,qy=py+x*sa+y*ca;l=std::min(l,qx);r=std::max(r,qx);t=std::min(t,qy);b=std::max(b,qy);}
+  put(l,t,r,b);
+ };
+ float hw=float(fc_w(c,s,FC_HAND_W))*0.5f,hh=float(fc_w(c,s,FC_HAND_H));
+ for(int32_t i=0;i<2;++i){
+  if(uint32_t st=fc_layer(c,o,FC_P_HAND[i])){float hx=rd<float>(c,st+0x20u),hy=rd<float>(c,st+0x24u);put(hx-hw,hy-hh,hx+hw,hy);}
+  if(uint32_t st=fc_layer(c,o,FC_P_FORE[i]))turned(st,FC_LOWER_BOX,i!=0);
+  if(uint32_t st=fc_layer(c,o,FC_P_UPPER[i]))turned(st,FC_UPPER_BOX,i!=0);
+ }
+ uint32_t g=fc_layer(c,o,FC_P_GROUP);float dy=g?rd<float>(c,g+0x24u):0.0f;
+ put(float(fc_w(c,s,FC_BODY_BOX)),float(fc_w(c,s,FC_BODY_BOX+1u))+dy,float(fc_w(c,s,FC_BODY_BOX+2u)),float(fc_w(c,s,FC_BODY_BOX+3u))+dy);
+ float l=float(fc_w(c,s,FC_HEAD_X)),t=float(fc_w(c,s,FC_HEAD_Y))+dy;
+ put(l,t,l+float(fc_w(c,s,FC_HEAD_W)),t+float(fc_w(c,s,FC_HEAD_H)));
+ return n;
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_fall_climber_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u&&fc_hooks==1u?1u:0u;}
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
 // 2026-10-27（r99）：5 连发马克斯奈尔（BattleAction_McsnlFive::update 0x184ebc）的领队固定以 UnitID 187 生成 4 架僚机；
 // 基准为 187 的社区领队改为生成落地映射表登记的僚机单位（formation_unit_key），映射为 0 时保持原生。
-HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&((rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0]))&&c.r[1]==45u||rd<uint32_t>(c,p+4u)==187u&&c.r[1]==187u)&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
+// 2026-10-31（r111）：叛军自爆摩托（ZSpec 标记 33554432）弃车时以 summonZakoBazooka 生成 45，同样改为落地映射表登记的骑手单位。
+static bool bb_flagged(Context& c,uint32_t o){uint32_t s=zspec(c,o);return s&&(zw(c,s,0)&33554432u);}
+HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&((rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0])||bb_flagged(c,c.r[0])||fc_unit(c,c.r[0]))&&c.r[1]==45u||rd<uint32_t>(c,p+4u)==187u&&c.r[1]==187u)&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
 extern "C" __declspec(dllexport) uint32_t msd_community_paratrooper_landing_version(){return 1u;}
+// 2026-10-31（r112，行为库 30：landing_keeps_hp，ZSpec 标记 67108864）：ParaTrooper::summonZakoBazooka 生成子单位之后（0x101af784，
+// r4 本单位、r0 子单位，原生随后登记 +0xfc 与 +0xf0）。带标记的单位落地时把当前生命（+0x308）交给生成的单位，不超过其最大生命
+// （+0x304），至少 1；叛军自爆摩托生成骑手也经此块（摩托不带标记，骑手生命按其数据行）。
+static void landing_hp(Context& c){uint32_t s=zspec(c,c.r[4]);if(!s||!(zw(c,s,0)&67108864u))return;int32_t hp=rd<int32_t>(c,c.r[4]+0x308u),mx=rd<int32_t>(c,c.r[0]+0x304u);wr<int32_t>(c,c.r[0]+0x308u,std::max(1,std::min(hp,mx)));}
+HOOK(landing_keeps_hp,0x101af785u, landing_hp(c);)
+static uint32_t landing_hp_hooks=0u;
+extern "C" __declspec(dllexport) uint32_t msd_community_landing_hp_version(){return landing_hp_hooks==1u?1u:0u;}
 extern "C" __declspec(dllexport) uint32_t msd_community_formation_version(){return 1u;}
 // 属性面板显示实际作战单位；其他调用保留购买与拥有状态的原生标识。
 HOOK(menu_display_id,0x101652fdu, if(record(c,c.r[0])&&c.r[14]==0x101ecd31u&&head(c,104)){ret(c,rd<uint32_t>(c,head(c,104)+(c.r[0]-U)*4u));return;})
@@ -2609,9 +2982,120 @@ static bool mm_attack(Context& c){
  if(ph==MP_DASH&&!z_viewer(c))is_call(c,IS_RESERVE,o,140u,0u);
  c.r[0]=0u;c.pc=c.r[14];return true;
 }
-static Block old_mole_update;static void mole_update(Context& c){if(mm_update(c))return;old_mole_update(c);}
-static Block old_mole_attack;static void mole_attack(Context& c){if(mm_attack(c))return;old_mole_attack(c);}
+// ---------- 叛军自爆摩托（2026-10-31，行为库 v29：bomb_bike v1，标记 33554432；基准 133 BattleAction_Bike_P；核心 r111）----------
+// 原作 Fanatic Biker（方案 docs/MS7_M4_UNITS_2026-10-31.md 第 7、8 节；离线预览 bike_r3_apex260）。Bike_P::update（0x18258c）与
+// attackAction（0x1780e0）与鼹鼠弹共用同两个块（字 121–131 与鼹鼠弹重叠，行为库以 conflicts_with 互斥）：
+//  状态 10 / 20 与 ≥ 100 交原生（平骑；行驶中被击毁与弃车后的爆炸均走原生 133 的状态 100：槽 18 的攻击框、共用效果 0xff04）。
+//  状态 30 / 40 / 50（原生按普攻距离词 7 或发动绝招转入）：置 DontSpAttack，原地播放蓄力动作（字 121）；播完转入翘头冲刺（字 122）：
+//   每 tick 前进 v（初值 字 125 / 10，每 tick 加 字 126 / 100，上限 字 127 / 10，世界单位），高度取地形；车头（单位位置前方 BB_FRONT）与
+//   前方最近的有效敌方单位（同鼹鼠弹的锁定规则）的前缘相距 ≤ 字 128、或冲刺满 字 135 tick 时播放弃车动作（字 123，每 tick 前进 字 129 / 10）。
+//   弃车动作播完：非动作演示时尾调用 ParaTrooper::summonZakoBazooka（r1 = 本单位；生成的 45 由 paratrooper_landing 改为骑手单位，
+//   骑手为基准 160 的被投出单位，自车后起跳、落地为原生 2）；下一 tick 转为飞行（字 124）：置 DontToche、AreaThrough、NoTarget，
+//   单位位置移到车身中心（后轮着地点前方 BB_AHEAD、离地 BB_H0），锁定前方最近的有效敌方单位，竖直初速按顶点 字 130（车身中心离地）
+//   与重力 字 131 / 100 求出，水平速度按落点（目标前缘之后 字 134；无目标时前方 BB_VIEW_REACH）反算；每 tick 按速度移动，攻击框接触对方
+//   （attackAction）或车身中心离地不足 BB_LAND 时预约状态 100，交原生爆炸。攻击组 +0x88 每 tick 写回进入时的攻击状态（同鼹鼠弹）。
+//   R6（用户 2026-10-31）：飞行中保留原有生命，可被选为目标与受伤（只置 AreaThrough、NockbackGuard，飞行动作设受击框），生命耗尽时
+//   按原生状态 100 爆炸；接触空中单位（受击方身体状态 NoTarget 0x40）时原地爆炸，接触地面单位或据点时车身移到离地 BB_LAND 再爆炸。
+//  其他状态（受击、击退等）打断时阶段归零、清除标记，交原生。动作演示：不生成骑手；落地后恢复高度与身体状态，回到待机（槽 6）。
+// R10（用户 2026-10-31：抛射距离太远，核心 r113）：水平抛射距离（放出时车身中心到落点）不超过字 138（0 为不限）；冲刺达到上限 tick 时
+// 目标仍远、或没有目标（原为前方 BB_VIEW_REACH）时落在该距离处（LAB far0：r112 中绝招后冲刺满 90 tick 抛出 751）。
+// 蓄力与弃车按阶段 tick 结束（字 136 / 137；蓄力脚本挂循环的扬尘子层，动作结束标志 +0xc9 不清零，不能按动作播完切换，LAB 首测）。
+// 对象内存：+0x1c 地面 y、+0x24 阶段、+0x28 阶段 tick、+0x2c 标记（位 8–15 进入时的攻击状态）、+0x30 / +0x34 锁定目标与实例号、
+// +0x38 冲刺 / 弃车的前进速度与飞行的水平速度、+0x3c 飞行的竖直速度（世界单位 / tick，向下为正）。状态全部在客体内存中（回滚安全）。
+static constexpr uint32_t BB_FLAG=33554432u,BB_W=121u,BB_FLIGHT_BITS=0x90u,BB_NEUTRAL=6u;   // 飞行：AreaThrough、NockbackGuard（R6 起保留受击）
+// R7：单位位置由后轮着地点前移 36（世界单位，描述符锚点前移 18 精灵像素，使绝招冷却条居中）：车头在前方 48，放出时车身中心在后方 24。
+static constexpr float BB_FRONT=48.0f,BB_AHEAD=-24.0f,BB_H0=54.0f,BB_LAND=40.0f,BB_VIEW_REACH=300.0f;
+enum:uint32_t{BB_CHARGE,BB_DASH,BB_EJECT,BB_FLY,BB_V0,BB_ACCEL,BB_CAP,BB_THROW,BB_EJECT_V,BB_APEX,BB_GRAV};
+enum:uint32_t{BP_NEW,BP_CHARGE,BP_DASH,BP_EJECT,BP_SPAWN,BP_FLIGHT};
+static uint32_t bb_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&BB_FLAG)?s:0u;}
+// 目标前缘：锁定目标的前缘（单位位置 + 其朝向 × 宽度，同钢铁死亡蠕虫）；无目标时为 0
+static bool bb_target_front(Context& c,uint32_t o,float& front){
+ uint32_t u=rd<uint32_t>(c,o+0x30u);
+ if(u&&(!mm_valid(c,o,u)||uint32_t(rd<uint16_t>(c,u+0x62u))!=rd<uint32_t>(c,o+0x34u))){u=0u;wr<uint32_t>(c,o+0x30u,0u);}
+ if(!u)u=mm_lock(c,o);
+ if(!u)return false;
+ front=wd_edge(c,u);return true;
+}
+static bool bb_update(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],state=c.r[2],s=bb_unit(c,o);if(!s)return false;
+ (void)act;
+ auto A=[&](uint32_t i){return int32_t(zw(c,s,BB_W+i));};
+ bool viewer=z_viewer(c);
+ uint32_t ph=rd<uint32_t>(c,o+0x24u),fl=rd<uint32_t>(c,o+0x2cu);
+ if(state!=30u&&state!=40u&&state!=50u){
+  if(ph!=BP_NEW&&state<100u){wr<uint32_t>(c,o+0x24u,BP_NEW);mm_bits(c,o,0u,BB_FLIGHT_BITS|0x04u);}
+  return false;
+ }
+ int32_t pend=-1;uint32_t force=0u;
+ int32_t d=ik_dir(c,o);
+ float x=rd<float>(c,o+0x8cu),y=rd<float>(c,o+0x90u);
+ uint32_t t=rd<uint32_t>(c,o+0x28u)+1u;
+ bool spawn=false;
+ if(ph==BP_NEW){
+  ph=BP_CHARGE;t=0u;fl=state<<8;mm_bits(c,o,0x04u,0u);
+  wr<float>(c,o+0x1cu,y);wr<uint32_t>(c,o+0x30u,0u);pend=A(BB_CHARGE);
+ }else if(ph==BP_CHARGE){
+  if(t>=zw(c,s,136u)){ph=BP_DASH;t=0u;wr<float>(c,o+0x38u,float(A(BB_V0))*0.1f);pend=A(BB_DASH);}
+ }else if(ph==BP_DASH){
+  float v=rd<float>(c,o+0x38u);x+=float(d)*v;
+  float g=ik_ground(c,o,x);ik_place(c,o,x,g);
+  v+=float(A(BB_ACCEL))*0.01f;float cap=float(A(BB_CAP))*0.1f;if(v>cap)v=cap;wr<float>(c,o+0x38u,v);
+  float front;bool near=!viewer&&bb_target_front(c,o,front)&&(front-(x+float(d)*BB_FRONT))*float(d)<=float(A(BB_THROW));
+  if(near||t>=zw(c,s,135u)||viewer&&t>=20u){ph=BP_EJECT;t=0u;pend=A(BB_EJECT);}   // 动作演示无目标：冲刺 20 tick
+ }else if(ph==BP_EJECT){
+  x+=float(d)*float(A(BB_EJECT_V))*0.1f;float g=ik_ground(c,o,x);ik_place(c,o,x,g);
+  if(t>=zw(c,s,137u)){ph=BP_SPAWN;t=0u;spawn=!viewer;}
+ }else if(ph==BP_SPAWN){
+  // 飞行开始：单位位置移到车身中心，锁定目标并按顶点与落点求速度
+  float g=viewer?rd<float>(c,o+0x1cu):ik_ground(c,o,x);
+  float cx=x+float(d)*BB_AHEAD,cy=g-BB_H0,land=cx+float(d)*BB_VIEW_REACH,front;
+  if(!viewer&&bb_target_front(c,o,front))land=front+float(d)*float(int32_t(zw(c,s,134u)));
+  float mt=float(zw(c,s,138u));if(mt>0.0f&&(land-cx)*float(d)>mt)land=cx+float(d)*mt;
+  float gr=float(A(BB_GRAV))*0.01f,rise=float(A(BB_APEX))-BB_H0;if(rise<1.0f)rise=1.0f;
+  float vy0=std::sqrt(2.0f*gr*rise),drop=BB_H0-BB_LAND;
+  float T=(vy0+std::sqrt(vy0*vy0+2.0f*gr*drop))/gr;
+  wr<float>(c,o+0x38u,(land-cx)/T);wr<float>(c,o+0x3cu,-vy0);
+  ik_place(c,o,cx,cy);mm_bits(c,o,BB_FLIGHT_BITS,0u);
+  ph=BP_FLIGHT;t=0u;pend=A(BB_FLY);
+ }else if(ph==BP_FLIGHT){
+  float vx=rd<float>(c,o+0x38u),vy=rd<float>(c,o+0x3cu)+float(A(BB_GRAV))*0.01f;wr<float>(c,o+0x3cu,vy);
+  x+=vx;y+=vy;
+  float g=viewer?rd<float>(c,o+0x1cu):ik_ground(c,o,x);
+  bool land=g-y<=BB_LAND&&vy>0.0f;
+  if(land)y=g-BB_LAND;
+  ik_place(c,o,x,y);
+  if(land){
+   if(!viewer)is_call(c,IS_RESERVE,o,100u,0u);
+   else{   // 动作演示：恢复高度与身体状态，回到待机
+    mm_bits(c,o,0u,BB_FLIGHT_BITS|0x04u);ik_place(c,o,x,g);ph=BP_NEW;fl=0u;
+    is_call(c,IS_RESERVE,o,10u,1u);pend=int32_t(BB_NEUTRAL);force=1u;
+   }
+  }
+ }
+ if(ph!=BP_NEW)wr<uint32_t>(c,o+0x88u,(fl>>8)&0xffu);
+ wr<uint32_t>(c,o+0x24u,ph);wr<uint32_t>(c,o+0x28u,t);wr<uint32_t>(c,o+0x2cu,fl);
+ if(spawn){c.r[0]=act;c.r[1]=o;c.pc=Z_SUMMON_CHILD;}       // 尾调用生成骑手（同 z_throw），返回地址为原 update 的返回地址
+ else if(pend>=0){c.r[0]=o;c.r[1]=uint32_t(pend);c.r[2]=force;c.r[3]=1u;c.pc=IS_SET_ANIM|1u;}
+ else c.pc=c.r[14];
+ return true;
+}
+// Bike_P::attackAction（r1 攻击方、r2 受击方）：飞行中接触即预约状态 100、不结算；蓄力、冲刺、弃车中不结算；其余（含状态 100 的爆炸）交原生。
+static bool bb_attack(Context& c){
+ uint32_t o=c.r[1];if(!bb_unit(c,o))return false;
+ uint32_t ph=rd<uint32_t>(c,o+0x24u);
+ if(ph==BP_NEW||rd<uint32_t>(c,o+0x7cu)>=100u)return false;
+ if(ph==BP_FLIGHT&&!z_viewer(c)){   // 接触：空中单位原地爆炸；地面单位与据点则车身移到落地高度（离地 BB_LAND）再爆炸（LAB bb3）
+  uint32_t u=c.r[2];
+  if(!(u&&(rd<uint32_t>(c,u+0x6cu)&0x40u))){float x=rd<float>(c,o+0x8cu);ik_place(c,o,x,ik_ground(c,o,x)-BB_LAND);}
+  is_call(c,IS_RESERVE,o,100u,0u);
+ }
+ c.r[0]=0u;c.pc=c.r[14];return true;
+}
+static Block old_mole_update;static void mole_update(Context& c){if(mm_update(c)||bb_update(c))return;old_mole_update(c);}
+static Block old_mole_attack;static void mole_attack(Context& c){if(mm_attack(c)||bb_attack(c))return;old_mole_attack(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_mole_missile_version(){return mole_hooks==2u?2u:0u;}
+// 2（r113）：字 138 最大水平抛射距离
+extern "C" __declspec(dllexport) uint32_t msd_community_bomb_bike_version(){return mole_hooks==2u?2u:0u;}
 // ---------- 贯穿子弹（2026-10-27，行为库 v25：piercing_shots v1，标记 8388608；基准 187；核心 r100）----------
 // 5 连发马克斯奈尔（187）的子弹动作类为 BattleActionBullet。原生 BattleActionBullet::attackAction（0x177754，r1 子弹、r2 目标）在目标
 // 受伤（damage 返回非 0）时，除子弹 +0x1c 或 +0x20 为 −2 外预约子弹状态 60（0x17777c，移除）；每发命中目标数（+0x148）只决定接触

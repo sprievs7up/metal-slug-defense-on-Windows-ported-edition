@@ -60,6 +60,8 @@ docs/ms7/MS7_AA_TURRETS_IRON_DEATH_WORM_CHECK_2026-10-24.md 与 verification/iro
   倍速重采样为 FAST 中的副本（新第 k tick 显示原第 2k tick 的帧、旋转、偏移与缩放，挂载与音效在原 tick 的一半处），用于移动的钻入与
   出场、移动结束、为近距攻击的钻出；绝招中的钻出（绝招开始时在地下先钻出、钻击后回原处钻出）仍用原速的 12（参数
   special_emerge_animation，核心 r96）。
+- R7（用户 2026-10-29，方案 A1 + B2）：五种攻击属性的耐性档位均为 0（受伤 ×0.8，attribute_resistance_tiers；原 192 的 [1, 1, 2, 1, 1]）；
+  钻离与钻击中只有脚本第 KNOCK_TICK tick（最后一段）起的命中扣击退计量（行为 v5 的 special_knockback_tick，核心 r109）。
 - 地下行进（用户 2026-10-25 要求；MSA 为钻入后瞬移）：动作 UNDER 为根层挂与待机相同的土环 100 × 5 与每 TRAIL_EVERY tick 放一团
   尘土 21 的发射层 EMITTER，不设受击框（R3；R2 为钻孔矩形）；移速同蜈蚣长老（192 的 3 × 5/3）。
 运行：E:\\anaconda3\\python.exe -I artwork/iron_death_worm_20261025/build_iron_death_worm.py [--report]
@@ -130,6 +132,7 @@ WORM = {   # 行为 iron_death_worm 的参数（MSA 动作号）
     'dead_body_first_animation': DEAD_BODY[0], 'dead_body_count': len(DEAD_BODY),
     'debris_roll_first_animation': ROLL_FIRST, 'debris_burst_animation': BURST, 'debris_fuse': DEBRIS_FUSE,
     'special_emerge_animation': 12,
+    'special_knockback_tick': 60,   # R7：绝招 16 段（每 4 tick 一段）的最后一段起扣击退计量
 }
 ICON_MSA = (441, 1464, 40, 40)                    # m_unit_misc.pict 1363
 ICON_ANCHOR = [-5, -5]
@@ -147,6 +150,8 @@ VALUES = {
     'status_word_values': {'6': 20, '7': 0, '17': 999, '20': 60, '31': 999, '33': 500, '34': 40, '35': 250, '36': 200},
     'status_float_values': {'16': 5.0, '30': 200.0},
     'attack_attributes': {'melee': 0, 'special': 0},
+    # R7（用户 2026-10-29）：全部攻击属性受伤 ×0.8（原生档位 0）
+    'attribute_resistance_tiers': [0, 0, 0, 0, 0],
 }
 ONES = ('attack_wait_multiplier', 'attack_range_multiplier', 'knockback_distance_multiplier',
         'ballistic_range_multiplier')
@@ -827,13 +832,13 @@ def unit_file(animations, icon_rect):
             'move_speed_multiplier': v['move_speed_multiplier'],
             'production_reference_id': BASE, 'production_interval_multiplier': v['production_interval_multiplier'],
             'status_word_values': v['status_word_values'], 'status_float_values': v['status_float_values'],
-            'attack_attributes': v['attack_attributes'],
+            'attack_attributes': v['attack_attributes'], 'attribute_resistance_tiers': v['attribute_resistance_tiers'],
             'image_direction': 90, 'special_effect_size': [90, 120], 'minimap_marker': [10, 20],
             'icon': {'page': 1, 'rect': list(icon_rect), 'anchor': ICON_ANCHOR},
             'textures': list(TEXTURES), 'sprite_descriptor': DESCRIPTOR,
             'animations': {str(k): animations[k] for k in sorted(animations)},
             'localization': localization(), 'tags': ['ms7', 'msa'],
-            'behaviors': [{'name': 'iron_death_worm', 'version': 4, 'params': WORM}]}
+            'behaviors': [{'name': 'iron_death_worm', 'version': 5, 'params': WORM}]}
 
 
 def find_icon_slot(raw):

@@ -26,6 +26,9 @@ docs/ms6/IRON_SENTINEL_MSA_PORT_PLAN_2026-10-21.md，数值 docs/ms6/IRON_SENTIN
   R11（用户 2026-10-22：16000 毁灭性太强）：第二形态巨型导弹每次命中 16000 → 8000（damage_multiplier [16, 3]），其余不变。
   R12（社区意见，用户 2026-10-25：伤害不削，第二形态在总生命中的占比降低，快速击杀成为对手的奖励；画在其他单位之后）：第一形态
   生命 60000、第二形态 30000（合计 90000 不变），绘制优先级 −90（同 BIG SHIEE），其余不变。
+  R13（用户 2026-10-30：第二形态被击毁时闪烁并只有局部爆炸后消失，应为爆炸消失，爆炸覆盖最后的图案区域，并有炸碎后的碎片）：
+  槽 21 去掉残骸的闪烁，按车体与残骸的图像范围以 op12 放共用爆炸，残骸在最后一组爆炸中移除；追加碎块脚本 154–158（第二形态的
+  顶盖与两种破损机壳，旋转、落地移除）。需要核心 r110（行为 iron_slider_second_form v2）。
 运行：E:\\anaconda3\\python.exe -I artwork/iron_sentinel_msa_20261021/build_iron_sentinel_msa.py [--preview]
 （--preview 只写 out/；否则写入 community_content/：两张图集、描述符、两个单位文件、音效与 content.json）。
 """
@@ -90,6 +93,42 @@ SPECIAL_EFFECT_SIZE = [380, 120]    # 本体宽约 800、高约 476（动作演�
 # 绘制优先级（R12，社区意见、用户 2026-10-25：画在其他单位之后）：原生按对象 +0xf0 升序绘制，值取数据行 +0x340；基准 394 / 395 为 0，
 # 原版大型单位为负值（BIG SHIEE −90、REBEL GIGANT −78、JUPITER KING −80），本单位取大杰的 −90。
 DRAW_PRIORITY = -90
+# 第二形态损毁（R13，verification/iron_sentinel_death_20261030/）：原生 BattleAction_IronSlider_2 的状态 100 按较早版本的较小车体在固定位置
+# 放爆炸（入场 8 个、每 3–12 tick 随机 1 个、动画结束时 9 个，横向只到单位 x −80…140 世界单位），MSA 槽 21 为车体部件 10 tick → 残骸
+# 30 tick → 闪烁 4 次。核心 r110 起损毁只播放槽 21、播完移除，以下爆炸与碎块由槽 21 的 op12 生成。坐标为描述符单位（世界单位的 1/2），
+# 原点为单位脚点，正 x 为前方。不透明像素范围（opaque_extent.py）：车体部件 x −190…191、y −150…20；残骸 x −200…146、y −187…26
+# （塔部 x −60…0 最高）。共用爆炸 0xff04 首帧为白闪，约 3 tick 展开，宽约 ±31、自锚点向上约 55（游戏内截图）；各组按约 54 × 65 错位排布，
+# 位置略有起伏、生成时刻分散在 3–4 tick 内（同一 tick 整齐成行时画面为横条，且首帧白闪连成一片）。
+DEATH_TICKS = 44            # 槽 21 的长度：车体部件 0–9 tick，残骸 10–43 tick，第 44 tick 结束（原生随即移除单位）
+WRECK_TICK = 10
+FINAL_TICK = 40             # 碎块飞出；最后一组爆炸在第 38–41 tick 生成，到第 44 tick 展开并遮住残骸，单位在爆炸中移除
+BIG, MID, LARGE = 0xff04, 0xff03, 0xff17     # 共用效果：基寇卡损毁的爆炸、中爆炸、大型单位的爆炸（白闪后火球与黑烟）
+DEATH_EVENTS = (
+    # 入场：覆盖车体部件；第 7–8 tick 的两个遮住第 10 tick 换上的残骸塔部（残骸比车体部件高约 37）
+    [(t, BIG, 1, x, y) for t, x, y in ((0, -175, 16), (1, -122, 10), (0, -68, 18), (2, -14, 12), (1, 40, 20), (0, 94, 14),
+                                         (2, 148, 18), (1, 186, 10),
+                                         (1, -148, -52), (0, -95, -60), (2, -41, -48), (0, 13, -58), (1, 67, -50), (2, 121, -44),
+                                         (3, -120, -105), (4, -60, -115), (3, 0, -110), (4, 60, -100),
+                                         (7, -50, -125), (8, -110, -100))]
+    # 残骸上陆续爆炸（同原生的随机爆炸，按残骸范围排定位置）
+    + [(13, MID, 1, -140, -80), (16, MID, 1, 60, -50), (19, BIG, 1, -40, -150), (22, MID, 1, 110, -20), (25, MID, 1, -90, -30),
+       (28, MID, 1, 10, -110), (31, MID, 1, -170, -20), (34, BIG, 1, 80, -90), (37, MID, 1, -60, -170)]
+    # 最后一组：覆盖残骸全部范围
+    + [(t, BIG, 1, x, y) for t, x, y in ((38, -190, 18), (39, -138, 24), (40, -84, 14), (38, -30, 22), (40, 24, 16), (39, 78, 25),
+                                         (41, 130, 12),
+                                         (40, -162, -48), (38, -110, -58), (41, -57, -44), (39, -3, -55), (38, 50, -50), (40, 104, -42),
+                                         (39, -135, -112), (41, -82, -122), (40, -28, -118), (39, -45, -160))]
+    + [(40, LARGE, 2, -70, -70), (41, LARGE, 2, 50, -30)])
+# 碎块（脚本 154 起，核心 r110 以 addEffectFallOut 建立、落地移除，并在同处向前、向后各迸出 2 个原生破片）：
+# (帧, 最后一组爆炸时的位置, op7 [vx, vy, ax, ay]（1/100 描述符单位每 tick）, 每 2 tick 的旋转量（4096 为一周，正值为顺时针）)。
+# 帧 84 为第二形态的顶盖，398 / 400 为 MSA 记录中未使用的破损机壳；三者的锚点在图案中心。重力 40 即世界单位每 tick² 0.8（同原生破片）。
+DEBRIS = [(84, (-30, -150), [-150, -700, 0, 40], -128),
+          (398, (40, -100), [250, -550, 0, 40], 256),
+          (398, (-130, -110), [-300, -450, 0, 40], -256),
+          (400, (90, -60), [350, -400, 0, 40], 256),
+          (400, (-80, -140), [-100, -800, 0, 40], -256)]
+DEBRIS_FIRST = 154          # 核心 r110 按此编号起的 5 个脚本建立碎块
+DEBRIS_ANGLE = -285         # 部件在图集中斜置，op2 −285 为原画的水平方向（同本体部件）
 
 FIRST = {
     'base_id': 394, 'ap': 999, 'shop_price': 500, 'upgrade_cost_base': 1800,
@@ -216,6 +255,46 @@ def menu_animations(record, animations):
     return len(parts)
 
 
+def death_animation(animations, first_free):
+    """R13：重写槽 21 与残骸部件 101 / 102，追加碎块脚本（first_free 起）；返回追加的脚本数。"""
+    assert first_free == DEBRIS_FIRST, first_free
+    def cmd(op, *values):
+        return {'opcode': op, 'values': list(values)}
+    old = animations['21']
+    parts, wreck = old[:8], [c for c in old[8:] if c['opcode'] == 11]
+    assert all(c['opcode'] == 11 for c in parts) and [c['values'][0] for c in wreck] == [101, 102, 102]
+    for script in (101, 102):   # 残骸：显示到槽 21 结束，不闪烁
+        head = animations[str(script)][:3]
+        assert [c['opcode'] for c in head] == [19, 2, 0]
+        animations[str(script)] = head + [cmd(1, DEATH_TICKS - WRECK_TICK), cmd(0, -1), cmd(1, 1), cmd(21)]
+    events = {}
+    for tick, effect, prio, x, y in DEATH_EVENTS:
+        events.setdefault(tick, []).append(cmd(12, effect, prio, x, y))
+    for i, (frame, (x, y), motion, spin) in enumerate(DEBRIS):
+        events.setdefault(FINAL_TICK, []).append(cmd(12, DEBRIS_FIRST + i, 3, x, y))
+    out, tick = parts + [cmd(0, -1)], 0
+    for t in sorted(set(events) | {WRECK_TICK, DEATH_TICKS}):
+        if t > tick:
+            out.append(cmd(1, t - tick))
+            tick = t
+        if t == WRECK_TICK:
+            out += wreck
+        out += events.get(t, [])
+    animations['21'] = out + [cmd(21)]
+    count = len(DEBRIS)
+    for i, (frame, position, motion, spin) in enumerate(DEBRIS):
+        child = first_free + count + i
+        # 根层只移动（op7 在循环外，旋转子层的 op5 不会重设速度），子层每 2 tick 转 spin，转满一周后循环。
+        animations[str(first_free + i)] = [cmd(7, *motion), cmd(11, child, 0, 0, 0), cmd(1, 600), cmd(21)]
+        steps = 4096 // abs(spin)
+        assert steps * abs(spin) == 4096
+        body = [cmd(19, 100, 100), cmd(0, frame)]
+        for k in range(steps):
+            body += [cmd(2, (DEBRIS_ANGLE + k * spin + 2048) % 4096 - 2048), cmd(1, 2)]
+        animations[str(child)] = body + [cmd(5)]
+    return 2 * count
+
+
 def descriptor(record):
     def box(b):
         return [scaled(b[0]), scaled(b[1]), scaled(b[2]), scaled(b[3]), b[4]]
@@ -277,7 +356,7 @@ def unit_files(animations, current):
     first = {'key': KEY, **{k: v for k, v in FIRST.items()}, **common,
              'behaviors': [{'name': 'iron_slider', 'version': 1, 'params': {'second_form': KEY2}}]}
     second = {'key': KEY2, **{k: v for k, v in SECOND.items()}, **common, 'internal_only': True,
-              'behaviors': [{'name': 'iron_slider_second_form', 'version': 1, 'params': {}}]}
+              'behaviors': [{'name': 'iron_slider_second_form', 'version': 2, 'params': {}}]}
     return first, second
 
 
@@ -290,6 +369,8 @@ def main():
     desc = descriptor(record)
     stats['menu_parts'] = menu_animations(record, animations)
     desc['script_count'] += stats['menu_parts']
+    stats['death_scripts'] = death_animation(animations, desc['script_count'])
+    desc['script_count'] += stats['death_scripts']
     pr = preview_record(record, animations, desc)
     x0, y0, x1, y1 = body_extent(pr, atlases)
     # 小地图标记：按原版大型单位标记与图像尺寸（世界单位 = 2 精灵像素）的比例（宽约 1/25、高约 1/21.5）

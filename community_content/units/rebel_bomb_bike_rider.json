@@ -1,0 +1,744 @@
+{
+  "key": "s1xlv.rebel_bomb_bike_rider",
+  "base_id": 160,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 10,
+  "available_from_start": true,
+  "ap": 50,
+  "hp_multiplier": [
+    4,
+    3
+  ],
+  "knockback_threshold_multiplier": [
+    4,
+    3
+  ],
+  "production_reference_id": 160,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "image_direction": 270,
+  "icon": {
+    "page": 1,
+    "rect": [
+      502,
+      770,
+      45,
+      41
+    ],
+    "anchor": [
+      -5,
+      -4
+    ]
+  },
+  "textures": [
+    "rebel_bomb_bike_rider.obm"
+  ],
+  "sprite_descriptor": "rebel_bomb_bike_rider_descriptor.json",
+  "animations": {
+    "0": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "1": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "2": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "3": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "4": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "5": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "6": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "7": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "8": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 7,
+        "values": [
+          150,
+          -500,
+          0,
+          50
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          60
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "9": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "10": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "11": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "12": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "13": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "14": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "15": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "16": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "17": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "18": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "19": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "20": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "21": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "22": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "23": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "24": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "25": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "26": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "27": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "28": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "29": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "30": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "31": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "32": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "33": [
+      {
+        "opcode": 0,
+        "values": [
+          -1
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ]
+  },
+  "localization": {
+    "EN": {
+      "name": "RIDER SOLDIER",
+      "description": "STAND. ATK : Bike Throw     SPEC. ATK : Bike Throw\nA fanatic soldier of the Rebel Army bike squad.\nHurls the bike for a deadly blow, and fights on even after that."
+    },
+    "JP": {
+      "name": "バイク兵",
+      "description": "通常攻撃：バイク投げ     特殊攻撃：バイク投げ\nモーデン軍バイク部隊の狂信的な兵士。\nバイクを投げて必殺の一撃を放ち、投げた後も戦い続ける。"
+    },
+    "KR": {
+      "name": "바이크병",
+      "description": "일반 공격: 바이크 던지기     특수 공격: 바이크 던지기\n모덴군 바이크 부대의 광신적인 병사.\n바이크를 던져 치명적인 일격을 가하고, 던진 뒤에도 계속 싸운다."
+    },
+    "ES": {
+      "name": "SOLDADO RIDER",
+      "description": "ATQ ESTÁND. : Lanzar moto     ATQ ESPEC. : Lanzar moto\nSoldado fanático del escuadrón de motos rebelde.\nLanza la moto como golpe letal y sigue luchando después."
+    },
+    "PT": {
+      "name": "SOLDADO MOTOQUEIRO",
+      "description": "ATQ. PADR. : Arremesso de moto   ATQ. ESPEC. : Arremesso de moto\nSoldado fanático do esquadrão de motos rebelde.\nArremessa a moto num golpe fatal e continua lutando depois."
+    },
+    "RU": {
+      "name": "СОЛДАТ-ВСАДНИК",
+      "description": "СТАНД. АТАК: Бросок мотоцикла СПЕЦ. АТАК: Бросок мотоцикла\nФанатичный солдат мотоотряда повстанцев.\nБросает мотоцикл как смертельный удар и продолжает бой."
+    },
+    "FR": {
+      "name": "SOLDAT MOTARD",
+      "description": "ATT. STAND : Lancer de moto   ATT. SPÉ : Lancer de moto\nSoldat fanatique de l'escadron motorisé rebelle.\nIl projette sa moto pour un coup fatal et continue de combattre."
+    },
+    "DE": {
+      "name": "MOTORRADSOLDAT",
+      "description": "NORM. ANGR.: Motorradwurf SPEZ. ANGR.: Motorradwurf\nFanatischer Soldat der Motorradstaffel der Rebellen.\nSchleudert das Motorrad als tödlichen Schlag und kämpft danach weiter."
+    },
+    "IT": {
+      "name": "SOLDATO MOTOCICLISTA",
+      "description": "ATC STAND.: Lancio moto   ATC SPEC.: Lancio moto\nSoldato fanatico della squadra motociclisti ribelle.\nScaglia la moto come colpo letale e continua a combattere."
+    },
+    "ZT": {
+      "name": "機動兵",
+      "description": "普通攻擊：拋擲機車     特殊攻擊：拋擲機車\n叛軍機車部隊的狂熱士兵。拋出機車使出致命一擊。\n哪怕拋出機車也會繼續作戰"
+    },
+    "ZS": {
+      "name": "机动兵",
+      "description": "普通攻击：抛掷机车     特殊攻击：抛掷机车\n叛军机车部队的狂热士兵。抛出机车使出致命一击。\n哪怕抛出机车也会继续作战"
+    }
+  },
+  "menu_reference_id": 159,
+  "internal_only": true,
+  "behaviors": [
+    {
+      "name": "para_drop_transform",
+      "version": 1,
+      "params": {
+        "landing_unit": "s1xlv.rebel_bomb_bike_rocketeer"
+      }
+    },
+    {
+      "name": "landing_keeps_hp",
+      "version": 1,
+      "params": {}
+    },
+    {
+      "name": "thrown_flight",
+      "version": 1,
+      "params": {
+        "forward": -54,
+        "height": 16,
+        "base_clearance": 0
+      }
+    }
+  ]
+}

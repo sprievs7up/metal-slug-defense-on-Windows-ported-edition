@@ -70,6 +70,13 @@
     "melee": 0,
     "special": 0
   },
+  "attribute_resistance_tiers": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
   "image_direction": 90,
   "special_effect_size": [
     90,
@@ -43720,7 +43727,7 @@
   "behaviors": [
     {
       "name": "iron_death_worm",
-      "version": 4,
+      "version": 5,
       "params": {
         "neutral_animation": 6,
         "burrow_animation": 120,
@@ -43738,7 +43745,8 @@
         "debris_roll_first_animation": 113,
         "debris_burst_animation": 116,
         "debris_fuse": 15,
-        "special_emerge_animation": 12
+        "special_emerge_animation": 12,
+        "special_knockback_tick": 60
       }
     }
   ]

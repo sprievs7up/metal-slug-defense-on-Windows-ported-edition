@@ -82,12 +82,12 @@ def read_mod_sounds(folder, mod_id, assets):
 
 
 def sound_references(unit):
-    """单位动作脚本中以字符串写的音效键（op23）与行为参数中的音效键（防具受击、击毙与气球出场音效）。"""
+    """单位动作脚本中以字符串写的音效键（op23）与行为参数中的音效键（防具受击、击毙与气球出场音效，Fall Climber 的手落地音效）。"""
     refs = [cmd['values'][0] for commands in unit.get('animations', {}).values() for cmd in commands
             if cmd.get('opcode') == SOUND_OPCODE and cmd.get('values') and isinstance(cmd['values'][0], str)]
     spec = unit.get('zombie_spec') or {}
     return (refs + list(spec.get('armor_sounds', [])) + ([spec['kill_sound']] if spec.get('kill_sound') else [])
-            + ([spec['launch_sound']] if spec.get('launch_sound') else []))
+            + ([spec['launch_sound']] if spec.get('launch_sound') else []) + list(spec.get('climber_sounds', [])))
 
 
 def check_unit_sounds(unit, visible):

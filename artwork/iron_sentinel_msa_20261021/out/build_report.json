@@ -22,7 +22,8 @@
       "249": 1,
       "204": 1
     },
-    "menu_parts": 12
+    "menu_parts": 12,
+    "death_scripts": 10
   },
   "extent_sprite_px": [
     -202,

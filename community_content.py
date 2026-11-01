@@ -255,6 +255,9 @@ def check_unit(u):
         if group not in ('normal','special') or reference.get('group') not in ('normal','special') or not isinstance(reference.get('unit_id'),int) or not 0<reference['unit_id']<400:raise ValueError('Invalid attack parameter reference')
     for group,attribute in u.get('attack_attributes',{}).items():
         if group not in ('melee','normal','special') or not isinstance(attribute,int) or isinstance(attribute,bool) or attribute not in range(5):raise ValueError('Invalid native attack attribute')
+    # 属性耐性档位（2026-10-29）：攻击属性 0–4 各一个档位，0–3 依次为受伤 ×0.8 / ×1.0 / ×1.2 / ×1.5。
+    tiers=u.get('attribute_resistance_tiers')
+    if tiers is not None and (not isinstance(tiers,list) or len(tiers)!=5 or any(not isinstance(v,int) or isinstance(v,bool) or not 0<=v<=3 for v in tiers)):raise ValueError('Invalid attribute resistance tiers')
     if 'shot_action_reference_id' in u and (u['base_id']!=61 or u['shot_action_reference_id']!=157):raise ValueError('Unsupported mummy projectile action reference')
     grounded=u.get('ground_special_attack',False)
     if not isinstance(grounded,bool) or (grounded and u['base_id']!=3):raise ValueError('Unsupported grounded special attack')
@@ -277,10 +280,12 @@ def check_references(u,by_key):
     child=u.get('child_unit_key')
     if child is not None and (child not in by_key or not by_key[child].get('internal_only') or child==u['key']):raise ValueError('Invalid internal child reference')
     form=u.get('second_form_key')
-    if form is not None and (form not in by_key or not by_key[form].get('internal_only') or form==u['key'] or by_key[form].get('native_action')!='IronSlider_2'):raise ValueError('Invalid second form reference')
+    # 2026-11-01：第二形态为 IRON SLIDER 的第二形态动作类，或 Fall Climber 的第二形态（fall_climber，标记 134217728）
+    if form is not None and (form not in by_key or not by_key[form].get('internal_only') or form==u['key'] or (by_key[form].get('native_action')!='IronSlider_2' and not ((by_key[form].get('zombie_spec') or {}).get('flags',0)&134217728))):raise ValueError('Invalid second form reference')
     if 'native_action' in u and u['native_action'] not in NATIVE_ACTIONS:raise ValueError('Invalid native action class')
     landing=u.get('landing_unit_key')
-    if landing is not None and (u['base_id']!=160 or landing not in by_key or by_key[landing].get('internal_only')):raise ValueError('Invalid paratrooper landing reference')
+    # 2026-10-31 行为库 v29：落地单位可为原版 UnitID（1–399，如叛军自爆摩托的骑手落成原生 2）；R11 起亦可为内部单位（机动兵的 162 副本）
+    if landing is not None and (u['base_id']!=160 or (not (isinstance(landing,int) and 1<=landing<=399) and (landing not in by_key or landing==u['key']))):raise ValueError('Invalid paratrooper landing reference')
     summoned=u.get('summoned_unit_key')
     if summoned is not None and (u['base_id']!=64 or summoned not in by_key or summoned==u['key'] or by_key[summoned].get('internal_only')):raise ValueError('Invalid mummy gate summon reference')
     # 2026-10-29 行为库 v26：召唤箱召唤内部单位（summon_internal_unit），不与可选单位召唤同用。
@@ -357,7 +362,11 @@ def check_unit_assets(u,dims,descriptor_path,is_stock):
     # 2026-10-25 钢铁死亡蠕虫：各动作与碎块弹体槽
     if zombie.get('worm'):
         m=zombie['worm'];slots+=m[:9]+[m[9]+i for i in range(m[10])]+[m[11]+2*i+k for i in range(m[12]) for k in (0,1)]
-    if slots and (not filename or any(not 0<=v<desc['script_count'] for v in slots)):raise ValueError('Behavior animation outside sprite descriptor')
+    # 2026-11-01 Fall Climber：各根动作与光球脚本
+    if zombie.get('climber'):
+        slots+=zombie['climber'][1:10]
+    # 2026-10-31 R11：沿用原生描述符的单位（如机动兵落地的 162 副本），行为动作槽须为本单位覆盖的动作
+    if slots and (any(not 0<=v<desc['script_count'] for v in slots) if filename else any(str(v) not in u['animations'] for v in slots)):raise ValueError('Behavior animation outside sprite descriptor')
     if 'recovery_animation' in u:
         value=u['recovery_animation']
         if u['base_id']!=61 or not filename or not isinstance(value,int) or isinstance(value,bool) or not 0<=value<desc['script_count']:raise ValueError('Invalid mummy recovery animation')
@@ -492,7 +501,7 @@ class CommunityContent:
         if self.icon_pages and (not hasattr(p.uc.lib,'msd_community_icon_pages_version') or p.uc.lib.msd_community_icon_pages_version()!=1):raise RuntimeError('Native core lacks multi-page unit icons')
         p.uc.lib.msd_enable_community_content()
         # 钢铁哨兵（行为 iron_slider）的 7 个钩子同样在启用社区内容时登记。
-        if any(u.get('native_action') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_iron_slider_version') or p.uc.lib.msd_community_iron_slider_version()!=1):raise RuntimeError('Native core lacks the Iron Slider adaptation')
+        if any(u.get('native_action') for u in self.units) and (not hasattr(p.uc.lib,'msd_community_iron_slider_version') or p.uc.lib.msd_community_iron_slider_version()<2):raise RuntimeError('Native core lacks the Iron Slider adaptation')
         # 生命分档单位的钩子在启用社区内容时登记，版本函数在全部找到原生块后返回 1。
         # 生命分档单位：核心版本 1 为首批 7 个钩子，2 另含前方最近敌人（front_nearest_target，标记 64）的 5 个钩子，
         # 3 另含分档受击动作（stage_knockback_animation，标记 128），4 另含雪地步兵类（基准 182）的分档入口，
@@ -503,6 +512,8 @@ class CommunityContent:
         # 2026-10-18 炸药（lob_blast，标记 8192）与按攻击属性的死亡（death_by_attribute，标记 16384）：基准 221 的 3 个钩子。
         if any(u['zombie_spec']['flags']&(8192|16384) for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_hunter_version') or p.uc.lib.msd_community_hunter_version()<1):raise RuntimeError('Native core lacks dynamite and attribute deaths')
         if any(u['zombie_spec'].get(k) for u in self.units if u.get('zombie_spec') for k in ('death_normal_variant','death_explosion_variant','death_fire_variant')) and p.uc.lib.msd_community_hunter_version()<2:raise RuntimeError('Native core lacks death animation variants')
+        # 2026-10-31 R11：按属性的死亡用于基准 162（冲天火箭弹兵类）需核心 r114（版本 3）
+        if any(u['zombie_spec']['flags']&16384 and u['base_id']==162 for u in self.units if u.get('zombie_spec')) and p.uc.lib.msd_community_hunter_version()<3:raise RuntimeError('Native core lacks attribute deaths for rocket bomb soldiers')
         # 2026-10-21 效果贴地（ground_hugging_effect，标记 32768）：效果默认绘制与逐分件绘制的 3 个钩子。
         if any(u['zombie_spec']['flags']&32768 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_ground_effect_version') or p.uc.lib.msd_community_ground_effect_version()<1):raise RuntimeError('Native core lacks ground-hugging effects')
         # 2026-10-22 建筑损毁效果（structure_death_effect，标记 65536）：沙包类损毁后移除前的 1 个钩子。
@@ -517,12 +528,18 @@ class CommunityContent:
         if any(u['zombie_spec']['flags']&1048576 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_invader_king_version') or p.uc.lib.msd_community_invader_king_version()<1):raise RuntimeError('Native core lacks invader king behavior')
         # 2026-10-25 钢铁死亡蠕虫（iron_death_worm，标记 2097152）：与蜈蚣长老共用侵略者类的块与地面裁切绘制，另加分层绘制的第 4 个延续块（核心 r91）；
         # 行为 v2（按 MSA 底层代码核对的流程、地下行进、损毁碎块）需核心 r92（版本 2）。
-        if any(u['zombie_spec']['flags']&2097152 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_iron_death_worm_version') or p.uc.lib.msd_community_iron_death_worm_version()<5):raise RuntimeError('Native core lacks iron death worm behavior')
+        if any(u['zombie_spec']['flags']&2097152 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_iron_death_worm_version') or p.uc.lib.msd_community_iron_death_worm_version()<6):raise RuntimeError('Native core lacks iron death worm behavior')
         # 2026-10-26 鼹鼠弹（mole_missile，标记 4194304）：Bike_P 类 update / attackAction 的 2 个块（核心 r97）；钻出时借用蜈蚣长老的地面裁切绘制。
         # R1 行为 v2（悬停点与追踪俯冲）需核心 r98（版本 2）。
         # 2026-10-27 贯穿子弹（piercing_shots，标记 8388608）：BattleBulletDefault::attackAction 的 2 个块（核心 r100）。
         if any(u['zombie_spec']['flags']&8388608 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_piercing_shots_version') or p.uc.lib.msd_community_piercing_shots_version()<1):raise RuntimeError('Native core lacks piercing shots')
         if any(u['zombie_spec']['flags']&16777216 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_summon_on_hit_version') or p.uc.lib.msd_community_summon_on_hit_version()<1):raise RuntimeError('Native core lacks summon on hit')
+        # 2026-10-31 叛军自爆摩托（bomb_bike，标记 33554432）：与鼹鼠弹共用 Bike_P 类 update / attackAction 的块，另加骑手生成的落地映射（核心 r111）。
+        if any(u['zombie_spec']['flags']&33554432 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_bomb_bike_version') or p.uc.lib.msd_community_bomb_bike_version()<2):raise RuntimeError('Native core lacks bomb bike behavior')
+        # 2026-10-31 R9 落地延续生命（landing_keeps_hp，标记 67108864）：summonZakoBazooka 生成子单位之后的 1 个块（核心 r112）。
+        if any(u['zombie_spec']['flags']&67108864 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_landing_hp_version') or p.uc.lib.msd_community_landing_hp_version()<1):raise RuntimeError('Native core lacks landing HP carry-over')
+        # 2026-11-01 Fall Climber（fall_climber，标记 134217728）：侵略者类的块与三遍裁切绘制、部件判定（核心 r115）。
+        if any(u['zombie_spec']['flags']&134217728 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_fall_climber_version') or p.uc.lib.msd_community_fall_climber_version()<1):raise RuntimeError('Native core lacks fall climber behavior')
         if any(u['zombie_spec']['flags']&4194304 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_mole_missile_version') or p.uc.lib.msd_community_mole_missile_version()<2 or not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks mole missile behavior')
         self.ready=False
 
@@ -702,6 +719,9 @@ class CommunityContent:
             # 原生攻击属性为非等级字段：近距词 21、普攻词 28、绝招词 37；1 表示火焰，2 表示爆炸（决定被击杀单位的死亡状态 120 / 110）。
             for group,attribute in u.get('attack_attributes',{}).items():
                 struct.pack_into('<i',row,{'melee':21,'normal':28,'special':37}[group]*4,attribute)
+            # 属性耐性档位（2026-10-29）：词 8–12 为非等级字段；原生 BattleUnit::damage 按“词 8 + 传入的属性号”取档（档位 0–3 查表
+            # 0x108f6194：×0.8 / ×1.0 / ×1.2 / ×1.5，其余 ×1.0）。未写时沿用 base_id 单位的值。
+            if 'attribute_resistance_tiers' in u:struct.pack_into('<5i',row,8*4,*u['attribute_resistance_tiers'])
             for field,words in (('normal_projectile_distance_multiplier',(26,)),('special_projectile_distance_multiplier',(33,)),
                                 ('summon_interval_multiplier',(38,39)),('construction_time_multiplier',(38,))):
                 a,b=ratio(u.get(field,[1,1]))
@@ -772,9 +792,11 @@ class CommunityContent:
                 value=struct.unpack_from('<i',row,off)[0]
                 if value>0:struct.pack_into('<i',row,off,(2*value*a+b)//(2*b))
             struct.pack_into('<i',row,0x378,u['faction']);rows+=row
-            child_key=u.get('child_unit_key') or u.get('summoned_unit_key') or u.get('summoned_internal_key') or u.get('throw_child_key') or u.get('second_form_key')
+            # 2026-10-31 R9：para_drop_transform 的落地单位同样写入子单位字，开战时随本单位预载其图像与音效（机动兵骑手落成原版 162 时，
+            # 原生子单位字 45 不预载 162，其死亡音效 864 无声）；原版 UnitID 直接写入。
+            child_key=u.get('child_unit_key') or u.get('summoned_unit_key') or u.get('summoned_internal_key') or u.get('throw_child_key') or u.get('second_form_key') or u.get('landing_unit_key')
             if child_key:
-                child=next(entry['id'] for entry in self.units if entry['key']==child_key)
+                child=child_key if isinstance(child_key,int) else next(entry['id'] for entry in self.units if entry['key']==child_key)
                 struct.pack_into('<I',rows,len(rows)-0x390+0xa4,child)
             action=p.word(actions+bid*4)
             if 'shot_action_reference_id' in u:
@@ -880,7 +902,12 @@ class CommunityContent:
         landing_ids={u['key']:u['id'] for u in self.units}
         # 落地映射：空降单位登记落地后的单位；投出子单位的生命分档单位登记被投出的飞行单位（原生均以固定 UnitID 45 生成）；
         # 基准 187 的编队领队登记僚机单位（原生以固定 UnitID 187 生成，2026-10-27）。
-        landings=struct.pack('<'+'I'*n,*(landing_ids[u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key')] if u and (u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key')) else 0 for u in units))
+        # 2026-11-01 Fall Climber（标记 134217728）：第一形态生命耗尽时以 summonZakoBazooka 生成第二形态（固定 UnitID 45 → second_form_key）。
+        def climber_form(u):return u.get('second_form_key') if u and ((u.get('zombie_spec') or {}).get('flags',0)&134217728) else None
+        def landing_of(u):
+            key=u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key') or climber_form(u)
+            return key if isinstance(key,int) else landing_ids[key]   # 原版 UnitID 直接写入（2026-10-31）
+        landings=struct.pack('<'+'I'*n,*(landing_of(u) if u and (u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key') or climber_form(u)) else 0 for u in units))
         display_ids=struct.pack('<'+'I'*n,*(landing_ids[u['child_unit_key']] if u and u.get('child_unit_key') else UNIT_ID_BASE+i for i,u in enumerate(units)))
         fields+=(pack_pointer,self.alloc(landings),self.alloc(display_ids))
         recoveries=struct.pack('<'+'I'*n,*((u or empty).get('recovery_animation',26) for u in units))
@@ -1019,7 +1046,7 @@ class CommunityContent:
         pointers=[]
         for spec in specs:
             if not spec:pointers.append(0);continue
-            words=[0]*136;words[0]=spec['flags']
+            words=[0]*140;words[0]=spec['flags']
             thresholds=spec.get('thresholds',[]);words[1]=len(thresholds)
             for i,(a,b) in enumerate(thresholds):words[2+i]=a;words[8+i]=b
             words[14]=sum(1<<(i+1) for i,flag in enumerate(spec.get('transitions',[])) if flag)
@@ -1060,12 +1087,26 @@ class CommunityContent:
             # 地下钻击、损毁横穿、爆炸、地下行进、掘削碎块首槽与个数、损毁碎块首槽与个数；117–119（v3，核心 r95）：碎块滚动首槽、
             # 碎块爆炸、碎块引信 tick；120（v4，核心 r96）：绝招中的钻出
             for i,v in enumerate(spec.get('worm',[])):words[104+i]=v
+            # 2026-11-01：53–103 Fall Climber（fall_climber v1，核心 r115；与 elder_centipede / invader_king / iron_death_worm 互斥）：形态、
+            # 各动作号、光球脚本、有无第二形态，骨架几何、步伐、起伏、绝招移动与光球的参数，上臂、前臂与机体的判定范围（见行为库说明）；
+            # 104 / 105 左右手落地音效（R4，只有 1 个时两手共用，0 为无）；106 光球水平飞行距离（R6）；107 / 108 腕点（R7）；109 / 110 每几颗光球后冷却与冷却 tick（R10）
+            for i,v in enumerate(spec.get('climber',[])):words[53+i]=v&0xffffffff
+            steps=[self.sound_ids[k] for k in spec.get('climber_sounds',[])]
+            if steps:words[104]=steps[0];words[105]=steps[-1]
+            for i,v in enumerate(spec.get('climber_more',[])):words[106+i]=v&0xffffffff
             # 2026-10-26：121–131 鼹鼠弹（mole_missile v1，核心 r97）：悬停、钻入、地下潜行、钻出、冲刺、爆炸、绝招爆炸、损毁动作，
             # 冲刺速度（世界单位 × 10 / tick）、悬停点的前方距离与离地高度（R1，核心 r98；136 字，132–135 保留）
             for i,v in enumerate(spec.get('mole',[])):words[121+i]=v
+            # 2026-10-31：121–131 与 134–135 叛军自爆摩托（bomb_bike v1，核心 r111；与 mole_missile 互斥）：蓄力、冲刺、弃车、飞行动作号，
+            # 冲刺初速（× 10）、加速度（× 100）、上限（× 10）、投掷距离、弃车速度（× 10）、抛物线顶点、重力（× 100）；134–138 落点偏移、
+            # 冲刺上限 tick、蓄力与弃车 tick、最大水平抛射距离（R10，核心 r113）（140 字，139 保留）
+            for i,v in enumerate(spec.get('bike',[])):words[121+i]=v
+            for i,v in enumerate(spec.get('bike_extra',[])):words[134+i]=v
             # 2026-10-29：132 受击召唤的冷却 tick（summon_on_hit，核心 r105）
             words[132]=spec.get('hit_summon_cooldown',0)
-            pointers.append(self.alloc(struct.pack('<136I',*words)))
+            # 2026-10-29：133 钢铁死亡蠕虫的钻离 / 钻击中开始扣击退计量的脚本 tick（iron_death_worm v5，核心 r109）
+            words[133]=spec.get('worm_knock_tick',0)
+            pointers.append(self.alloc(struct.pack('<140I',*words)))
         return self.alloc(struct.pack('<'+'I'*len(pointers),*pointers))
 
     def grant_world_clear_rewards(self):

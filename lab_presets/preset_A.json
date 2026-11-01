@@ -1,33 +1,13 @@
 {
   "schema": 1,
-  "stage_id": 13061,
+  "stage_id": 13085,
   "enemy_deck": [
     [
-      1078,
+      1085,
       40
     ],
     [
-      1026,
-      40
-    ],
-    [
-      1025,
-      40
-    ],
-    [
-      215,
-      40
-    ],
-    [
-      379,
-      40
-    ],
-    [
-      377,
-      40
-    ],
-    [
-      1024,
+      1083,
       40
     ],
     [
@@ -35,25 +15,37 @@
       40
     ],
     [
-      208,
+      215,
       40
     ],
     [
-      206,
+      210,
+      40
+    ],
+    [
+      1024,
+      40
+    ],
+    [
+      1025,
+      40
+    ],
+    [
+      1026,
+      40
+    ],
+    [
+      1079,
+      40
+    ],
+    [
+      1081,
       40
     ]
   ],
   "player_deck": [
     [
-      266,
-      40
-    ],
-    [
-      262,
-      40
-    ],
-    [
-      85,
+      84,
       40
     ],
     [
@@ -65,11 +57,11 @@
       40
     ],
     [
-      135,
+      85,
       40
     ],
     [
-      389,
+      234,
       40
     ],
     [
@@ -77,30 +69,38 @@
       40
     ],
     [
-      307,
+      266,
       40
     ],
     [
       373,
       40
+    ],
+    [
+      27,
+      40
+    ],
+    [
+      247,
+      40
     ]
   ],
-  "player_base_level": 10,
-  "enemy_base_level": 10,
+  "player_base_level": 0,
+  "enemy_base_level": 0,
   "player_hp_boost": 0,
   "player_atk_boost": 0,
   "enemy_hp_boost": 0,
   "enemy_atk_boost": 0,
   "full_control": true,
-  "enemy_ai": true,
+  "enemy_ai": false,
   "player_ai": false,
-  "enemy_auto_special": true,
+  "enemy_auto_special": false,
   "player_auto_special": false,
   "enemy_ai_slug": false,
   "player_ai_slug": false,
   "player_support": 0,
   "enemy_support": 0,
-  "player_ai_tier": "SILVER",
+  "player_ai_tier": "PREDATOR",
   "enemy_ai_tier": "PREDATOR",
   "versus": false,
   "versus_keys": null,

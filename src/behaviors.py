@@ -54,10 +54,14 @@ def _check_param(behavior, name, spec, value, units):
     where = f'{behavior}.{name}'
     kind = spec['type']
     if kind == 'unit_key':
+        # 2026-10-31 行为库 v29：规格写 native 时可填原版 UnitID（1–399），如 para_drop_transform 落成原生 2 REBEL INFANTRY
+        if spec.get('native') and _int(value) and 1 <= value <= 399:
+            return
         unit = units.get(value) if isinstance(value, str) else None
         if unit is None:
             raise ValueError(f'{where}: unknown unit key {value!r}')
-        if bool(unit.get('internal_only')) != bool(spec.get('internal')):
+        # 2026-10-31 R11：internal 为 "any" 时可选单位与内部单位均可（para_drop_transform 的落地单位）
+        if spec.get('internal') != 'any' and bool(unit.get('internal_only')) != bool(spec.get('internal')):
             raise ValueError(f'{where}: unit {value} must ' + ('' if spec.get('internal') else 'not ') + 'be internal')
     elif kind == 'rational':
         if not (isinstance(value, list) and len(value) == 2 and all(_int(v) and 0 < v <= 10000 for v in value)):
@@ -132,6 +136,10 @@ def resolve(unit, units, library):
         for needed in by_name[name].get('requires_behaviors', []):
             if needed not in resolved:
                 raise ValueError(f'{unit["key"]}: {name} requires behavior {needed}')
+        # 2026-10-31 行为库 v29：互斥的行为（如共用 ZSpec 字的 bomb_bike 与 mole_missile）
+        for other in by_name[name].get('conflicts_with', []):
+            if other in resolved:
+                raise ValueError(f'{unit["key"]}: {name} cannot be combined with {other}')
     stages = resolved.get('hp_stage_animations')
     if stages:
         thresholds, transitions = stages['thresholds'], stages['transitions']
@@ -343,7 +351,8 @@ def internal_fields(resolved):
     # 2026-10-25 钢铁死亡蠕虫（行为库 v19 / 行为 v2，核心 r92，基准 192 侵略者类，ZSpec 字 104–116）：各动作号、地下行进、
     # 掘削碎块弹体脚本、损毁碎块脚本（MSA EffectAction_DeadBody，步长 2，落地动作为其后一个）；
     # R4（行为库 v20 / 行为 v3，核心 r95，字 117–119）：碎块滚动动作首槽、碎块爆炸动作、碎块引信 tick；
-    # R5（行为库 v21 / 行为 v4，核心 r96，字 120）：绝招中的钻出动作（平常的钻出用 emerge_animation）
+    # R5（行为库 v21 / 行为 v4，核心 r96，字 120）：绝招中的钻出动作（平常的钻出用 emerge_animation）；
+    # R7（行为库 v27 / 行为 v5，核心 r109，字 133）：钻离 / 钻击脚本中开始扣击退计量的 tick（字 121–131 为鼹鼠弹）
     if 'iron_death_worm' in resolved:
         v = resolved['iron_death_worm']
         zombie.update(flags=zombie['flags'] | 2097152, worm=[v[k] for k in (
@@ -364,7 +373,7 @@ def internal_fields(resolved):
             'debris_burst_animation',
             'debris_fuse',
             'special_emerge_animation',
-        )])
+        )], worm_knock_tick=v['special_knockback_tick'])
     # 2026-10-26 鼹鼠弹（行为库 v22 / 行为 v1，核心 r97，基准 133 SPECIAL FORCE (RIDER) 类，ZSpec 字 121–131）：各动作号与冲刺参数；
     # R1（行为库 v23 / 行为 v2，核心 r98）：字 130 / 131 改为悬停点的前方距离与离地高度（追踪俯冲）；
     # 本单位不击退（标记 2，同 no_knockback）
@@ -389,16 +398,88 @@ def internal_fields(resolved):
     # 2026-10-29 受击召唤（行为库 v26，核心 r105，基准 64）：ZSpec 标记 16777216、字 132 冷却 tick。
     if 'summon_on_hit' in resolved:
         zombie.update(flags=zombie['flags'] | 16777216, hit_summon_cooldown=resolved['summon_on_hit']['cooldown'])
+    # 2026-10-31 叛军自爆摩托（行为库 v29 / 行为 v1，核心 r111，基准 133，ZSpec 标记 33554432）：字 121–131 为蓄力、冲刺、弃车、飞行动作号与
+    # 冲刺初速、加速度、上限、投掷距离、弃车速度、抛物线顶点、重力，字 134–138 为落点偏移、冲刺上限 tick、蓄力与弃车 tick、
+    # 最大水平抛射距离（R10，核心 r113）（与 mole_missile 互斥）；
+    # 骑手单位写入落地映射（throw_child_key，原生以固定 UnitID 45 生成）。
+    if 'bomb_bike' in resolved:
+        v = resolved['bomb_bike']
+        zombie.update(flags=zombie['flags'] | 33554432, bike=[v[k] for k in (
+            'charge_animation',
+            'dash_animation',
+            'eject_animation',
+            'flight_animation',
+            'dash_speed',
+            'dash_accel',
+            'dash_cap',
+            'throw_range',
+            'eject_speed',
+            'apex',
+            'gravity',
+        )], bike_extra=[v['land_offset'], v['dash_limit'], v['charge_ticks'], v['eject_ticks'], v['max_throw']])
+        fields['throw_child_key'] = v['rider_unit']
+    # 2026-11-01 Fall Climber（行为库 v31 / 行为 v1，核心 r115，基准 192 侵略者类，ZSpec 标记 134217728，字 53–103，与 elder_centipede /
+    # invader_king / iron_death_worm 互斥）：动作号、骨架几何、步伐与起伏、光球与绝招移动、部件判定范围的参数（second_form 写 1 / 0，单位号经
+    # 子单位字；手落地音效 climber_sounds 由加载器换为 SoundID 写入字 104 / 105；R6 光球水平飞行距离、R7 腕点与 R10 连射冷却 climber_more 写入字 106–110）；
+    # 第一形态以 second_form_key 引用第二形态（STATUS 显示两形态生命之和、开战预载）。不击退（核心按标记处理）。
+    if 'fall_climber' in resolved:
+        v = resolved['fall_climber']
+        zombie.update(flags=zombie['flags'] | 134217728, climber=[1 if k == 'second_form' and v[k] else 0 if k == 'second_form' else v[k] for k in (
+            'form',
+            'neutral_animation',
+            'move_animation',
+            'attack_left_animation',
+            'attack_right_animation',
+            'change_animation',
+            'charge_animation',
+            'laser_animation',
+            'death_animation',
+            'orb_animation',
+            'second_form',
+            'hand_x',
+            'gait',
+            'lift',
+            'bob',
+            'bob_up',
+            'bob_high',
+            'bob_down',
+            'bob_low',
+            'rise',
+            'dash_speed',
+            'dash_ahead',
+            'shot_rise',
+            'shot_speed',
+            'upper_length',
+            'lower_length',
+            'shoulder_x',
+            'shoulder_y',
+            'elbow_x',
+            'elbow_y',
+            'elbow_sign',
+            'muzzle_x',
+            'muzzle_y',
+            'hand_width',
+            'hand_height',
+            'head_x',
+            'head_y',
+            'head_width',
+            'head_height',
+        )] + v['upper_box'] + v['lower_box'] + v['body_box'], climber_sounds=list(v['step_sounds']), climber_more=[v['shot_distance'], v['wrist_x'], v['wrist_y'], v['burst_shots'], v['burst_cooldown']])
+        if v['second_form']:
+            fields['second_form_key'] = v['second_form']
+    # 2026-10-31 R9 落地延续生命（行为库 v30，核心 r112，基准 160）：ZSpec 标记 67108864，无参数字。
+    if 'landing_keeps_hp' in resolved:
+        zombie['flags'] |= 67108864
     if zombie['flags']:
         fields['zombie_spec'] = zombie
     return fields
 
 
 def sound_keys(unit):
-    """行为参数中引用的音效键（生命分档单位的防具受击、击毙与气球出场音效）。"""
+    """行为参数中引用的音效键（生命分档单位的防具受击、击毙与气球出场音效，Fall Climber 的手落地音效）。"""
     spec = unit.get('zombie_spec') or {}
     return (list(spec.get('armor_sounds', [])) + ([spec['kill_sound']] if spec.get('kill_sound') else [])
-            + ([spec['launch_sound']] if spec.get('launch_sound') else []))
+            + ([spec['launch_sound']] if spec.get('launch_sound') else []) + list(spec.get('climber_sounds', [])))
 
 
 def apply(units_by_key, library):
