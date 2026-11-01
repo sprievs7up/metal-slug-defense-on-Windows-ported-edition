@@ -2271,7 +2271,7 @@ static constexpr float FC_VIEW_DASH=200.0f;
 enum:uint32_t{FC_FORM,FC_NEUTRAL,FC_MOVE,FC_ATTACK_L,FC_ATTACK_R,FC_CHANGE,FC_CHARGE,FC_LASER,FC_DEATH,FC_ORB,FC_SECOND,
  FC_HAND_X,FC_GAIT,FC_LIFT,FC_BOB,FC_BOB_UP,FC_BOB_HIGH,FC_BOB_DOWN,FC_BOB_LOW,FC_RISE,FC_DASH,FC_DASH_AHEAD,FC_SHOT_RISE,FC_SHOT_SPEED,
  FC_L1,FC_L2,FC_SX,FC_SY,FC_EX,FC_EY,FC_SIGN,FC_MX,FC_MY,FC_HAND_W,FC_HAND_H,FC_HEAD_X,FC_HEAD_Y,FC_HEAD_W,FC_HEAD_H,
- FC_UPPER_BOX,FC_LOWER_BOX=FC_UPPER_BOX+4u,FC_BODY_BOX=FC_LOWER_BOX+4u,FC_STEP=FC_BODY_BOX+4u,FC_SHOT_DIST=FC_STEP+2u,FC_WRIST_X,FC_WRIST_Y,FC_BURST,FC_BURST_CD};
+ FC_UPPER_BOX,FC_LOWER_BOX=FC_UPPER_BOX+4u,FC_BODY_BOX=FC_LOWER_BOX+4u,FC_STEP=FC_BODY_BOX+4u,FC_SHOT_DIST=FC_STEP+2u,FC_WRIST_X,FC_WRIST_Y,FC_BURST,FC_BURST_CD,FC_MOVE_DAMAGE};
 // 根层直接子层的优先级（R7，按整机图：手 < 前臂 < 肘护盖 < 上臂 < 机体组；[0] 左侧、[1] 右侧）
 static constexpr int32_t FC_P_GROUP=10,FC_P_HAND[2]={1,5},FC_P_FORE[2]={2,6},FC_P_CAP[2]={3,7},FC_P_UPPER[2]={4,8};
 static uint32_t fc_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&FC_FLAG)?s:0u;}
@@ -2499,6 +2499,19 @@ static bool fc_pierce(Context& c){
 }
 static Block old_fc_pierce_hit;static void fc_pierce_hit(Context& c){if(fc_pierce(c))return;old_fc_pierce_hit(c);}
 static uint32_t fc_hooks=0u;
+// R14（用户 2026-11-01，核心 r116）：第二形态绝招的移动段（阶段 1 移到敌方前线、阶段 4 移回）受到的任何伤害乘字 111 / 100（行为参数
+// special_move_damage_taken，缺省 100 为不减；本单位 15 即 −85%）。BattleUnit::damage 的块 0x101e0ab2：r4 为受击方，s14 为属性耐性倍率
+// （0x101e0a9a 查表或 0x101e0aa8 的 1.0），随后 生命 −= s14 × 伤害（栈 +28）并取整；只改本次的 s14，击退计量与受击 ID 照常。
+static Block old_fc_damage;static void fc_damage(Context& c){
+ if(active(c)){
+  uint32_t o=c.r[4],s=fc_unit(c,o);
+  if(s&&fc_w(c,s,FC_FORM)==2){
+   uint32_t phase=rd<uint32_t>(c,o+0x2cu);int32_t pct=fc_w(c,s,FC_MOVE_DAMAGE);
+   if((phase==1u||phase==4u)&&pct>=0&&pct<100)setfs(c,14,fs(c,14)*float(pct)*0.01f);
+  }
+ }
+ old_fc_damage(c);
+}
 // 部件判定：整台机体（世界坐标，不按地面裁切）
 static int32_t fc_parts(Context& c,uint32_t o,uint32_t s,WdBox* out){
  int32_t m=fc_m(c,o),n=0;float ux=rd<float>(c,o+0x8cu),uy=rd<float>(c,o+0x90u);
@@ -2527,7 +2540,7 @@ static int32_t fc_parts(Context& c,uint32_t o,uint32_t s,WdBox* out){
  put(l,t,l+float(fc_w(c,s,FC_HEAD_W)),t+float(fc_w(c,s,FC_HEAD_H)));
  return n;
 }
-extern "C" __declspec(dllexport) uint32_t msd_community_fall_climber_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u&&fc_hooks==1u?1u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_fall_climber_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u&&fc_hooks==2u?2u:0u;}   // 2（r116）：绝招移动段减伤
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
 // 2026-10-27（r99）：5 连发马克斯奈尔（BattleAction_McsnlFive::update 0x184ebc）的领队固定以 UnitID 187 生成 4 架僚机；
 // 基准为 187 的社区领队改为生成落地映射表登记的僚机单位（formation_unit_key），映射为 0 时保持原生。

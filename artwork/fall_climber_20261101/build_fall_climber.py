@@ -551,10 +551,10 @@ def preview(page_imgs, rects, words, anims):
 VALUES = {
     # 用户 2026-11-01：第一形态 20000（6000 × 10/3）；R9 第二形态 40000（20/3，见 FORM2_VALUES）；击退门槛倍率随生命（第 6.1 节；本单位不击退）
     'ap': 999, 'shop_price': 350, 'hp_multiplier': [10, 3], 'knockback_threshold_multiplier': [10, 3],
-    # R10（用户平衡调整）：普攻 Lv40 400（1060 × 20/53；R9 为 800，R3–R8 同 HOZUMI 3000）；远距 600、弹飞行距离 700（R11；R10 750，R9 为 700 / 900，
+    # R13（用户）：普攻 Lv40 600（1060 × 30/53；R10–R12 为 400，1060 × 20/53；R9 为 800，R3–R8 同 HOZUMI 3000）；远距 600、弹飞行距离 700（R11；R10 750，R9 为 700 / 900，
     # R6 为 400 / 600）；1.2 秒一发（攻击后等待 14，LAB fc17 实测一发周期 = 22 + 等待 tick；R6–R9 等待 1）；每射出 20 发强制待机 6 秒
     # （行为参数 burst_shots / burst_cooldown）；贯穿（每发命中目标数 999，同一颗对同一目标只结算一次）；绝招 4 段 × 2000（2400 × 5/6，R12；R9–R11 为 12 段 × 800，R3–R8 为 16 段 × 500）
-    'damage_multiplier': [1, 1], 'normal_damage_multiplier': [20, 53], 'special_damage_multiplier': [5, 6],
+    'damage_multiplier': [1, 1], 'normal_damage_multiplier': [30, 53], 'special_damage_multiplier': [5, 6],
     # 再出击 100 秒 = 3000 tick（550 × 60/11）；移速同 HOZUMI 1.5（3 × 1/2）
     'production_interval_multiplier': [60, 11], 'move_speed_multiplier': [1, 2],
     # 词 6 / 7 近距 / 远距触发距离，24 普攻每发命中目标数，26 / 27 普攻弹飞行距离 / 攻击后等待，33 绝招投射距离，34 间隔，35 / 36 绝招等待 / 首次冷却（16 秒 = 480 tick；
@@ -639,6 +639,7 @@ def behavior_params(form):
          'laser_animation': SLOT['laser'], 'death_animation': SLOT['death2'], 'orb_animation': SLOT['orb'],
          'hand_x': t(R.HAND_X), 'gait': 120, 'lift': 36, 'bob': 8, 'bob_up': 12, 'bob_high': 16, 'bob_down': 12, 'bob_low': 16,
          'rise': R.RISE, 'dash_speed': 80, 'dash_ahead': 100, 'shot_rise': 30, 'shot_speed': 80, 'shot_distance': 700, 'burst_shots': 20, 'burst_cooldown': 180,
+         'special_move_damage_taken': 15,   # R14（用户）：第二形态绝招移动段受到的伤害 −85%（核心 r116）
          'upper_length': t(a['L1']), 'lower_length': t(a['L2']), 'shoulder_x': t(a['S'][0]), 'shoulder_y': t(a['S'][1]),
          'elbow_x': t(a['E'][0]), 'elbow_y': t(a['E'][1]), 'elbow_sign': a['sign'], 'muzzle_x': t(mx), 'muzzle_y': t(my - peek),
          'hand_width': hand.width, 'hand_height': hand.height, 'head_x': head[0], 'head_y': head[1], 'head_width': head[2],

@@ -19,7 +19,7 @@
     1
   ],
   "normal_damage_multiplier": [
-    20,
+    30,
     53
   ],
   "special_damage_multiplier": [
@@ -15469,6 +15469,7 @@
         "shot_distance": 700,
         "burst_shots": 20,
         "burst_cooldown": 180,
+        "special_move_damage_taken": 15,
         "upper_length": 648,
         "lower_length": 882,
         "shoulder_x": -557,

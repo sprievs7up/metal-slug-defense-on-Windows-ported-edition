@@ -1937,6 +1937,7 @@ if((old_mole_attack=find_block(0x101780e1u))){register_block(0x101780e1u,mole_at
 if((old_pierce_attack=find_block(0x10177755u))){register_block(0x10177755u,pierce_attack);++pierce_hooks;}
 if((old_pierce_hit=find_block(0x1017777du))){register_block(0x1017777du,pierce_hit);++pierce_hooks;}
 if((old_fc_pierce_hit=find_block(0x10175e21u))){register_block(0x10175e21u,fc_pierce_hit);++fc_hooks;}
+if((old_fc_damage=find_block(0x101e0ab3u))){register_block(0x101e0ab3u,fc_damage);++fc_hooks;}
 if((old_sh_damage=find_block(0x1016f4f5u))){register_block(0x1016f4f5u,summon_hit_damage);++summon_hit_hooks;}
 if((old_sh_update=find_block(0x101aed79u))){register_block(0x101aed79u,summon_hit_update);++summon_hit_hooks;}
 }
