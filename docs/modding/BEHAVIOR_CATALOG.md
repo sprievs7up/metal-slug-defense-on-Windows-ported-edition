@@ -1,4 +1,4 @@
-# 单位行为目录 / Unit behavior catalog（行为库版本 31）
+# 单位行为目录 / Unit behavior catalog（行为库版本 41）
 
 本文件由 `content_tool.py list-behaviors --markdown` 从 `behavior_library.json` 生成，请勿手工修改。
 Generated from `behavior_library.json` by `content_tool.py list-behaviors --markdown`; do not edit by hand.
@@ -197,11 +197,11 @@ Zombie-class units (base: Zombie (Young Man)) change appearance by remaining HP.
 
 ## no_knockback（v1）
 
-- 适用的原版基准单位 / base_id: 313, 200
+- 适用的原版基准单位 / base_id: 313, 200, 192
 
-受击时不进入击退（不检查击退计量），生命归零时照常倒下。基准 200（飞行侵略者类，BattleAction_WingedInvader）同样适用（行为库 v14）。
+受击时不进入击退（不检查击退计量），生命归零时照常倒下。基准 200（飞行侵略者类，BattleAction_WingedInvader）同样适用（行为库 v14）；基准 192（侵略者类，UNION 四个单位）亦可使用（行为库 v34）。
 
-The unit is never knocked back by hits (the knockback gauge is not checked); it still dies when HP reaches zero. Also applies to base 200 (Winged Invader class, BattleAction_WingedInvader; library v14).
+The unit is never knocked back by hits (the knockback gauge is not checked); it still dies when HP reaches zero. Also applies to base 200 (Winged Invader class, BattleAction_WingedInvader; library v14) and base 192 (Invader class, the four UNION units; library v34).
 
 无参数 / no parameters.
 
@@ -676,4 +676,99 @@ MS7 boss Fall Climber (2026-11-01, core r115): the body sits below the walk line
 | `lower_box` | int_list | length: 4; default: [-37, -90, 10, 15]; min: -400; max: 400 |
 | `body_box` | int_list | length: 4; default: [-72, 0, 72, 142]; min: -400; max: 400 |
 | `step_sounds` | sound_list | default: []; min_length: 0; max_length: 2 |
+
+## union（v8）
+
+- 适用的原版基准单位 / base_id: 192
+- 需要字段 / requires fields: sprite_descriptor
+
+MS7 任务 5 首领 UNION（2026-11-01，核心 r118；按 MSA 7.13.0 BattleAction_UnionCombine / Union1 / Union2 / Union3 的底层代码移植，解读见 docs/MS7_M5_UNITS_2026-11-01.md）。role 0 为合体单位，1–3 为 1–3 号机（内部单位），四者都写 first_unit / second_unit / third_unit （三机的内部单位键，合体单位以之生成三机并作开战预载，1、3 号机以之找到对方）。合体单位：v3 起可受伤，未隐去时受到的伤害乘 combined_damage_taken / 100（缺省 100 不减；MSA 为 Guard 不受伤）；分离时三机的当前生命按合体单位当时的生命比例继承；v4 起出场后累计 max_combined_ticks 帧仍未分离时（待机或前进中）自行开始分离（0 为不限，只在敌人进入射程时分离）；10 待机、20 前进；30 / 40 / 50 都播放分离动作 divide_animation（禁止普攻与绝招），第 split_tick 帧在本单位位置加朝向偏移处生成三机（first_offset / second_offset / third_offset，世界单位），下一帧置隐形、不可选为目标、不阻挡、不受伤并移到本方据点之后（v7 起 hidden_animation 大于 0 时改播该动作，并把小地图标记写为 0；原生绘制不看隐形，0 时停在分离动作的最后一帧）；v8 起 ground_follow_count 大于 0 时，分离动作中 split_bullet 的弹体与脚本 ground_follow_first 起 ground_follow_count 个效果（1 号机的部件，原生只水平移动）随地形升降：以该弹体的 x 为 1 号机的位置，前 16 帧由合体单位的高度渐变到该处地形，之后贴合地形，1 号机在该高度生成；三机全部消失时移除本单位（不再合体）。单位菜单的动作演示中（核心 r130 起），三机的图像已建立后（宿主演示预载）本单位即在三处偏移生成三机并改播 hidden_animation，演示近距 / 远距 / 绝招时三机同时进入该状态（1 号机没有远距），三机都结束后本单位回到待机；演示中弹体同样按弹体表建立。分离动作中脚本 split_bullet 的弹体随合体单位隐去而移除。1、3 号机：每帧互相推挤，3 号机前缘（x + spacing[1]）越过 1 号机后缘（x − spacing[2]）时把移动的一方放到相距 spacing[0] 处；30 / 40 / 50 播放 near_animation / far_animation / special_animation 后进入攻击等待；3 号机绝招第 16、40 帧各在“射程与敌方据点前缘之内”的高空投下 5 枚 bomb_bullet 炸弹。三机的绝招：所在一方由原生 AI（BattleControllerEnemy / NetEnemy）控制时可发动即自行发动；玩家一方由玩家点按机体或全体绝招发动（核心 r126 起）。2 号机：在空中飞行（不贴地；v8 起前进只限在敌方据点前缘之前，不再拉到本方据点，分离在本方据点之后时从生成处前进），30 结束后在 rise_ticks 帧内升到 rise_top（世界坐标的高度，MSA 为机体高度一半的上方）、移到本方据点上空，以每帧 descend_speed / 10 下降到离地 hover 后重新出击；置 AreaThrough 与 StageEffectNone（是否不可选为目标由 untargetable 决定，缺省可被选为目标）；不可选为目标时（核心 r127 起），对方以原生瞄准弹（setMoveParamsNearEnemyTarget）攻击的单位把它当作目标：瞄准弹在它比对方最前单位更靠前时转向它，射出过瞄准弹的单位种类在它更靠前时按它计算距离并以远距攻击（近距不发射瞄准弹时）打它；弹体动作每帧改写运动的种类（例如克拉克）不计。损毁：1、3 号机播放 death_animation 后以每帧 crash_speed / 10 前冲（攻击框按绝招组结算，伤害为绝招伤害 × crash_damage，第二参数 99），停住或撞到敌人（v7 起以攻击 ID 判定：冲撞攻击开始后第一次命中即为撞到）时爆炸（death_burst_ticks 帧的爆炸序列；v4 起另在机体各处放 4 团大型单位爆炸 0xff17、播放原生大爆炸音效 253，第 2 帧起不绘制本机）后移除；2 号机向前下方坠落，机体下缘（原点下方 touchdown_offset 世界单位，缺省 40）触地时爆炸移除（v6 起 crash_animation 大于 0 时在触地处播放该动作，其攻击框按 crash_damage 的损毁冲撞伤害结算，并同 1、3 号机放大型爆炸与音效 253）；合体单位播放 death_animation 后在三处爆炸移除。击退（80）播放 knockback_animation。object_width 大于 0 时每帧把单位宽度（原生 getWidthSize 的精灵像素值，乘精灵缩放后为世界单位；用于前线、索敌距离与阻挡）写为该值，供共用一份描述符的单位按各自的待机受击框前缘设宽度（v2，核心 r119；0 为原生 setObjectSize 的值）。bullets 为弹体表，每项 4 个整数 [首个脚本, 个数, 种类, 命中]：种类 1 按所在攻击组的弹速水平飞行，2 以弹速飞向最近的敌方单位，3 按脚本 op7 运动，4 为分离弹体，5（v5）水平射出后追踪最近的敌方单位（第 8 帧起每帧转向至多约 6°，第 120 帧后直飞，速率不变，精灵保持水平不倾斜）；种类加 16 时触地不消失；命中为 0 直接移除，小于 4096 为命中后播放的动作号（播完移除），0xff00–0xfffe 为共用效果编号（0xff00 + n），65536 以上（v6）低 16 位为命中动作号、(值 >> 16) & 255 为同时在弹体下方 40 放出的共用效果 n（同原生派斯戰車的降落伞炸弹）。
+
+MS7 Mission 5 boss UNION (2026-11-01, core r118), ported from the MSA 7.13.0 BattleAction_UnionCombine / Union1 / Union2 / Union3 code (analysis in docs/MS7_M5_UNITS_2026-11-01.md). role 0 is the combined unit and 1-3 are machines 1-3 (internal units); all four give first_unit / second_unit / third_unit (the internal unit keys of the machines: the combined unit spawns and preloads them, machines 1 and 3 use them to find each other). Combined unit: from v3 it takes damage, multiplied by combined_damage_taken / 100 while not hidden (default 100, no reduction; MSA uses Guard, no damage); at the split the machines inherit its current HP ratio; from v4, if it has not split after max_combined_ticks frames since appearing it starts the split by itself while idle or advancing (0 means no limit: it splits only when an enemy comes into range); 10 idle, 20 advance; 30 / 40 / 50 all play divide_animation (no attacks), on frame split_tick spawn the three machines at the facing-relative offsets first_offset / second_offset / third_offset (world units), on the next frame become invisible, untargetable, non-blocking and undamageable behind the own base (from v7, when hidden_animation is above 0 it plays that animation and its minimap marker is set to 0, since native drawing ignores invisibility; with 0 it keeps the last frame of the split); from v8, when ground_follow_count is above 0, the split_bullet bullet and the ground_follow_count effects from script ground_follow_first (the parts of machine 1, which native code only moves horizontally) follow the terrain during the split: the bullet x is taken as the position of machine 1, the height blends from the combined unit's height to the terrain there over the first 16 frames and follows the terrain afterwards, and machine 1 is created at that height, and are removed once all three machines are gone (no recombination). In the unit menu action viewer (from core r130), once the images of the three machines exist (preloaded by the host viewer) this unit creates them at the three offsets and plays hidden_animation; the near, far and special demos put all three into that state at once (machine 1 has no far attack), and this unit returns to idle when all three have finished; bullets use the bullet table in the viewer as well. Bullets of script split_bullet are removed when the combined unit hides. Machines 1 and 3 push each other every frame: when machine 3's front (x + spacing[1]) passes machine 1's rear (x - spacing[2]) the moving one is put spacing[0] apart. 30 / 40 / 50 play near_animation / far_animation / special_animation followed by the attack wait; machine 3's special drops 5 bomb_bullet bombs from high above at frames 16 and 40, within its range and the enemy base front. The machines' specials: on a side controlled by the native AI (BattleControllerEnemy / NetEnemy) they start by themselves once available; on a player's side the player starts them by tapping the machine or with the all-specials command (from core r126). Machine 2 flies (not on the ground; from v8 its forward flight is limited only by the enemy base front and is no longer pulled to the own base, so after a split behind the own base it advances from where it was created); after 30 it rises to the height rise_top (world y; above the screen top by half its body height in MSA) in rise_ticks frames, moves above the own base and descends by descend_speed / 10 per frame to hover above the ground before attacking again; it has AreaThrough and StageEffectNone (untargetable makes it untargetable; targetable by default). When untargetable (from core r127), opposing units that attack with native aimed bullets (setMoveParamsNearEnemyTarget) treat it as a target: aimed bullets turn to it when it is ahead of the opposing front unit, and unit types that have fired aimed bullets measure their distance to it when it is ahead, attacking it with the far attack (when the near attack fires no aimed bullet); types whose bullet action rewrites the motion every frame (for example Clark) do not count. Death: machines 1 and 3 play death_animation and charge forward by crash_speed / 10 per frame (the attack box uses the special group with special damage x crash_damage and second parameter 99), exploding when they stop or hit an enemy (from v7 judged by the attack ID: the first hit after the crash attack starts) (a death_burst_ticks frame sequence; from v4 also four large-unit explosions 0xff17 over the hull and the native big explosion sound 253, the machine no longer drawn from frame 2) before removal; machine 2 dives forward and down and explodes when its lower edge (touchdown_offset world units below the origin, default 40) touches the ground (from v6, when crash_animation is above 0 it plays that animation at the touchdown point, whose attack box deals the crash damage of crash_damage, with the large explosions and sound 253 of machines 1 and 3); the combined unit plays death_animation and explodes in three places. Knockback (80) plays knockback_animation. When object_width is above 0 the unit width (the native getWidthSize value in sprite pixels, world units after the sprite scale; used for the front line, target distance and blocking) is written every frame, so units sharing one descriptor can each take the front edge of their own idle hit box (v2, core r119; 0 keeps the native setObjectSize value). bullets is the bullet table of 4-integer entries [first script, count, kind, hit]: kind 1 flies level at the attack group's bullet speed, 2 flies at that speed towards the nearest enemy unit, 3 follows the script op7 motion, 4 is the divide bullet, 5 (v5) launches level and then homes on the nearest enemy unit (from frame 8 it turns by at most about 6 degrees per frame, flying straight after frame 120, at constant speed, the sprite kept level); kind + 16 keeps the bullet on touching the ground; hit 0 removes it, below 4096 is an animation played before removal, 0xff00-0xfffe is a shared effect id (0xff00 + n), and from 65536 (v6) the low 16 bits are the hit animation and (value >> 16) & 255 a shared effect n placed 40 below the bullet at the same time (as the native PARACHUTE TRUCK bomb).
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `role` | int | default: 0; min: 0; max: 3 |
+| `first_unit` | unit_key | default: null; internal: true |
+| `second_unit` | unit_key | default: null; internal: true |
+| `third_unit` | unit_key | default: null; internal: true |
+| `neutral_animation` | int | default: 6; min: 0; max: 1023 |
+| `move_animation` | int | default: 7; min: 0; max: 1023 |
+| `near_animation` | int | default: 10; min: 0; max: 1023 |
+| `far_animation` | int | default: 10; min: 0; max: 1023 |
+| `special_animation` | int | default: 10; min: 0; max: 1023 |
+| `divide_animation` | int | default: 10; min: 0; max: 1023 |
+| `knockback_animation` | int | default: 12; min: 0; max: 1023 |
+| `death_animation` | int | default: 13; min: 0; max: 1023 |
+| `death_loop_animation` | int | default: 13; min: 0; max: 1023 |
+| `split_tick` | int | default: 39; min: 1; max: 300 |
+| `first_offset` | int_list | length: 2; default: [390, -6]; min: -2000; max: 2000 |
+| `second_offset` | int_list | length: 2; default: [70, -276]; min: -2000; max: 2000 |
+| `third_offset` | int_list | length: 2; default: [0, 0]; min: -2000; max: 2000 |
+| `spacing` | int_list | length: 3; default: [349, 237, 113]; min: 0; max: 2000 |
+| `hover` | int | default: 285; min: 0; max: 2000 |
+| `descend_speed` | int | default: 30; min: 1; max: 400 |
+| `rise_ticks` | int | default: 25; min: 1; max: 300 |
+| `rise_top` | int | default: -84; min: -2000; max: 2000 |
+| `untargetable` | int | default: 0; min: 0; max: 1 |
+| `crash_speed` | int | default: 160; min: 0; max: 1000 |
+| `crash_damage` | rational | default: [10, 3] |
+| `death_burst_ticks` | int | default: 20; min: 0; max: 120 |
+| `bomb_bullet` | int | default: 118; min: 0; max: 1023 |
+| `split_bullet` | int | default: 142; min: 0; max: 1023 |
+| `object_width` | int | default: 0; min: 0; max: 2000 |
+| `combined_damage_taken` | int | default: 100; min: 0; max: 100 |
+| `max_combined_ticks` | int | default: 0; min: 0; max: 9000 |
+| `touchdown_offset` | int | default: 40; min: 0; max: 1000 |
+| `crash_animation` | int | default: 0; min: 0; max: 1023 |
+| `hidden_animation` | int | default: 0; min: 0; max: 1023 |
+| `ground_follow_first` | int | default: 0; min: 0; max: 1023 |
+| `ground_follow_count` | int | default: 0; min: 0; max: 8 |
+| `bullets` | int_list | default: []; min_length: 0; max_length: 40; min: 0; max: 16777215 |
+
+## energy_pod（v2）
+
+- 适用的原版基准单位 / base_id: 192
+- 需要字段 / requires fields: sprite_descriptor
+
+MS7 任务 5 新单位 Energy Pod（能量弹，2026-11-02，核心 r131；设计与示意动画见 docs/MS7_ENERGY_POD_2026-11-02.md）。role 0 为组单位（出场的单位），1 为球单位（内部单位，ball_unit 指向它；两者都写 ball_unit）。组单位出场即在编队位置生成三颗球（等级同组单位，开战时随组单位预载），随即隐去（不绘制，播放 hidden_animation；不可选为目标、不阻挡、不受伤、不击退），作为全组的控制者，三颗球都消失时移除。三颗球为空中单位（NoTarget、DontToche、AreaThrough，地面单位从其下方走过；原生瞄准弹的单位以对方最前的球为目标，同 union 的 2 号机），不击退、无绝招（组与球都置 DontSpAttack）。流程（世界单位 / tick，朝右一方为准，朝左一方镜像）：编队中心在地形以上 height，三颗球在半径 radius 的圆上（顶角朝上；二球上下竖排，一球在中心不旋转）；中立时以组单位的移速（状态词 5）前进、编队以每周 neutral_period tick 逆时针旋转，球播放 idle_animation（三个相位）；最近的敌方单位或据点前缘进入水平“近距射程”（状态词 6）时停止前进（此处为发起攻击的位置），转速在 spin_up tick 内线性加速到每周 period tick，随即播放 about_animation（about_ticks），之后按存活的球数变色（三球黄、蓝、红，二球黄、红，一球红；charged_animation 起各色），再经 charged_hold（单球 single_hold）tick 依次出发（间隔 launch_gap）：目标为出发时离编队中心最近、且水平距离在 target_range 以内的敌方单位或据点前缘（v2，0 为不限；第一颗出发时范围内没有敌人则取消本次出击：各球播放收尾动作、在原处减速后回到中立并等待 reattack_wait；已有球出发时其余的球沿用本次出击的目标），以 dive_speed / 10 飞向其脚下地面（球底触地），在触地处放 bump_effect、黄 / 蓝球放 ring_effect、红球放 fire_effect（纯为效果）并按镜像角度弹回出发时的高度，播放 dive_animation（攻击框，整段一个攻击 ID）与尾迹 trail_effect；俯冲与反弹中撞到的敌方单位与据点各受近距组伤害（状态词 15；目标数词 17，每个目标每颗球每次出击一次；属性黄 0、蓝 2、红 1，写入球的状态词 21）。到达的球播放 recover_animation，以发起攻击位置关于目标的镜像为中心、在同一圆上旋转等待其余的球（取不越过已到者的最近空位），全部到齐 join_wait tick 后转速在 spin_down tick 内线性减速到中立转速，以组单位的移速飞回发起攻击的位置（途中按中立转速旋转）；回到原位后敌人仍在范围内时隔 reattack_wait tick 再攻击，否则恢复中立前进。被击毁的球在原地播放 wreck_animation（原色或所变颜色，由该动作脚本放原生爆炸与音效）后移除，画在存活的球之下；其余的球在编队或集合圆上于 regroup_ticks tick 内均分，只剩一球时移到圆心、不再旋转；已变色的球不改色，已有球出发后留在编队圆上的球不调整，途中被击毁的球不再被等待。从开始加速到减速结束（含俯冲、反弹与集合等待），球受到的伤害乘 attack_damage_taken / 100（缺省 100 不减）。charge_sound 在变色时、launch_sound 在每颗出发与落地时、flame_sound 在红球落地时播放。弹回终点与集合中心的 x 限在发起攻击的位置前后 2 × 近距射程（弹回终点另加半径）之内，并限在双方据点之间（核心 r132 起）。单位菜单的动作演示中，组单位在球的图像已建立后（宿主演示预载）生成三颗球；近距演示为一次完整的出击、集合与飞回（目标为前方近距射程处的地面），结束后回到待机。recover_ticks 为收尾动作的 tick 数（只用于说明，核心以动作播完为准）。
+
+MS7 Mission 5 unit Energy Pod (2026-11-02, core r131; design and preview animation in docs/MS7_ENERGY_POD_2026-11-02.md). role 0 is the group unit (the deployed unit) and 1 the pod unit (internal, referenced by ball_unit; both give ball_unit). On appearing the group unit creates three pods in formation (same level, preloaded with the group at battle start) and hides itself (not drawn, plays hidden_animation; untargetable, non-blocking, undamageable, no knockback); it controls the whole group and is removed once all three pods are gone. The pods are air units (NoTarget, DontToche, AreaThrough: ground units walk under them; units firing native aimed shots target the foremost enemy pod, as with union machine 2); no knockback and no special attack (DontSpAttack on group and pods). Flow (world units / ticks, for the right-facing side; mirrored for the other side): the formation centre is height above the terrain and the pods lie on a circle of radius radius (apex up; two pods stacked vertically, one pod at the centre without rotation); in neutral the group advances at its move speed (status word 5) while the formation turns anticlockwise once every neutral_period ticks and the pods play idle_animation (three phases); when the nearest enemy unit or the front of the enemy base comes within the near range (status word 6) horizontally it stops (the attack position), the turn rate rises linearly over spin_up ticks to once every period ticks, the pods play about_animation (about_ticks) and then change colour by the number of live pods (three: yellow, blue, red; two: yellow, red; one: red; charged_animation plus the colour index) and after charged_hold (single pod: single_hold) ticks leave one by one every launch_gap ticks: each flies at dive_speed / 10 to the ground under the enemy unit or base front nearest to the formation centre at departure and within target_range of it horizontally (v2; 0 means no limit; if nothing is in range when the first pod is due to leave, the sortie is cancelled: the pods play the recover animation, spin down in place, return to neutral and wait reattack_wait; once a pod has left, the others reuse this sortie's target) (pod bottom touching the ground), leaves bump_effect there plus ring_effect (yellow / blue) or fire_effect (red), which are effects only, and bounces back at the mirrored angle to its starting height, playing dive_animation (attack box, one attack ID for the whole flight) with trail_effect; enemy units and the base it touches on the way down or up take the near-attack damage (status word 15; target count word 17; each target once per pod per sortie; attribute yellow 0, blue 2, red 1, written to the pod status word 21). Arriving pods play recover_animation and turn on a circle of the same radius centred on the mirror of the attack position about the target, taking the nearest free slot not past those already there; join_wait ticks after all have arrived the turn rate falls linearly over spin_down ticks to the neutral rate and the group flies back to the attack position at its move speed (turning at the neutral rate); there it attacks again after reattack_wait ticks if an enemy is still in range, otherwise it resumes the neutral advance. A destroyed pod plays wreck_animation in place (plain or its colour; the script adds the native explosion and sound) and is removed, drawn below the live pods; the others spread evenly on the formation or gathering circle over regroup_ticks ticks, or move to the centre and stop turning when one is left; pods that have changed colour keep it, pods still on the formation circle are not moved once one has left, and pods destroyed in flight are not waited for. From the start of the spin-up to the end of the spin-down (including the dive, bounce and gathering), damage taken by the pods is multiplied by attack_damage_taken / 100 (default 100, no reduction). charge_sound plays on the colour change, launch_sound on each departure and landing, flame_sound on a red landing. The x of each bounce end point and of the gathering centre is kept within 2 × the near range of the attack position (plus the radius for bounce end points) and between the two bases (from core r132). In the unit menu action viewer the group creates the pods once their images exist (preloaded by the host viewer); the near demo is one full sortie, gathering and return (target: the ground at the near range ahead), then back to neutral. recover_ticks is the length of the recover animation (documentation only; the core waits for the animation to end).
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `role` | int | default: 0; min: 0; max: 1 |
+| `ball_unit` | unit_key | default: null; internal: true |
+| `deck_animation` | int | default: 0; min: 0; max: 1023 |
+| `hidden_animation` | int | default: 2; min: 0; max: 1023 |
+| `idle_animation` | int | default: 3; min: 0; max: 1023 |
+| `about_animation` | int | default: 6; min: 0; max: 1023 |
+| `charged_animation` | int | default: 7; min: 0; max: 1023 |
+| `dive_animation` | int | default: 10; min: 0; max: 1023 |
+| `recover_animation` | int | default: 13; min: 0; max: 1023 |
+| `wreck_animation` | int | default: 16; min: 0; max: 1023 |
+| `trail_effect` | int | default: 20; min: 0; max: 1023 |
+| `bump_effect` | int | default: 23; min: 0; max: 1023 |
+| `ring_effect` | int | default: 26; min: 0; max: 1023 |
+| `fire_effect` | int | default: 28; min: 0; max: 1023 |
+| `charge_sound` | sound_key | default: null |
+| `launch_sound` | sound_key | default: null |
+| `flame_sound` | sound_key | default: null |
+| `radius` | int | default: 52; min: 0; max: 400 |
+| `height` | int | default: 220; min: 0; max: 1000 |
+| `dive_speed` | int | default: 140; min: 10; max: 1000 |
+| `period` | int | default: 36; min: 4; max: 1000 |
+| `neutral_period` | int | default: 216; min: 4; max: 10000 |
+| `spin_up` | int | default: 30; min: 1; max: 300 |
+| `spin_down` | int | default: 30; min: 1; max: 300 |
+| `about_ticks` | int | default: 32; min: 1; max: 300 |
+| `charged_hold` | int | default: 24; min: 0; max: 300 |
+| `single_hold` | int | default: 12; min: 0; max: 300 |
+| `launch_gap` | int | default: 15; min: 0; max: 300 |
+| `join_wait` | int | default: 10; min: 0; max: 300 |
+| `regroup_ticks` | int | default: 20; min: 1; max: 300 |
+| `recover_ticks` | int | default: 14; min: 0; max: 300 |
+| `reattack_wait` | int | default: 54; min: 0; max: 3000 |
+| `attack_damage_taken` | int | default: 100; min: 0; max: 100 |
+| `target_range` | int | default: 650; min: 0; max: 4000 |
 

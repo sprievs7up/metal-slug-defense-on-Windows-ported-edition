@@ -14,6 +14,7 @@ struct StateIO{
 void msd_lab_netplay_state(StateIO& io);          // lab_hooks.cpp：AI 段位、单位来源、相持判定、LAB 音效队列、底栏触点
 void msd_lab_netplay_defaults(uint32_t seed);     // 清零后需要非零初值的字段（AI 随机数、单位来源序号、触点片段）
 void msd_flame_netplay_state(StateIO& io);        // community_content.cpp：KT-21 喷火单次击退记录
+void msd_union_netplay_state(StateIO& io);        // community_content.cpp：UNION 2 号机的瞄准单位种类（2026-11-02 R12）
 // 位 0：渲染抑制（重模拟帧跳过 glDrawArrays/glDrawElements）；位 1：确定性数学（sin/cos/sinf/cosf 软件实现）。
 extern uint32_t msd_netplay_flags;
 constexpr uint32_t NETPLAY_SUPPRESS_DRAW=1u,NETPLAY_DETERMINISTIC_MATH=2u;

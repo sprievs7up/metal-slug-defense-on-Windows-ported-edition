@@ -1179,6 +1179,18 @@ class Lab:
         enemy_team = p.word(enemy + 0x38c) if red_team is None else red_team
         cleared = 0
         red = self.ensure_red_renderer()
+        fast = getattr(p.uc.lib, 'msd_lab_fix_units', None)
+        if fast is not None:
+            # 核心 r136 起：同一逐单位读写在核心中完成（src/lab_hooks.cpp msd_lab_fix_units，mode 0），每帧一次调用
+            import ctypes
+            fast.restype = ctypes.c_uint32
+            manager = p.call('_ZN19BattleObjectManager11getInstanceEv')
+            cleared = fast(ctypes.byref(p.uc.ctx), *(ctypes.c_uint32(v & 0xffffffff) for v in (
+                manager, 0, enemy_team, 0xffffffff if red_team is None else red_team, red or 0, mine, enemy)))
+            if cleared and not getattr(self, 'reported_invulnerable', False):
+                self.reported_invulnerable = True
+                self.record('cleared_remote_hp_lock', count=cleared)
+            return
         for team in (0, 1):
             manager, units = self.team_list(team)
             renderer = p.word(manager + 64)

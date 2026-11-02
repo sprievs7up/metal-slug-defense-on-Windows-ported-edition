@@ -384,11 +384,12 @@ static bool z_front_behind(Context& c,uint32_t u,uint32_t f,uint32_t team){
  return z_ahead(c,u)||z_ahead(c,f);
 }
 // getNearEnemyDistance 入口（r0 管理器、r1 单位、r2 非 0 时扣除双方宽度）；计算次序同原生，结果截断为整数。
-static bool z_balloon_flying(Context& c,uint32_t u);
+static bool z_balloon_flying(Context& c,uint32_t u);static bool un_air_distance(Context& c);   // UNION 2 号机（R12，后文）
 static bool z_distance(Context& c){
  uint32_t m=c.r[0],u=c.r[1],team=rd<uint32_t>(c,u+0x70u);
  // 气球飞行段不以任何敌方单位为攻击目标（不在空中啃咬），飞到敌方据点前由 z_balloon 放手落地。
  if(z_balloon_flying(c,u)){ret(c,0x7fffffffu);return true;}
+ if(un_air_distance(c))return true;   // 会瞄准的单位以对方 UNION 2 号机为目标（R12）
  if(!z_front_behind(c,u,rd<uint32_t>(c,m+(team?0x38u:0x3cu)),team))return false;
  uint32_t e=z_nearest_ahead(c,m,u,team,0x49u);
  if(!e){ret(c,0x7fffffffu);return true;}
@@ -1478,7 +1479,9 @@ static uint32_t ik_bullet_spec(Context& c,uint32_t b);static bool ik_beam_hits(C
 static bool mm_clip(Context& c,uint32_t o);   // 鼹鼠弹（后文）：钻出动作中按地面裁切绘制
 static bool wd_update(Context& c);static bool wd_shot(Context& c);static bool wd_bullet_update(Context& c);static bool wd_create(Context& c);static uint32_t wd_unit(Context& c,uint32_t o);static bool wd_debris(Context& c,uint32_t b);   // 钢铁死亡蠕虫（后文）
 static bool fc_update(Context& c);static bool fc_shot(Context& c);static bool fc_bullet_update(Context& c);static uint32_t fc_unit(Context& c,uint32_t o);static bool fc_orb(Context& c,uint32_t b);static bool fc_hit_before(Context& c,uint32_t b,uint32_t t);   // Fall Climber（后文）
-static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c)||wd_update(c)||fc_update(c))return;old_elder_update(c);}
+static bool un_update(Context& c);static bool un_shot(Context& c);static bool un_bullet_update(Context& c);static bool un_bullet(Context& c,uint32_t b);static bool un_bullet_hitting(Context& c,uint32_t b);static void un_damage(Context& c,uint32_t o);   // UNION（后文）
+static bool ep_update(Context& c);static void ep_damage(Context& c,uint32_t o);static bool ep_air(Context& c,uint32_t u);   // Energy Pod（后文）
+static Block old_elder_update;static void elder_update(Context& c){if(ec_update(c)||ik_update(c)||wd_update(c)||fc_update(c)||un_update(c)||ep_update(c))return;old_elder_update(c);}
 static bool ec_shot(Context& c){
  uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=ec_unit(c,o);if(!s)return false;
  int32_t x=int32_t(c.r[3]),y=rd<int32_t>(c,c.r[13]);
@@ -1488,7 +1491,7 @@ static bool ec_shot(Context& c){
  }else if(script>=zw(c,s,70)&&script<zw(c,s,70)+zw(c,s,71))ec_fire(c,act,o,script,2u,40u,x,y);
  c.pc=c.r[14];return true;
 }
-static Block old_elder_shot;static void elder_shot(Context& c){if(ec_shot(c)||ik_shot(c)||wd_shot(c)||fc_shot(c))return;old_elder_shot(c);}
+static Block old_elder_shot;static void elder_shot(Context& c){if(ec_shot(c)||ik_shot(c)||wd_shot(c)||fc_shot(c)||un_shot(c))return;old_elder_shot(c);}
 static bool ec_bullet_update(Context& c){
  uint32_t act=c.r[0],b=c.r[1],state=c.r[2],s=ec_bullet_spec(c,b);if(!s)return false;
  uint32_t kind=rd<uint32_t>(c,b+0x28u),age=rd<uint32_t>(c,b+0x2cu)+1u;wr<uint32_t>(c,b+0x2cu,age);
@@ -1506,12 +1509,13 @@ static bool ec_bullet_update(Context& c){
  }
  c.pc=c.r[14];return true;
 }
-static Block old_elder_bullet;static void elder_bullet(Context& c){if(ec_bullet_update(c)||ik_bullet_update(c)||wd_bullet_update(c)||fc_bullet_update(c))return;old_elder_bullet(c);}
+static Block old_elder_bullet;static void elder_bullet(Context& c){if(ec_bullet_update(c)||ik_bullet_update(c)||wd_bullet_update(c)||fc_bullet_update(c)||un_bullet_update(c))return;old_elder_bullet(c);}
 static Block old_elder_attack;static void elder_attack(Context& c){
  uint32_t b=c.r[1],k=ec_bullet_spec(c,b)?rd<uint32_t>(c,b+0x28u):0u;
  if(k>=2u||wd_debris(c,b)){c.pc=EC_DEFAULT_ATTACK;return;}   // 钢铁死亡蠕虫的掘削碎块：结算后消失（MSA 默认弹体 attackAction 0x10e54b8）
  if(fc_orb(c,b)){if(fc_hit_before(c,b,c.r[2])){c.r[0]=0u;c.pc=c.r[14];return;}c.pc=EC_DEFAULT_ATTACK;return;}   // Fall Climber 的光球：贯穿，同一目标只结算一次（R6）
  if(ik_bullet_spec(c,b)&&!ik_beam_hits(c,b,c.r[2])){c.r[0]=0u;c.pc=c.r[14];return;}   // 侵略者之王的激光：先按光束判定
+ if(un_bullet(c,b)){if(un_bullet_hitting(c,b)){c.r[0]=0u;c.pc=c.r[14];return;}c.pc=EC_DEFAULT_ATTACK;return;}   // UNION 的弹体：结算后预约 60（MSA 默认弹体）；播放命中动作中不再结算
  old_elder_attack(c);
 }
 static void ec_create(Context& c){
@@ -2505,6 +2509,8 @@ static uint32_t fc_hooks=0u;
 // R15（用户 2026-11-01，核心 r117）：阶段 2（蓄力）与 3（激光）另乘字 112 / 100（行为参数 special_laser_damage_taken，缺省 100；本单位 10 即 −90%）。
 static Block old_fc_damage;static void fc_damage(Context& c){
  if(active(c)){
+  un_damage(c,c.r[4]);   // UNION 合体单位（R6，核心 r120）：未隐去时伤害乘 combined_damage_taken / 100
+  ep_damage(c,c.r[4]);   // Energy Pod 的球（核心 r131）：攻击过程中伤害乘 attack_damage_taken / 100
   uint32_t o=c.r[4],s=fc_unit(c,o);
   if(s&&fc_w(c,s,FC_FORM)==2){
    uint32_t phase=rd<uint32_t>(c,o+0x2cu);
@@ -2543,12 +2549,1107 @@ static int32_t fc_parts(Context& c,uint32_t o,uint32_t s,WdBox* out){
  return n;
 }
 extern "C" __declspec(dllexport) uint32_t msd_community_fall_climber_version(){return elder_centipede_hooks==10u&&wd_part_hooks==3u&&fc_hooks==2u?3u:0u;}   // 2（r116）：绝招移动段减伤；3（r117）：蓄力与激光段另一档减伤
+// ---------- UNION（2026-11-01，行为库 v32：union v1，标记 268435456；基准 192 BattleAction_Alien；核心 r118；R5 起行为库 v33：union v2，核心 r119；R6 起行为库 v34：union v3，核心 r120；R7 起行为库 v35：union v4，核心 r121；R8 起行为库 v36：union v5，核心 r123；R9 起行为库 v37：union v6，核心 r125；R11 核心 r126；R12 起行为库 v38：union v7，核心 r127）----------
+// MS7 任务 5 首领（docs/MS7_M5_UNITS_2026-11-01.md）。按 MSA 7.13.0 BattleAction_UnionCombine（合体单位，role 0）与 BattleAction_Union1 /
+// Union2 / Union3（1–3 号机，role 1–3，内部单位）的底层代码移植；参数存 ZSpec 字 53–127（与 elder_centipede / invader_king /
+// iron_death_worm / fall_climber 互斥，按标记区分）。动作号为 MSA 脚本号。
+//  合体单位：R6 起不置 Guard（MSA initialize 置 Guard），受到的伤害乘 combined_damage_taken / 100（un_damage，由 BattleUnit::damage 钩子 fc_damage
+//   调用；隐去后置 Guard）；R7 起出场后累计 max_combined_ticks 帧仍未分离时（10 / 20 中）自行预约状态 30 开始分离（+0x2c 计数）；10 待机、20 原生 actionMove 前进；30 / 40 / 50 第一帧置不能近距 / 远距 / 绝招并播放分离动作，
+//   状态第 split_tick 帧生成三机（MSA createUnit：3 号机 (0, 0)、2 号机 (+70, −276)、1 号机 (+390, −6)，偏移为朝向坐标）：2、1 号机以嵌套调用
+//   BattleObject::createChildObject（0x101de224，等级 = getStatus(0) = 状态字 2）生成，其图像随合体单位开战预载（子单位字链 合体 → 1 号机 → 2 号机；
+//   原生预载只到第二级，嵌套调用中不能建立新图像）；3 号机在同一帧末尾尾调用 ParaTrooper::summonZakoBazooka 在原处生成（paratrooper_landing
+//   按落地映射表把固定的 45 换成 3 号机，登记 +0xfc）；R6 起三机生命按生成时合体单位的生命比例继承（当前生命 = 最大生命 × 合体当前 / 合体最大，
+//   至少 1；3 号机在隐去的那一帧换算，合体生成时的生命记在 +0x34）；隐去的那一帧 1、3 号机互记对方的实例号（+0x62），并移除分离动作的效果对象；下一帧置隐形、不可选为目标、不阻挡、击退守护，移到本方据点之后（MSA postDivide 移到画面外），此后只在三机都不在时移除本单位
+//   （MSA 阶段 3；不再合体）。80 播放击退动作；100–140 播放损毁动作后在 (0, −50)、(100, −30)、(200, −50) 放 0xff17、0xff04、0xff17 后移除。
+//  1、3 号机：每帧按对方的位置推挤（MSA union1PositionAdjust / union3PositionAdjust：3 号机前缘 x3 + 朝向 × 237 越过 1 号机后缘 x1 − 朝向 × 113
+//   时，1 号机放到 x3 + 朝向 × 349，或 3 号机放到 x1 − 朝向 × 349）；10 / 20 / 30 / 40 / 50 同 MSA 各槽，攻击动作播完进入攻击等待；3 号机绝招
+//   第 16、40 帧各投下 5 枚炸弹（MSA createDropBomb：落点距离 = min(绝招投射距离（字 33），到敌方据点前缘的距离），偏移表同 MSA）。
+//  2 号机：飞行（每帧写回高度），20 按移速向前飞（不越过敌方据点前缘；R14 起不再拉到本方据点，见 un_fly_limit）；30 播完后升空（rise_ticks 帧内升到画面上方，MSA union2BaseReturn）、
+//   移到本方据点上空、以每帧 descend_speed / 10 下降到离地 hover 后回到 10（MSA 状态 21 / 22），升降中不攻击、击退守护。
+//  损毁（100–140）：1、3 号机播放冲撞动作，以每帧 crash_speed / 10 前冲（攻击框由脚本 op4 设定；数据行副本的绝招组伤害 × crash_damage、
+//   第二参数 99、目标数 999，攻击组 50，同侵略者之王 ik_death_blast），停住（不越过敌方据点前缘）或命中（+0x318 剩余目标数减少）时爆炸；
+//   2 号机下坠（初速 4、每帧加 0.5），触地时爆炸（R9 起机体下缘 touchdown_offset 触地即爆炸，crash_animation 的攻击框按损毁冲撞的伤害结算，
+//   并同 1、3 号机放大型爆炸与音效 253）。R7（用户：1、3 号机自爆的爆炸太小，像直接消失）：1、3 号机爆炸第 0 / 3 / 6 / 9 帧另在机体各处放
+//   大型单位爆炸 0xff17（UN_BLASTS，朝向坐标），第 0 帧播放原生大爆炸音效 253（脚本中不播放的槽登记以随单位预载），第 2 帧起不绘制本机（在第一团白闪中隐去）。
+//  爆炸：MSA deadBurst（0x10e44f0，第 3 参数 1）：第 0 帧 0xff04、偶数帧四处 0xff03 向外扩散，
+//   death_burst_ticks 帧后移除；1、3 号机另每 4 帧随机放 0xff16，2 号机每 2 帧随机放 0xff17（伪随机取实例号与帧数，不用对象地址）。
+//  弹体（Alien::shotBullet）：按弹体表以 addBulletNotAim 建立（攻击组为当前状态，新建攻击 ID），种类 1 水平飞行、2 飞向最近的敌方单位（弹速取
+//   攻击组的状态字 18 / 25 / 32）、3 按脚本 op7、4 分离弹体（split_tick 帧后移除）、5 水平射出后追踪（R8，用户：1 号机的平射导弹改为追踪型；
+//   第 UN_HOME_DELAY 帧起每帧向最近的敌方单位（fs_nearest，含据点；瞄准其高度一半处）转向至多 UN_HOME_TURN（4096 为一周），
+//   第 UN_HOME_TICKS 帧后不再转向；速率不变；精灵保持水平不倾斜，用户指定同钢铁哨兵第一形态的导弹）；命中或落地时按“命中”值放共用效果、播放命中动作或直接移除
+//   （R9：命中值 ≥ 65536 时低 16 位为命中动作，(值 >> 16) & 255 为同时在下方 40 放出的共用效果，同原生派斯戰車的降落伞炸弹）。
+//   动作演示中弹体交给原生。
+//  宽度（R5，核心 r119）：object_width 大于 0 时每帧把精灵 +8（单位宽度，精灵像素）写为该值，供原生前线、索敌距离与阻挡使用。
+// 单位的状态只在客体对象内存：+0x1c 标记（1 已出场、2 已开始分离、4 已生成三机、8 已隐去、16 损毁已开始、32 爆炸已开始、64 已置升降标记）、
+// +0x20 本动作 tick、+0x24 / +0x26 / +0x28 三机实例号（合体单位）或对方实例号（1、3 号机 +0x24）、+0x2c 2 号机升降阶段、+0x30 爆炸 tick、
+// +0x34 冲撞的剩余目标数（1、3 号机）或生成三机时的生命（合体单位，R6）、+0x38 2 号机悬停高度 / 下坠速度。弹体：+0x24 阶段（1 播放命中动作）、+0x28 种类 + 40、+0x2c 存在 tick、
+// +0x30 / +0x34 速度、+0x38 命中值。
+static constexpr uint32_t UN_FLAG=268435456u,UN_W=53u,UN_KIND=40u,UN_CHILD=0x101de224u,UN_GUARD=0x10177e42u,UN_INVISIBLE=0x10177e3au,
+ UN_DONT_LONG=0x10178588u,UN_STAGE_FX=0x1017819au,UN_NK_GUARD=0x1017818cu,UN_IS_SP=0x101e0e36u;
+enum:uint32_t{UN_ROLE,UN_U1,UN_U2,UN_U3,UN_NEUTRAL,UN_MOVE,UN_NEAR,UN_FAR,UN_SPECIAL,UN_DIVIDE,UN_KNOCK,UN_DEATH,UN_DEATH_LOOP,UN_SPLIT,
+ UN_OFF1,UN_OFF2=UN_OFF1+2u,UN_OFF3=UN_OFF2+2u,UN_SPACING=UN_OFF3+2u,UN_HOVER=UN_SPACING+3u,UN_DESCEND,UN_RISE,UN_RISE_TOP,UN_UNTARGET,UN_CRASH,
+ UN_CRASH_NUM,UN_CRASH_DEN,UN_BURST,UN_BOMB,UN_SPLIT_BULLET,UN_WIDTH,UN_TAKEN,UN_MAX_COMBINED,UN_TOUCHDOWN,UN_CRASH_ANIM,UN_HIDDEN,UN_GFOLLOW,UN_GFOLLOW_N,UN_BULLET_N,UN_BULLETS};
+// R7：1、3 号机爆炸中的大型爆炸（tick、朝向坐标 x、y）与音效
+static constexpr int16_t UN_BLASTS[4][3]={{0,20,-90},{3,-70,-60},{6,100,-110},{9,10,-160}};
+static constexpr uint32_t UN_BLAST_FX=0xff17u,UN_BLAST_SE=253u;
+// R8：追踪弹体（种类 5）的直飞帧数、转向上限（4096 为一周，68 约 6°）与转向持续帧数
+static constexpr uint32_t UN_HOME_DELAY=8u,UN_HOME_TICKS=120u;static constexpr int32_t UN_HOME_TURN=68;
+static uint32_t un_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&UN_FLAG)?s:0u;}
+static int32_t un_w(Context& c,uint32_t s,uint32_t i){return int32_t(zw(c,s,UN_W+i));}
+static uint32_t un_team(Context& c,uint32_t o){return rd<uint32_t>(c,o+0x70u)&1u;}
+static uint32_t un_row(Context& c,uint32_t o){return o+0x128u+0xecu*rd<uint32_t>(c,o+0x300u);}
+// 本队单位链表中实例号与 UnitID 相符、仍在场（+0x64 非 0；BattleObject::kill 置 0）的单位（MSA 0x10dea70 按序号查找）
+static uint32_t un_find(Context& c,uint32_t team,uint32_t inst,uint32_t uid){
+ if(!inst||!uid)return 0u;
+ uint32_t head=is_call(c,IS_TEAM_UNITS,IS_MANAGER,team,0u),u=head;
+ for(uint32_t k=0;u&&k<1024u;++k){
+  if(rd<uint16_t>(c,u+0x62u)==inst&&rd<uint32_t>(c,u+0x128u)==uid&&rd<uint8_t>(c,u+0x64u))return u;
+  uint32_t n=rd<uint32_t>(c,u+0x124u);u=n?n-0x11cu:0u;if(u==head)break;
+ }
+ return 0u;
+}
+// 本队第一个 UnitID 相符的在场单位（MSA union1Init / union3 阶段 0：按 UnitID 找对方，用于关卡直接放置的 1、3 号机）
+// R14（用户：2 号机分离后向前闪现）：2 号机前进只限在“敌方据点前缘 − 朝向 × 本单位宽度”之前。wd_clamp 另把 x 限在本方据点之前，
+// 合体单位在本方据点之后分离时（R13 移速减半后，出场 78 帧的分离点在本方据点之后约 120），2 号机生成在本方据点之后，前进的第一帧被拉到据点处（前跳约 51）。
+static float un_fly_limit(Context& c,uint32_t o,float x){
+ uint32_t foe=ik_base(c,(rd<uint32_t>(c,o+0x70u)&1u)^1u);int32_t d=ik_dir(c,o);
+ if(foe){float f=wd_edge(c,foe)-float(d)*wd_width(c,o);x=d>0?std::min(x,f):std::max(x,f);}
+ return x;
+}
+static uint32_t un_first(Context& c,uint32_t team,uint32_t uid){
+ uint32_t head=is_call(c,IS_TEAM_UNITS,IS_MANAGER,team,0u),u=head;
+ for(uint32_t k=0;u&&k<1024u;++k){
+  if(rd<uint32_t>(c,u+0x128u)==uid&&rd<uint8_t>(c,u+0x64u)&&rd<int32_t>(c,u+0x308u)>0)return u;
+  uint32_t n=rd<uint32_t>(c,u+0x124u);u=n?n-0x11cu:0u;if(u==head)break;
+ }
+ return 0u;
+}
+// 伪随机（效果位置）：实例号与帧数的散列，回滚两端相同
+static uint32_t un_rand(Context& c,uint32_t o,uint32_t t,uint32_t salt){
+ uint32_t h=uint32_t(rd<uint16_t>(c,o+0x62u))*2654435761u^(t+salt*977u)*40503u;h^=h>>15;h*=2246822519u;h^=h>>13;return h;
+}
+// MSA deadBurst（0x10e44f0，第 3 参数 1）：t = 0 放 0xff04（下方 20），偶数帧 2–20 在 (±a, ±b) 四处放 0xff03（a、b 按表向外扩散）
+// R11：单位所在一方的控制器是否为原生 AI。AppMain::getInstance +0xc220 为 BattleMain，其 +8 → +4 为主场景（BattleMain::getMainScene），
+// 场景 +0x40 起 8 个控制器指针（BattleMain::getEnemyController 按队伍取 +0x40 + 4 × 队伍），控制器 +0x38c 队伍、+0x39c 成员；
+// 找不到场景或控制器时（动作演示等）按玩家一方处理。联机两端的人类一方都是 Player / NetPlayer，判定一致。
+static constexpr uint32_t UN_APP=0x10161f44u,UN_VT_ENEMY=0x1092dff8u,UN_VT_NET_ENEMY=0x1092e128u;
+// R15：BattleSpriteFactory::getInstance、convertIDtoImageIndex（社区单位经 convertunit 钩子）、Image 对象的虚表
+static constexpr uint32_t UN_SF_INSTANCE=0x101dc984u,UN_IMAGE_INDEX=0x101dc928u,UN_IMAGE_VT=0x10923cf8u;
+static bool un_guest_ptr(uint32_t a){return a>=0x10000000u&&a<0x1ffff000u;}
+static bool un_ai_side(Context& c,uint32_t o){
+ uint32_t app=0u;msd_guest_call(c,UN_APP,0u,0u,0u,0u,&app);
+ uint32_t main=un_guest_ptr(app)?rd<uint32_t>(c,app+0xc220u):0u,h=un_guest_ptr(main)?rd<uint32_t>(c,main+8u):0u;
+ uint32_t scene=un_guest_ptr(h)?rd<uint32_t>(c,h+4u):0u;if(!un_guest_ptr(scene))return false;
+ uint32_t team=rd<uint32_t>(c,o+0x70u),member=rd<uint32_t>(c,o+0x74u);
+ for(uint32_t i=0;i<8u;++i){
+  uint32_t k=rd<uint32_t>(c,scene+0x40u+i*4u);
+  if(un_guest_ptr(k)&&rd<uint32_t>(c,k+0x38cu)==team&&rd<uint32_t>(c,k+0x39cu)==member){uint32_t vt=rd<uint32_t>(c,k);return vt==UN_VT_ENEMY||vt==UN_VT_NET_ENEMY;}
+ }
+ return false;
+}
+static void un_burst_fx(Context& c,uint32_t act,uint32_t o,uint32_t t){
+ static const int16_t BX[10]={40,76,108,136,152,172,188,200,208,212},BY[10]={40,80,120,160,200,240,280,320,360,400};
+ if(t==0u){is_effect(c,act,o,0,20,0xff04u);return;}
+ if((t&1u)||t>20u)return;
+ int32_t a=BX[t/2u-1u],b=BY[t/2u-1u];
+ is_effect(c,act,o,-a,-b,0xff03u);is_effect(c,act,o,a,-b,0xff03u);is_effect(c,act,o,-a,b,0xff03u);is_effect(c,act,o,a,b,0xff03u);
+}
+// R6：机体 m 的当前生命按合体单位的生命比例 hp / mx 继承（不高于其现有生命，至少 1）
+static void un_inherit(Context& c,uint32_t m,int32_t hp,int32_t mx){
+ if(!m||mx<=0)return;
+ int32_t cap=rd<int32_t>(c,m+0x304u),v=int32_t(int64_t(cap)*std::max(hp,0)/mx);if(v<1)v=1;
+ if(v<rd<int32_t>(c,m+0x308u))wr<int32_t>(c,m+0x308u,v);
+}
+// R6：未隐去的合体单位受到的伤害乘 combined_damage_taken / 100（BattleUnit::damage 0x101e0ab3 块的属性耐性倍率 s14，同 fc_damage）
+static void un_damage(Context& c,uint32_t o){
+ uint32_t s=un_unit(c,o);if(!s||un_w(c,s,UN_ROLE)!=0||(rd<uint32_t>(c,o+0x1cu)&8u))return;
+ int32_t pct=un_w(c,s,UN_TAKEN);if(pct>=0&&pct<100)setfs(c,14,fs(c,14)*float(pct)*0.01f);
+}
+static uint32_t un_spawn(Context& c,uint32_t o,uint32_t uid,int32_t dx,int32_t dy){
+ if(!uid)return 0u;
+ const uint32_t st[2]={uint32_t(dy),uint32_t(rd<uint8_t>(c,o+0x115u))};uint32_t ch=0u;
+ if(!msd_guest_call_stack(c,UN_CHILD,o,uid,is_status(c,o,2u),uint32_t(dx),st,2u,&ch)||!ch)return 0u;   // 等级 = getStatus(0) = 状态字 2；未完成时 ch 不是单位
+ wr<uint32_t>(c,ch+0xf0u,rd<uint32_t>(c,o+0xf0u));   // 同原生召唤（MummyGate::summonUnit）
+ return ch;
+}
+// 弹体表：返回种类（0 为不在表中）与命中值
+static uint32_t un_entry(Context& c,uint32_t s,uint32_t script,uint32_t& hit){
+ uint32_t n=std::min<uint32_t>(zw(c,s,UN_W+UN_BULLET_N),10u);
+ for(uint32_t i=0;i<n;++i){
+  uint32_t w=UN_W+UN_BULLETS+i*4u,first=zw(c,s,w),cnt=zw(c,s,w+1u);
+  if(script>=first&&script<first+cnt){hit=zw(c,s,w+3u);return zw(c,s,w+2u);}
+ }
+ return 0u;
+}
+static uint32_t un_fire(Context& c,uint32_t act,uint32_t o,uint32_t script,uint32_t state,int32_t x,int32_t y){
+ uint32_t s=un_unit(c,o),hit=0u,kind=s?un_entry(c,s,script,hit):0u;if(!kind)return 0u;
+ if(state<30u||state>50u)state=50u;
+ uint32_t b=ec_fire(c,act,o,script,UN_KIND+kind,state,x,y);if(!b)return 0u;
+ wr<uint16_t>(c,b+0x144u,uint16_t(is_call(c,WD_NEW_ID,IS_MANAGER,rd<uint32_t>(c,o+0x70u),0u)));
+ wr<uint32_t>(c,b+0x24u,0u);wr<uint32_t>(c,b+0x38u,hit);wr<float>(c,b+0x30u,0.0f);wr<float>(c,b+0x34u,0.0f);
+ uint32_t k=kind&15u;
+ if(k==4u)wr<uint32_t>(c,b+0x3cu,rd<uint16_t>(c,o+0x62u));   // R14：分离弹体记所属合体单位的实例号（un_ground_follow）
+ if(k==1u||k==2u||k==5u){
+  float v=rd<float>(c,un_row(c,o)+(state==30u?18u:state==40u?25u:32u)*4u),vx=float(ik_dir(c,o))*v,vy=0.0f;
+  if(k==2u){   // MSA 0x10deed4：飞向 x 最近的敌方单位（腰部）
+   float bx=rd<float>(c,b+0x8cu),by=rd<float>(c,b+0x90u),best=1e9f,tx=0.0f,ty=0.0f;
+   uint32_t head=is_call(c,IS_TEAM_UNITS,IS_MANAGER,un_team(c,o)^1u,0u),u=head;
+   for(uint32_t i=0;u&&i<1024u;++i){
+    if(rd<uint8_t>(c,u+0x64u)&&rd<int32_t>(c,u+0x308u)>0&&rd<uint32_t>(c,u+0x7cu)<100u&&u!=head){
+     float ux=rd<float>(c,u+0x8cu),dd=std::fabs(ux-bx);if(dd<best){best=dd;tx=ux;ty=rd<float>(c,u+0x90u)-40.0f;}
+    }
+    uint32_t n=rd<uint32_t>(c,u+0x124u);u=n?n-0x11cu:0u;if(u==head)break;
+   }
+   if(best<1e8f){float dx=tx-bx,dy=ty-by,dd=std::sqrt(dx*dx+dy*dy);if(dd>1e-3f){vx=dx/dd*v;vy=dy/dd*v;}}
+  }
+  wr<float>(c,b+0x30u,vx);wr<float>(c,b+0x34u,vy);
+  if(k==5u){wr<uint32_t>(c,b+0x3cu,ik_dir(c,o)>0?0u:2048u);wr<float>(c,b+0x40u,v);}   // 航向（4096 为一周）与速率
+ }
+ return b;
+}
+// MSA createDropBomb（0xdaf61c）：kind 0 / 1 两组各 5 枚，偏移为（落点距离 − dx，dy）（朝向坐标，世界单位）
+static void un_drop_bombs(Context& c,uint32_t act,uint32_t o,uint32_t s,uint32_t kind){
+ static const int16_t K[2][10]={{10,-400,75,-360,130,-360,200,-410,100,-410},{150,-370,50,-370,110,-380,175,-390,230,-360}};
+ uint32_t team=un_team(c,o),foe=ik_base(c,team^1u);int32_t d=ik_dir(c,o);float x=rd<float>(c,o+0x8cu);
+ int32_t reach=int32_t(is_status(c,o,33u)),dist=reach;
+ if(foe){float f=rd<float>(c,foe+0x8cu)-float(d)*wd_width(c,foe);dist=std::min(reach,int32_t(std::fabs(x-f)));}
+ for(uint32_t i=0;i<5u;++i)un_fire(c,act,o,uint32_t(un_w(c,s,UN_BOMB)),50u,dist-int32_t(K[kind][i*2u]),int32_t(K[kind][i*2u+1u]));
+}
+static uint32_t un_bullet_spec(Context& c,uint32_t b){
+ if(!active(c)||!head(c,168u)||!b||rd<uint32_t>(c,b)!=FS_BULLET_VPTR)return 0u;
+ uint32_t uid=rd<uint32_t>(c,b+0x128u);if(!record(c,uid))return 0u;
+ uint32_t s=rd<uint32_t>(c,head(c,168u)+(uid-U)*4u),k=rd<uint32_t>(c,b+0x28u);
+ return s&&(zw(c,s,0)&UN_FLAG)&&k>UN_KIND&&k<=UN_KIND+31u?s:0u;
+}
+// R14（用户：分离动作不在平地时 1 号机卡进地面，生成时瞬移；应在坡道上也正常地在地面上分开）：分离动作中 1 号机由分离弹体
+// （split_bullet，其 x 即 1 号机的位置）与脚本 ground_follow_first 起 ground_follow_count 个效果（op12）水平移出，原生只改 x，坡道上部件钻进地面或悬空，
+// 生成的 1 号机下一帧贴地时纵向跳变。分离弹体每帧按所属合体单位（un_fire 记于弹体 +0x3c 的实例号）求 1 号机应有的高度：
+// 前 UN_GF_BLEND 帧由合体单位的高度渐变到弹体处的地形，之后贴合地形；与已加的升降量之差加到弹体与所属效果的 y（+0x90 / +0x98）。
+// 效果在弹体第 2 帧认领：UnitID 与朝向同合体单位、动作在上述范围内、在合体单位前方 0 至 first_offset 之内且未被认领者，+0x24 记 UN_GF_TAG | 实例号
+// （原生效果对象不写 +0x24–+0x54；同一方两台 UNION 先后分离时各认领自己的部件）。已加的升降量与起点处地形的高度差记在合体单位 +0x38 / +0x3c
+// （分离开始时清零，合体单位不另用这两字）；1 号机按 first_offset 的 y 加已加的升降量生成。
+static constexpr uint32_t UN_GF_TAG=0x554e0000u,UN_GF_BLEND=16u;
+static void un_ground_follow(Context& c,uint32_t b,uint32_t s,uint32_t age){
+ if(age<2u||z_viewer(c))return;
+ uint32_t team=rd<uint32_t>(c,b+0x70u)&1u,uid=rd<uint32_t>(c,b+0x128u),inst=rd<uint32_t>(c,b+0x3cu)&0xffffu,o=un_find(c,team,inst,uid);if(!o)return;
+ uint32_t fl=rd<uint32_t>(c,o+0x1cu);if(!(fl&2u)||(fl&8u))return;   // 分离中、尚未隐去
+ int32_t d=ik_dir(c,o);float cx=rd<float>(c,o+0x8cu),cy=rd<float>(c,o+0x90u),xa=rd<float>(c,b+0x8cu);
+ uint32_t first=uint32_t(un_w(c,s,UN_GFOLLOW)),n=uint32_t(un_w(c,s,UN_GFOLLOW_N)),tag=UN_GF_TAG|inst;
+ auto each=[&](auto fn){
+  uint32_t e=rd<uint32_t>(c,IS_MANAGER+0x28u),first_e=e;
+  for(uint32_t k=0;e&&k<512u;++k){
+   uint32_t link=rd<uint32_t>(c,e+0x120u),a=rd<uint32_t>(c,e+0xc4u);
+   if(rd<uint32_t>(c,e+0x128u)==uid&&rd<uint32_t>(c,e+0x78u)==rd<uint32_t>(c,o+0x78u)&&a>=first&&a<first+n)fn(e);
+   e=link?link-0x11cu:0u;if(e==first_e)break;
+  }
+ };
+ if(age==2u){
+  float reach=float(un_w(c,s,UN_OFF1));
+  each([&](uint32_t e){float r=float(d)*(rd<float>(c,e+0x8cu)-cx);if(!rd<uint32_t>(c,e+0x24u)&&r>=0.0f&&r<=reach)wr<uint32_t>(c,e+0x24u,tag);});
+  wr<float>(c,o+0x38u,0.0f);wr<float>(c,o+0x3cu,ik_ground(c,o,xa)-cy);
+ }
+ float w=std::min(1.0f,float(age-2u)/float(UN_GF_BLEND)),want=ik_ground(c,o,xa)-cy-(1.0f-w)*rd<float>(c,o+0x3cu),inc=want-rd<float>(c,o+0x38u);
+ wr<float>(c,o+0x38u,want);
+ if(inc==0.0f)return;
+ auto lift=[&](uint32_t q){wr<float>(c,q+0x90u,rd<float>(c,q+0x90u)+inc);wr<float>(c,q+0x98u,rd<float>(c,q+0x98u)+inc);};
+ lift(b);
+ each([&](uint32_t e){if(rd<uint32_t>(c,e+0x24u)==tag)lift(e);});
+}
+static bool un_bullet_update(Context& c){
+ uint32_t act=c.r[0],b=c.r[1],state=c.r[2],s=un_bullet_spec(c,b);if(!s)return false;
+ uint32_t raw=rd<uint32_t>(c,b+0x28u)-UN_KIND,kind=raw&15u,age=rd<uint32_t>(c,b+0x2cu)+1u,hit=rd<uint32_t>(c,b+0x38u);wr<uint32_t>(c,b+0x2cu,age);
+ auto done=[&]{c.pc=c.r[14];return true;};
+ if(state==200u||age>300u){is_call(c,IS_KILL,b);return done();}
+ if(rd<uint32_t>(c,b+0x24u)==1u){if(age>1u&&!rd<uint8_t>(c,b+0xc9u))is_call(c,IS_KILL,b);return done();}   // 命中动作播完移除
+ // 分离弹体：只随合体单位隐去而移除（split_tick 帧后）；命中后不消失、继续前进（MSA BulletAction_UnionCombine::update 不处理状态 60，同一攻击 ID 对每个目标结算一次）
+ if(kind==4u){if(age>uint32_t(un_w(c,s,UN_SPLIT))+1u)is_call(c,IS_KILL,b);else if(un_w(c,s,UN_GFOLLOW_N)>0)un_ground_follow(c,b,s,age);return done();}
+ float x=rd<float>(c,b+0x8cu),y=rd<float>(c,b+0x90u);
+ if(kind==5u){   // R8：追踪（航向 +0x3c、速率 +0x40）；精灵保持水平
+  uint32_t a=rd<uint32_t>(c,b+0x3cu)&0xfffu;float v=rd<float>(c,b+0x40u);
+  if(age>UN_HOME_DELAY&&age<=UN_HOME_TICKS)if(uint32_t e=fs_nearest(c,b)){
+   float ex=rd<float>(c,e+0x8cu),ey=rd<float>(c,e+0x90u)-float(int32_t(is_call(c,IS_HEIGHT,e))>>1);
+   uint32_t want=is_call(c,IS_ATAN,uint32_t(int32_t(ex-x)),uint32_t(int32_t(ey-y)))&0xfffu;
+   int32_t dd=int32_t((want-a)&0xfffu);if(dd>=2048)dd-=4096;dd=std::max(-UN_HOME_TURN,std::min(UN_HOME_TURN,dd));
+   a=uint32_t(int32_t(a)+dd)&0xfffu;wr<uint32_t>(c,b+0x3cu,a);
+  }
+  wr<float>(c,b+0x30u,float(int32_t(is_call(c,IS_COS,a)))*(1.0f/4096.0f)*v);wr<float>(c,b+0x34u,float(int32_t(is_call(c,IS_SIN,a)))*(1.0f/4096.0f)*v);
+ }
+ if(kind==1u||kind==2u||kind==5u){x+=rd<float>(c,b+0x30u);y+=rd<float>(c,b+0x34u);wd_debris_place(c,b,x,y);}
+ bool landed=!(raw&16u)&&kind!=4u&&y>=float(stage_altitude(c,int32_t(x)));
+ if(state==60u||state==59u||landed){
+  // R9：命中值 ≥ 65536 时低 16 位为命中动作、(值 >> 16) & 255 为同时放出的共用效果 n（0xff00 + n），放在弹体下方 40
+  // （同原生 BulletAction_M3_RocketVan 状态 60：动作 17 与 addEffect(0, 40, 0xff16)）
+  uint32_t anim=hit<65536u?hit:hit&0xffffu,fx=hit<65536u?0u:0xff00u|((hit>>16)&0xffu);
+  if(anim&&anim<4096u){   // 命中动作（MSA BulletAction_Union2_L / Union3_L：60 / 130 / 200 播放命中动作后移除）
+   msd_guest_call(c,IS_MOVE_X,b,0u,0u,0xffffffffu,nullptr);msd_guest_call(c,IS_MOVE_Y,b,0u,0u,0xffffffffu,nullptr);
+   wr<float>(c,b+0x30u,0.0f);wr<float>(c,b+0x34u,0.0f);wr<uint32_t>(c,b+0x24u,1u);wr<uint32_t>(c,b+0x2cu,0u);
+   is_call(c,IS_SET_ANIM,b,anim,0u,1u);
+   if(fx)is_effect(c,act,b,0,40,fx);
+  }else{if(hit)is_effect(c,act,b,0,0,hit);is_call(c,IS_KILL,b);}
+ }
+ return done();
+}
+static bool un_shot(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],script=c.r[2],s=un_unit(c,o);if(!s)return false;
+ // R15：动作演示中同样按弹体表建立（R1–R14 演示中交给原生；原生 Alien::shotBullet 在共用描述符中取动作 18，即 1 号机机体，演示中三机攻击时显示为 1 号机的复本）
+ un_fire(c,act,o,script,rd<uint32_t>(c,o+0x7cu),int32_t(c.r[3]),rd<int32_t>(c,c.r[13]));
+ c.pc=c.r[14];return true;
+}
+static bool un_update(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],state=c.r[2],frame=c.r[3],s=un_unit(c,o);if(!s)return false;
+ int32_t anim=int32_t(rd<uint32_t>(c,o+0xc4u)),pend=-1,d=ik_dir(c,o),role=un_w(c,s,UN_ROLE);
+ auto A=[&](uint32_t i){return un_w(c,s,i);};
+ auto cur=[&]{return pend>=0?pend:anim;};
+ auto run=[&]{return pend>=0||rd<uint8_t>(c,o+0xc9u)!=0;};
+ auto set=[&](int32_t a){pend=a;wr<uint32_t>(c,o+0x20u,0u);};
+ auto body=[&](uint32_t fn,bool on){is_call(c,fn,o,on?1u:0u);};
+ bool viewer=z_viewer(c),first=frame==0u,dying=state>=100u&&state<=140u;
+ uint32_t team=un_team(c,o),fl=rd<uint32_t>(c,o+0x1cu),tick=rd<uint32_t>(c,o+0x20u)+1u;wr<uint32_t>(c,o+0x20u,tick);
+ uint32_t uid[3]={uint32_t(A(UN_U1)),uint32_t(A(UN_U2)),uint32_t(A(UN_U3))};
+ float x=rd<float>(c,o+0x8cu),y=rd<float>(c,o+0x90u);
+ // R5（核心 r119）：单位宽度（精灵 +8，getWidthSize = +8 × +0x28）。四个单位共用一份描述符，原生 setObjectSize 取首个设受击框的脚本，
+ // 三机都得到合体单位的宽度（356）；敌方据此算出的距离短 180–220，停在射程之外、子弹落在机体之前。每帧写为本机待机受击框的前缘（精灵像素）。
+ if(A(UN_WIDTH)>0){uint32_t sp=rd<uint32_t>(c,o+0x5cu);if(sp)wr<uint32_t>(c,sp+8u,uint32_t(A(UN_WIDTH)));}
+ auto ground=[&]{float g=ik_ground(c,o,rd<float>(c,o+0x94u));wr<float>(c,o+0x90u,g);wr<float>(c,o+0x98u,g);};
+ auto attack=[&](int32_t a){if(first)set(a);else if(!run()){is_call(c,EC_START_WAIT,act,o,state);set(A(UN_NEUTRAL));}};
+ bool kill=false,summon=false;
+ if(!(fl&1u)){
+  fl|=1u;
+  if(role==2){body(WD_AREA_THROUGH,true);body(UN_STAGE_FX,true);if(A(UN_UNTARGET)){body(WD_NO_TARGET,true);body(WD_DONT_TOCHE,true);}wr<float>(c,o+0x38u,y);}
+  else{
+   if(!rd<uint16_t>(c,o+0x24u)){uint32_t p=un_first(c,team,uid[role==1?2:0]);if(p)wr<uint16_t>(c,o+0x24u,rd<uint16_t>(c,p+0x62u));}
+   if(!viewer)ik_place(c,o,x,ik_ground(c,o,x));   // MSA union1Init：贴地（不限位）
+   // R13（用户：合体阶段已在 2.6 秒内自行分离，不必显示绝招冷却条）：合体单位出场即置 DontSpAttack，getSpAttackCooldownRate 为 0，
+   // BattlePlayerOperator::drawUI（0x1d8daa）不画冷却条；点按与全体绝招不再发动合体单位的绝招，分离由攻击状态 30 / 40 与限时 max_combined_ticks 引起
+   if(role==0&&!viewer)body(EC_DONT_SP,true);
+  }
+  if(!dying)set(A(UN_NEUTRAL));
+ }
+ if(role==0){
+  // ---- 合体单位（MSA BattleAction_UnionCombine）----
+  if(!viewer&&!dying&&!(fl&2u)&&A(UN_MAX_COMBINED)>0){   // R7：合体状态限时（出场起计）
+   uint32_t age=rd<uint32_t>(c,o+0x2cu)+1u;wr<uint32_t>(c,o+0x2cu,age);
+   if(age>=uint32_t(A(UN_MAX_COMBINED))&&(state==10u||state==20u))is_call(c,IS_RESERVE,o,30u,1u);
+  }
+  if(viewer){
+   // R15（用户：商店 / 单位界面中 UNION 应进入即展开，三机同步演示攻击；MSA actionViewUpdate：30 三机近距、40 2、3 号机远距、50 三机绝招，
+   // 全部结束后回到 10）。宿主演示（unit_viewer）以原生 BattleObjectManager::draw 画出全部对象，并对演示单位（本单位）预约 30 / 40 / 50、
+   // 回到 10 后放回起点再演示。演示中：三机图像已建立后（见下）本单位即在 first_offset / second_offset / third_offset 处生成三机（3 号机同战斗中由尾调用生成），
+   // 改播 hidden_animation；预约的 30 / 40 / 50 中（三机都已更新过一次后）把三机放回各自的偏移处（地面单位贴本单位的高度）并预约同一状态（1 号机没有远距，40 时不动），
+   // 三机都离开 30–50 后本单位回到 10；本单位在 10 时三机也按偏移跟随（宿主把本单位放回起点）。R1–R14 只播放分离动作。
+   // 三机的绝招特效类型（BattleUnit +0x3d0，BattleObjectManager::createUnit 经 setEffectRenderer 对本方单位写 1）写为 0，同演示单位
+   // （createKyotenUnit 建立）：类型为 1 / 2 时 BattleUnit::draw 调用 BattleEffectRenderer::drawSpAttackEffect，演示中在 Graphics::drawImageSE 停止。
+   uint32_t m[3];for(uint32_t i=0;i<3u;++i)m[i]=un_find(c,team,rd<uint16_t>(c,o+0x24u+i*2u),uid[i]);
+   auto home=[&](uint32_t i){
+    if(!m[i])return;
+    wr<uint32_t>(c,m[i]+0x3d0u,0u);
+    float ny=y+(i==0u?0.0f:float(A(UN_OFF1+i*2u+1u)));
+    ik_place(c,m[i],x+float(d)*float(A(UN_OFF1+i*2u)),ny);if(i==1u)wr<float>(c,m[i]+0x38u,ny);
+   };
+   // 三机的图像须已建立：原生演示只为演示单位建立图像，开战时沿子单位字链预载。钩子内嵌套建立单位时 BattleSpriteFactory::createImage
+   // 能分配页数组（堆导入可用）而不能读图，留下页为空或未初始化的数组，之后 createImage 见到数组即直接返回，所得精灵绘制时在
+   // Graphics::drawImageSE 停止（1、2 号机；3 号机由原生流程建立不受影响）。宿主演示（unit_viewer.preload_spawned）在每次建立演示后预载三机图像；
+   // 本单位在三机图像页都已建立（页 0 为 Image 对象）后才生成三机，此前照常播放合体待机。
+   auto drawable=[&](uint32_t u){
+    uint32_t f=is_call(c,UN_SF_INSTANCE,0u),idx=is_call(c,UN_IMAGE_INDEX,u),arr=f?rd<uint32_t>(c,rd<uint32_t>(c,f+0xe108u)+idx*4u):0u,pg=arr?rd<uint32_t>(c,arr):0u;
+    return pg>=0x10000000u&&pg<0x20000000u&&rd<uint32_t>(c,pg)==UN_IMAGE_VT;
+   };
+   if(!(fl&4u)&&!(drawable(uid[0])&&drawable(uid[1])&&drawable(uid[2]))){   // 等待图像（不预载时停在合体待机，演示动作直接结束）
+    if(cur()!=A(UN_NEUTRAL))set(A(UN_NEUTRAL));
+    if(state==30u||state==40u||state==50u)is_call(c,IS_RESERVE,o,10u,1u);
+   }else{
+   if(!(fl&4u)){
+    fl|=4u;
+    for(uint32_t k=2u;k-->0u;){uint32_t q=un_spawn(c,o,uid[k],A(UN_OFF1+k*2u),A(UN_OFF1+k*2u+1u));wr<uint16_t>(c,o+0x24u+k*2u,q?rd<uint16_t>(c,q+0x62u):uint16_t(0u));m[k]=q;home(k);}
+    if(!rd<uint32_t>(c,o+0xfcu))summon=true;
+   }else if(!(fl&8u)){
+    fl|=8u;
+    uint32_t m3=rd<uint32_t>(c,o+0xfcu);
+    if(m3&&rd<uint32_t>(c,m3+0x128u)==uid[2]&&rd<uint8_t>(c,m3+0x64u)){
+     wr<uint16_t>(c,o+0x28u,rd<uint16_t>(c,m3+0x62u));m[2]=m3;home(2u);
+     if(m[0]){wr<uint16_t>(c,m[0]+0x24u,rd<uint16_t>(c,m3+0x62u));wr<uint16_t>(c,m3+0x24u,rd<uint16_t>(c,m[0]+0x62u));}
+    }
+   }else fl|=512u;   // 三机都已至少更新一次（转达状态从下一帧起）
+   bool ready=(fl&512u)!=0u,busy=false;for(uint32_t i=0;i<3u;++i)if(m[i]){uint32_t st=rd<uint32_t>(c,m[i]+0x7cu);if(st>=30u&&st<=50u)busy=true;}
+   if(state==30u||state==40u||state==50u){   // 转达（256：本次已转达，+0x30 记转达时的状态帧；演示动作在三机就绪前开始时就绪后补转达）
+    if(ready&&!(fl&256u)){fl|=256u;wr<uint32_t>(c,o+0x30u,frame);for(uint32_t i=0;i<3u;++i)if(m[i]){home(i);if(!(state==40u&&i==0u))is_call(c,IS_RESERVE,m[i],state,1u);}}
+    else if((fl&256u)&&frame>=rd<uint32_t>(c,o+0x30u)+3u&&!busy)is_call(c,IS_RESERVE,o,10u,1u);
+   }else{fl&=~256u;if(ready&&!busy)for(uint32_t i=0;i<3u;++i)home(i);}
+   if(A(UN_HIDDEN)>0&&cur()!=A(UN_HIDDEN))set(A(UN_HIDDEN));
+   }
+  }else if(fl&8u){   // 已分离（阶段 3）：三机都不在时移除
+   bool any=false;for(uint32_t i=0;i<3u;++i)if(un_find(c,team,rd<uint16_t>(c,o+0x24u+i*2u),uid[i]))any=true;
+   if(!any&&!viewer)kill=true;
+  }else if(dying&&!(fl&4u)){   // 三机已生成时照常隐去（R6 起合体单位可受伤）
+   if(!(fl&16u)){fl|=16u;set(A(UN_DEATH));}
+   else if(!run()){is_effect(c,act,o,0,-50,0xff17u);is_effect(c,act,o,100,-30,0xff04u);is_effect(c,act,o,200,-50,0xff17u);kill=true;}
+  }else if(fl&2u||state==30u||state==40u||state==50u){
+   if(!(fl&2u)){fl|=2u;body(WD_DONT_SHORT,true);body(UN_DONT_LONG,true);body(EC_DONT_SP,true);set(A(UN_DIVIDE));wr<uint32_t>(c,o+0x30u,0u);wr<float>(c,o+0x38u,0.0f);wr<float>(c,o+0x3cu,0.0f);}
+   uint32_t t=rd<uint32_t>(c,o+0x30u)+1u;wr<uint32_t>(c,o+0x30u,t);   // 分离动作的帧（第一帧为 1；MSA 状态帧 n 对应 t = n + 1）
+   if(t==uint32_t(A(UN_SPLIT))+1u&&!(fl&4u)){
+    // MSA createUnit（3 号机、2 号机、1 号机同一帧）：2、1 号机以嵌套调用生成（其图像随合体单位开战预载：子单位字链 合体 → 1 号机 → 2 号机）；
+    // 3 号机在本函数末尾尾调用 ParaTrooper::summonZakoBazooka 在原处（偏移 (0, 0)）生成（原生以 UnitID 45 经 createChildObject 生成，
+    // paratrooper_landing 按落地映射表换成 3 号机，登记 +0xfc；原生流程中可建立未预载的图像）
+    fl|=4u;
+    int32_t hp=rd<int32_t>(c,o+0x308u),mx=rd<int32_t>(c,o+0x304u);wr<int32_t>(c,o+0x34u,hp);
+    for(uint32_t k=2u;k-->0u;){
+     int32_t dy=A(UN_OFF1+k*2u+1u)+(k==0u&&A(UN_GFOLLOW_N)>0?int32_t(std::lround(rd<float>(c,o+0x38u))):0);   // R14：1 号机在其部件随地形升降后的高度生成
+     uint32_t m=un_spawn(c,o,uid[k],A(UN_OFF1+k*2u),dy);un_inherit(c,m,hp,mx);
+     wr<uint16_t>(c,o+0x24u+k*2u,m?rd<uint16_t>(c,m+0x62u):uint16_t(0u));
+    }
+    if(!rd<uint32_t>(c,o+0xfcu))summon=true;
+   }else if(t>uint32_t(A(UN_SPLIT))+1u&&!(fl&8u)){
+    fl|=8u;body(UN_GUARD,true);body(UN_INVISIBLE,true);body(WD_NO_TARGET,true);body(WD_DONT_TOCHE,true);body(UN_NK_GUARD,true);body(WD_AREA_THROUGH,true);
+    // R12（用户：分开后 3 号机的贴图错误地显示在据点处）：原生绘制不看 Invisible，隐去的合体单位停在分离动作最后一帧（3 号机车身）、移到本方据点之后，
+    // 敌方一侧镜头可卷到该处。改播空白动作 hidden_animation，并把本单位状态副本的小地图标记（字 45 / 46）写为 0。
+    if(A(UN_HIDDEN)>0)set(A(UN_HIDDEN));
+    {uint32_t row=un_row(c,o);wr<int32_t>(c,row+45u*4u,0);wr<int32_t>(c,row+46u*4u,0);}
+    // 3 号机（summonZakoBazooka 登记于 +0xfc）：记实例号，并与 1 号机互记（MSA createUnit）
+    uint32_t m3=rd<uint32_t>(c,o+0xfcu),m1=un_find(c,team,rd<uint16_t>(c,o+0x24u),uid[0]);
+    if(m3&&rd<uint32_t>(c,m3+0x128u)==uid[2]&&rd<uint8_t>(c,m3+0x64u)){
+     wr<uint16_t>(c,o+0x28u,rd<uint16_t>(c,m3+0x62u));
+     if(m1){wr<uint16_t>(c,m1+0x24u,rd<uint16_t>(c,m3+0x62u));wr<uint16_t>(c,m3+0x24u,rd<uint16_t>(c,m1+0x62u));}
+     un_inherit(c,m3,rd<int32_t>(c,o+0x34u),rd<int32_t>(c,o+0x304u));
+    }
+    // 分离动作的效果对象（op12：3 号机车身、1 号机与飞艇的部件、烟雾）随合体单位隐去而移除（MSA EffectAction_UnionCombine）
+    uint32_t e=rd<uint32_t>(c,IS_MANAGER+0x28u),first_e=e;
+    for(uint32_t k=0;e&&k<512u;++k){
+     uint32_t link=rd<uint32_t>(c,e+0x120u);
+     if(rd<uint32_t>(c,e+0x128u)==rd<uint32_t>(c,o+0x128u)&&rd<uint32_t>(c,e+0x78u)==rd<uint32_t>(c,o+0x78u))is_call(c,IS_KILL,e);   // R12：原生效果不记队伍（+0x70 恒为 0，R1–R11 只在我方一侧移除），以建立时的朝向（同本单位）区分双方
+     e=link?link-0x11cu:0u;if(e==first_e)break;
+    }
+    {uint32_t own=ik_base(c,team);float bx=own?rd<float>(c,own+0x8cu):x;ik_place(c,o,bx-float(d)*400.0f,y);}
+   }
+  }else switch(state){
+   case 10u:if(first||(cur()!=A(UN_NEUTRAL)&&!run()))set(A(UN_NEUTRAL));break;
+   case 20u:
+    if(viewer){if(cur()!=A(UN_NEUTRAL))set(A(UN_NEUTRAL));break;}
+    if(cur()!=A(UN_MOVE))set(A(UN_MOVE));
+    msd_guest_call(c,EC_ACTION_MOVE,act,o,l_bits(-1.0f),0u,nullptr);ground();
+    break;
+   case 80u:if(first)set(A(UN_KNOCK));wr<uint32_t>(c,o+0x84u,10u);break;
+   default:break;
+  }
+ }else if(dying){
+  // ---- 损毁（MSA Union1 / Union3 状态 100–130，Union2 状态 100–130）----
+  if(!(fl&16u)){
+   fl|=16u;set(A(UN_DEATH));wr<uint32_t>(c,o+0x30u,0u);wr<float>(c,o+0x38u,4.0f);
+   if(role!=2||A(UN_CRASH_ANIM)>0){   // 冲撞：数据行副本的绝招组改为损毁冲撞（MSA 攻击 4），攻击组 50；R9 起 2 号机的触地爆炸同样
+    uint32_t row=un_row(c,o);int64_t dmg=int64_t(rd<int32_t>(c,row+29u*4u))*A(UN_CRASH_NUM)/std::max(1,A(UN_CRASH_DEN));
+    wr<int32_t>(c,row+29u*4u,int32_t(std::min<int64_t>(dmg,INT32_MAX)));wr<float>(c,row+30u*4u,99.0f);wr<uint32_t>(c,row+31u*4u,999u);
+    wr<uint32_t>(c,o+0x88u,50u);wr<uint16_t>(c,o+0x26u,rd<uint16_t>(c,o+0x314u));   // R12：冲撞前（上一次攻击）的攻击 ID
+   }
+  }
+  if(!(fl&32u)){
+   if(role==2){   // 下坠，触地时爆炸（MSA union2TouchDown：地形高度 ≤ y + 机体高度一半）
+    // R9（用户：摔落到地上的瞬间就爆炸，触地爆炸造成 3000 伤害）：机体下缘（原点下方 touchdown_offset）触地即爆炸，原点放到触地处；
+    // crash_animation 大于 0 时播放该动作（攻击框为触地爆炸，伤害同 1、3 号机的损毁冲撞），否则同 R1–R8 直接隐去。
+    if(!run()&&cur()==A(UN_DEATH))set(A(UN_DEATH_LOOP));
+    float v=rd<float>(c,o+0x38u),g=ik_ground(c,o,x),off=float(A(UN_TOUCHDOWN));y+=v;wr<float>(c,o+0x38u,v+0.5f);
+    bool down=viewer||y+off>=g;if(down&&!viewer)y=g-off;
+    ik_place(c,o,x,y);
+    if(down){
+     fl|=32u;wr<uint32_t>(c,o+0x30u,0u);
+     if(!(A(UN_CRASH_ANIM)>0&&!viewer))body(UN_INVISIBLE,true);   // 触地帧仍绘制机体，下一帧（爆炸第 0 帧）换为触地爆炸动作
+    }
+   }else{
+    if(!run()&&cur()==A(UN_DEATH))set(A(UN_DEATH_LOOP));
+    float nx=viewer?x:wd_clamp(c,o,x+float(d)*float(A(UN_CRASH))*0.1f);
+    // R12（用户：自爆冲撞直接穿过敌方单位）：R1–R11 在损毁那一帧以剩余目标数（+0x318）为基准，此时冲撞的攻击尚未开始，基准是上一次攻击（如近距冲撞）
+    // 的余数；冲撞攻击开始时原生重置为目标数 999，第一次命中后回到同一余数，判不出命中。改为：攻击 ID（+0x314）已不是冲撞前的 ID，
+    // 且剩余目标数小于冲撞的目标数（数据行副本字 31）即为命中（循环动作重新开始攻击时同样成立）。
+    uint16_t aid=rd<uint16_t>(c,o+0x314u);
+    bool hit=aid&&aid!=rd<uint16_t>(c,o+0x26u)&&rd<int32_t>(c,o+0x318u)<rd<int32_t>(c,un_row(c,o)+31u*4u);
+    bool stopped=tick>2u&&std::fabs(nx-x)<0.01f;
+    ik_place(c,o,nx,viewer?y:ik_ground(c,o,nx));
+    if(hit||stopped||viewer){fl|=32u;wr<uint32_t>(c,o+0x30u,0u);}
+   }
+  }else{
+   uint32_t t=rd<uint32_t>(c,o+0x30u);wr<uint32_t>(c,o+0x30u,t+1u);
+   un_burst_fx(c,act,o,t);
+   if((role!=2||A(UN_CRASH_ANIM)>0)&&!viewer){   // R7：大型爆炸与音效，第 2 帧起隐去本机；R9 起 2 号机同样（爆炸放在触地处，触地爆炸动作的攻击框之后隐去）
+    int32_t lift=role==2?A(UN_TOUCHDOWN):0;
+    if(role==2&&t==0u)set(A(UN_CRASH_ANIM));
+    for(const auto& b:UN_BLASTS)if(t==uint32_t(b[0]))is_effect(c,act,o,b[1],b[2]+lift,UN_BLAST_FX);
+    if(t==0u)msd_guest_call(c,Z_PLAY_SE,o,UN_BLAST_SE,0u,0u,nullptr);
+    if(t==(role==2?8u:2u))body(UN_INVISIBLE,true);
+   }
+   if(role==2){if(!(t&1u)){uint32_t r=un_rand(c,o,t,2u);is_effect(c,act,o,int32_t(r%300u)-150,int32_t((r>>9)%200u)-70,0xff17u);}}
+   else if(!(t&3u)){uint32_t r=un_rand(c,o,t,1u);is_effect(c,act,o,int32_t(r%200u)-100,int32_t((r>>9)%120u)-90,0xff16u);}
+   if(t>=uint32_t(A(UN_BURST)))kill=true;
+  }
+ }else{
+  // ---- 1–3 号机（MSA BattleAction_Union1 / Union2 / Union3）----
+  uint32_t ph=rd<uint32_t>(c,o+0x2cu);
+  if(role==2&&ph){
+   // 升空（MSA union2BaseReturn → 状态 21）与下降（状态 22）
+   float hy=rd<float>(c,o+0x38u);
+   if(ph==1u){
+    float top=float(A(UN_RISE_TOP)),v=(top-hy)/float(std::max<int32_t>(1,A(UN_RISE)-int32_t(tick)+1));   // MSA moveYTo(−h / 2, 25)：h = 84 × 2
+    hy+=v;if(tick>=uint32_t(A(UN_RISE))){hy=top;uint32_t own=ik_base(c,team);if(own)x=rd<float>(c,own+0x8cu);ph=2u;}
+   }else{
+    hy+=float(A(UN_DESCEND))*0.1f;
+    if(ik_ground(c,o,x)-hy<=float(A(UN_HOVER))){
+     ph=0u;fl&=~64u;body(WD_DONT_SHORT,false);body(UN_DONT_LONG,false);body(EC_DONT_SP,false);body(UN_NK_GUARD,false);
+     is_call(c,IS_RESERVE,o,10u,0u);set(A(UN_NEUTRAL));
+    }
+   }
+   wr<float>(c,o+0x38u,hy);wr<uint32_t>(c,o+0x2cu,ph);
+  }else switch(state){
+   case 10u:if(first||(cur()!=A(UN_NEUTRAL)&&!run()))set(A(UN_NEUTRAL));break;
+   case 20u:
+    if(viewer){if(cur()!=A(UN_NEUTRAL))set(A(UN_NEUTRAL));break;}
+    if(cur()!=A(UN_MOVE))set(A(UN_MOVE));
+    if(role==2){float v=rd<float>(c,un_row(c,o)+5u*4u);x=un_fly_limit(c,o,x+float(d)*v);}
+    else{msd_guest_call(c,EC_ACTION_MOVE,act,o,l_bits(-1.0f),0u,nullptr);ground();x=rd<float>(c,o+0x8cu);}
+    break;
+   case 30u:
+    if(role==2&&!first&&!run()){
+     is_call(c,EC_START_WAIT,act,o,30u);set(A(UN_NEUTRAL));
+     if(!viewer){wr<uint32_t>(c,o+0x2cu,1u);fl|=64u;body(WD_DONT_SHORT,true);body(UN_DONT_LONG,true);body(EC_DONT_SP,true);body(UN_NK_GUARD,true);}
+    }else attack(A(UN_NEAR));
+    break;
+   case 40u:attack(A(UN_FAR));break;
+   case 50u:
+    if(role==3){if(frame==16u)un_drop_bombs(c,act,o,s,0u);else if(frame==40u)un_drop_bombs(c,act,o,s,1u);}   // R15 起动作演示中同样投弹
+    attack(A(UN_SPECIAL));
+    break;
+   case 80u:if(first)set(A(UN_KNOCK));else if(!run())wr<uint32_t>(c,o+0x84u,10u);break;
+   default:break;
+  }
+  if(role==2&&!viewer)ik_place(c,o,x,rd<float>(c,o+0x38u));   // 飞行：高度只由本段改变
+  // R11（用户：分开后绝招应由玩家手动发动）：所在一方由原生 AI 控制（BattleControllerEnemy / NetEnemy）时，待机 / 前进中绝招可发动
+  // （BattleUnit::isSpAttack）即自行预约状态 50（原生 AI 只在敌方绝招开关 +0x3bd 打开时发动一般单位的绝招）；玩家一方不自行发动，
+  // 由原生点按（BattlePlayerOperator::onGameScreenTouchEnded：本方单位中绝招可发动、与点按处横向 ≤ 99、纵向 < 80 者）或全体绝招发动
+  if(!viewer&&!ph&&(state==10u||state==20u)&&un_ai_side(c,o)&&is_call(c,UN_IS_SP,o))is_call(c,IS_RESERVE,o,50u,1u);
+  if(role!=2&&!viewer){   // 推挤（MSA union1PositionAdjust / union3PositionAdjust）
+   uint32_t p=un_find(c,team,rd<uint16_t>(c,o+0x24u),uid[role==1?2:0]);
+   if(p&&rd<int32_t>(c,p+0x308u)>0){
+    float px=rd<float>(c,p+0x8cu),gap=float(A(UN_SPACING)),front=float(A(UN_SPACING+1u)),rear=float(A(UN_SPACING+2u)),mx=x;
+    float x1=role==1?x:px,x3=role==1?px:x;
+    if(float(d)*((x3+float(d)*front)-(x1-float(d)*rear))>0.0f)mx=role==1?x3+float(d)*gap:x1-float(d)*gap;
+    if(mx!=x)ik_place(c,o,mx,ik_ground(c,o,mx));
+   }
+  }
+ }
+ wr<uint32_t>(c,o+0x1cu,fl);
+ if(kill){is_call(c,IS_KILL,o);c.pc=c.r[14];return true;}
+ if(summon){c.r[0]=act;c.r[1]=o;c.pc=Z_SUMMON_CHILD;return true;}   // 尾调用生成 3 号机（返回本 update 的调用者）
+ if(pend>=0)is_call(c,IS_SET_ANIM,o,uint32_t(pend),1u,1u);
+ c.pc=c.r[14];return true;
+}
+static bool un_bullet(Context& c,uint32_t b){return un_bullet_spec(c,b)!=0u;}
+// 播放命中动作中不再结算；R9：命中值 ≥ 65536（派斯戰車式炸弹）的爆炸动作照常结算其攻击框（原生 BulletAction_M3_RocketVan 状态 60 的攻击框 2），
+// 攻击 ID 不变，下落中已命中的目标不再结算；结算后预约的 60 在播放命中动作中不处理
+static bool un_bullet_hitting(Context& c,uint32_t b){return rd<uint32_t>(c,b+0x24u)==1u&&rd<uint32_t>(c,b+0x38u)<65536u;}
+// ---- R12：瞄准弹以 2 号机为目标（用户：会瞄准的单位把 2 号机当目标，例如崔佛、基寇卡、反坦克兵；拉尔夫、克拉克的子弹不瞄准）----
+// 原生瞄准弹（addBulletImpl：瞄准标记、目的距离与弹速均为正时调用 setMoveParamsNearEnemyTarget）只取对方最前单位中不含 NoTarget 者
+// （管理器 +0x38 / +0x3c），2 号机为空中单位（NoTarget、DontToche）因此不被瞄准。
+//  1) setMoveParamsNearEnemyTarget 取得的目标（0x1017d6d4 块的 r5，空时为 0x1017d736 块）之前若有对方的 UNION 2 号机（前缘更靠前，或没有目标），
+//     改以 2 号机为目标；是否真的转向、与目标同高时直飞等仍由原生判定（拉尔夫的远距没有目的距离，不经此函数；克拉克的弹体动作每帧改为贴地移动）。
+//  2) 经此函数的弹体按其 UnitID 记为“会瞄准”（un_aim，联机回滚状态，开战时清零）；弹体动作每帧改写运动的类（贴地 actionMove，或 actionMoveX / Y 而
+//     不重新瞄准：克拉克、大门的地雷震、草薙京的暗拂、萨鲁比亚、BIG JOHN、ALLEN JR.、PARTY P、火星人）不计。
+//  3) 会瞄准的单位（2）所记的种类，或行动类以瞄准版 addBullet 射击、其中没有改写运动的弹体动作（UN_AIM_VT，libAppMain.so 1.46.0 静态分析的 169 个类）
+//     且远距弹体的目的距离（字 26）与弹速（浮点字 25）均为正者）在 getNearEnemyDistance 中，对方 2 号机比最前单位更靠前（或没有最前单位）时按 2 号机计算距离，
+//     距离不足近距射程时取近距射程 + 1（近距攻击不发射瞄准弹时，以远距攻击打 2 号机）。
+static uint8_t un_aim[5120];
+static constexpr uint32_t UN_AIM_VT[]={
+ 0x109298c0u,0x10929920u,0x109299b0u,0x10929a10u,0x10929aa0u,0x10929ad0u,0x10929b00u,0x10929b30u,0x10929b60u,0x10929b90u,0x10929bc0u,0x10929bf0u,
+ 0x10929c20u,0x10929c50u,0x10929c80u,0x10929cb0u,0x10929d70u,0x10929da0u,0x10929dd0u,0x10929e00u,0x10929e30u,0x10929e60u,0x10929e90u,0x10929ec0u,
+ 0x10929ef0u,0x10929f20u,0x10929f50u,0x10929fe0u,0x1092a040u,0x1092a070u,0x1092a0a0u,0x1092a100u,0x1092a130u,0x1092a160u,0x1092a190u,0x1092a1c0u,
+ 0x1092a1f0u,0x1092a220u,0x1092a250u,0x1092a2b0u,0x1092a2e0u,0x1092a340u,0x1092a3d0u,0x1092a460u,0x1092a490u,0x1092a520u,0x1092a550u,0x1092a5b0u,
+ 0x1092a5e0u,0x1092a610u,0x1092a640u,0x1092a670u,0x1092a6a0u,0x1092a730u,0x1092a7c0u,0x1092a7f0u,0x1092a820u,0x1092a880u,0x1092a8b0u,0x1092a940u,
+ 0x1092a9a0u,0x1092a9d0u,0x1092aa00u,0x1092aa30u,0x1092aa60u,0x1092aa90u,0x1092aac0u,0x1092ab20u,0x1092ab50u,0x1092abe0u,0x1092ac40u,0x1092aca0u,
+ 0x1092acd0u,0x1092ad60u,0x1092ad90u,0x1092adc0u,0x1092ae20u,0x1092aee0u,0x1092af40u,0x1092afa0u,0x1092afd0u,0x1092b090u,0x1092b0f0u,0x1092b150u,
+ 0x1092b180u,0x1092b1b0u,0x1092b1e0u,0x1092b210u,0x1092b240u,0x1092b270u,0x1092b330u,0x1092b420u,0x1092b510u,0x1092b570u,0x1092b5a0u,0x1092b660u,
+ 0x1092b780u,0x1092b7e0u,0x1092b840u,0x1092bae0u,0x1092bb10u,0x1092bba8u,0x1092bc08u,0x1092bd58u,0x1092be48u,0x1092bea8u,0x1092bed8u,0x1092bf68u,
+ 0x1092bf98u,0x1092bfc8u,0x1092bff8u,0x1092c148u,0x1092c178u,0x1092c1d8u,0x1092c238u,0x1092c268u,0x1092c3f0u,0x1092c450u,0x1092c4b0u,0x1092c510u,
+ 0x1092c540u,0x1092c5a0u,0x1092c630u,0x1092c690u,0x1092c6c0u,0x1092c780u,0x1092c7e0u,0x1092c870u,0x1092c930u,0x1092c990u,0x1092c9c0u,0x1092c9f0u,
+ 0x1092ca50u,0x1092cae0u,0x1092cb40u,0x1092cba0u,0x1092ce40u,0x1092cea0u,0x1092cf60u,0x1092d020u,0x1092d080u,0x1092d0e0u,0x1092d110u,0x1092d230u,
+ 0x1092d260u,0x1092d2f0u,0x1092d350u,0x1092d380u,0x1092d4a0u,0x1092d4d0u,0x1092d500u,0x1092d560u,0x1092d5f0u,0x1092d620u,0x1092d740u,0x1092d770u,
+ 0x1092d7d0u,0x1092d800u,0x1092d860u,0x1092d920u,0x1092d950u,0x1092da40u,0x1092da70u,0x1092daa0u,0x1092dad0u,0x1092db00u,0x1092db30u,0x1092dbf0u,
+ 0x1092dc20u};
+static uint32_t union_aim_hooks=0u;
+void msd_union_netplay_state(StateIO& io){io.field(un_aim);}   // 联机回滚：会瞄准的单位种类属于战斗状态（netplay.h）
+static void un_aim_reset(){std::memset(un_aim,0,sizeof un_aim);}
+static constexpr uint32_t UN_MOTION_VT[]={0x10925098u,0x10925368u,0x10925b18u,0x10925d58u,0x109265c8u,0x109265f8u,0x10926da8u,0x10927168u,0x10928188u};
+// 对方队伍 foe 中最靠前的 UNION 2 号机（不可选为目标、存活、未损毁）或 Energy Pod 的球（核心 r131，ep_air）；front 返回其前缘（队伍 0 为 x + 宽，队伍 1 为 x − 宽）
+static uint32_t un_air_target(Context& c,uint32_t foe,float& front){
+ uint32_t head=is_call(c,IS_TEAM_UNITS,IS_MANAGER,foe,0u),u=head,best=0u;
+ for(uint32_t k=0;u&&k<1024u;++k){
+  uint32_t s=un_unit(c,u);
+  if((s&&un_w(c,s,UN_ROLE)==2&&un_w(c,s,UN_UNTARGET)&&rd<uint8_t>(c,u+0x64u)&&rd<int32_t>(c,u+0x308u)>0&&rd<uint32_t>(c,u+0x7cu)<100u
+     &&(rd<uint32_t>(c,u+0x6cu)&0x40u))||ep_air(c,u)){
+   float w=float(z_width(c,u)),x=rd<float>(c,u+0x8cu),k2=foe?x-w:x+w;
+   if(!best||(foe?k2<front:k2>front)){best=u;front=k2;}
+  }
+  uint32_t n=rd<uint32_t>(c,u+0x124u);u=n?n-0x11cu:0u;if(u==head)break;
+ }
+ return best;
+}
+// 2 号机 t（前缘 tf）是否比对方最前单位 h 更靠前（h 为 0 时为真）
+static bool un_air_ahead(Context& c,uint32_t h,uint32_t foe,float tf){
+ if(!h)return true;
+ float w=float(z_width(c,h)),x=rd<float>(c,h+0x8cu),hf=foe?x-w:x+w;
+ return foe?tf<hf:tf>hf;
+}
+static void un_aim_learn(Context& c){
+ uint32_t b=c.r[1];if(!active(c)||!b)return;
+ uint32_t uid=rd<uint32_t>(c,b+0x128u),act=rd<uint32_t>(c,b+0x58u),vt=act?rd<uint32_t>(c,act):0u;
+ if(uid<5120u&&!std::binary_search(UN_MOTION_VT,UN_MOTION_VT+sizeof UN_MOTION_VT/sizeof UN_MOTION_VT[0],vt))un_aim[uid]=1u;
+}
+static uint32_t un_aim_pick(Context& c,uint32_t b,uint32_t h){
+ if(!active(c)||!b)return 0u;
+ uint32_t foe=(rd<uint32_t>(c,b+0x70u)&1u)^1u;float tf=0.0f;
+ uint32_t t=un_air_target(c,foe,tf);
+ return t&&un_air_ahead(c,h,foe,tf)?t:0u;
+}
+HOOK(union_aim_learn,0x1017d685u, un_aim_learn(c);)
+HOOK(union_aim_target,0x1017d6d5u, if(uint32_t t=un_aim_pick(c,c.r[4],c.r[5]))c.r[5]=t;)
+static Block old_union_aim_none;static void union_aim_none(Context& c){
+ if(!c.r[5])if(uint32_t t=un_aim_pick(c,c.r[4],0u)){c.r[5]=t;c.pc=0x1017d6d5u;return;}   // 原生无目标时水平移动；有 2 号机时转入瞄准
+ old_union_aim_none(c);
+}
+// getNearEnemyDistance（z_distance 调用；r0 管理器、r1 单位、r2 非 0 时扣除双方宽度）
+static bool un_aims(Context& c,uint32_t u,uint32_t uid){
+ if(uid<5120u&&un_aim[uid])return true;
+ uint32_t act=rd<uint32_t>(c,u+0x58u),vt=act?rd<uint32_t>(c,act):0u;
+ if(!std::binary_search(UN_AIM_VT,UN_AIM_VT+sizeof UN_AIM_VT/sizeof UN_AIM_VT[0],vt))return false;
+ uint32_t row=un_row(c,u);return rd<int32_t>(c,row+26u*4u)>0&&rd<float>(c,row+25u*4u)>0.0f;
+}
+static bool un_air_distance(Context& c){
+ uint32_t m=c.r[0],u=c.r[1],uid=rd<uint32_t>(c,u+0x128u);
+ if(!active(c)||!un_aims(c,u,uid))return false;
+ uint32_t team=rd<uint32_t>(c,u+0x70u)&1u,foe=team^1u;float tf=0.0f;
+ uint32_t t=un_air_target(c,foe,tf);
+ if(!t||!un_air_ahead(c,rd<uint32_t>(c,m+(team?0x38u:0x3cu)),foe,tf))return false;
+ float ux=rd<float>(c,u+0x8cu),ex=rd<float>(c,t+0x8cu),d;
+ if(c.r[2]){float wu=float(z_width(c,u)),we=float(z_width(c,t));d=team?((ux-wu)-we)-ex:((ex-we)-wu)-ux;}
+ else d=team?ux-ex:ex-ux;
+ uint32_t row=un_row(c,u);
+ bool near_aims=rd<int32_t>(c,row+19u*4u)>0&&rd<float>(c,row+18u*4u)>0.0f;
+ int32_t near=rd<int32_t>(c,row+6u*4u);
+ if(!near_aims&&int32_t(d)<=near)d=float(near+1);
+ ret(c,uint32_t(int32_t(d)));return true;
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_union_version(){return elder_centipede_hooks==10u&&union_aim_hooks==3u?8u:0u;}
+// ---------- Energy Pod（能量弹，2026-11-02，行为库 v40：energy_pod v1，标记 536870912；基准 192 BattleAction_Alien；核心 r131；R12 核心 r132；R13 起行为库 v41：energy_pod v2，核心 r133）----------
+// MS7 任务 5 新单位（docs/MS7_ENERGY_POD_2026-11-02.md）。按用户确认的 R7 示意动画与第 5.3 节被击毁后的调整逐 tick 实现
+// （verification/ms7_epod_20261102/epod_anim.py 的 Sim.step；示意素材像素 × 2 = 世界单位）。参数存 ZSpec 字 53–85（与 elder_centipede /
+// invader_king / iron_death_worm / fall_climber / union 互斥，按标记区分），见 EP_* 与行为库说明。
+//  组单位（role 0，出场的单位）：第一帧置 Guard、隐形、不可选为目标、不阻挡、击退守护、AreaThrough 与不能近距 / 远距 / 绝招，播放 hidden_animation，
+//   小地图标记写 0，在编队位置以嵌套调用 createChildObject 生成三颗球（图像随组单位开战预载：子单位字 组 → 球）。此后每帧控制全组：
+//   编队中心 x 为本单位的 x，y 为地形以上 height（中立前进时随地形）；三颗球在半径 radius 的圆上，角 a 以 4096 为一周（朝向坐标：
+//   x = 中心 + 朝向 × r cos a，y = 中心 − r sin a；朝右一方逆时针），位置写入球的对象（球心在原点上方 EP_CY）。
+//   阶段：1 中立（转速每周 neutral_period；最近的敌方单位或据点前缘在水平“近距射程”（本单位状态词 6）以外时以移速（词 5）前进，以内且
+//   再攻击等待已过时开始攻击，此处为发起攻击的位置）→ 2 加速（spin_up tick 内线性加速到每周 period）→ 3 变色前（about_animation，
+//   about_ticks；单球不加速、不旋转）→ 4 已变色（按存活的球数取色，各球依序出发）→ 5 出击与集合 → 6 减速 → 7 飞回（以移速飞回、按中立转速旋转）
+//   → 回到 1，再攻击等待 reattack_wait。2–6 阶段球受伤乘 attack_damage_taken / 100（ep_damage，由 BattleUnit::damage 钩子 fc_damage 调用）。
+//  球（role 1，内部单位）：第一帧置 AreaThrough、StageEffectNone、NoTarget、DontToche（原生空中单位的组合，同 UNION 2 号机）；位置与动作由组单位写入。
+//   出发后按 [起点, 目标脚下地面（球底触地）, 镜像点] 以 dive_speed / 10 飞行，播放 dive_animation（攻击框；动作切换时原生清空攻击 ID，脚本 op4 建新 ID，
+//   整段俯冲与反弹不换动作，一个攻击 ID，每个目标只结算一次），攻击组 +0x88 为 30（近距组：词 15 伤害、词 17 目标数、词 21 属性，属性按颜色写入）。
+//   生命为 0（原生预约 100 / 110 / 120）时在原地播放 wreck_animation（脚本末尾放 0xff03 与音效 203），绘制优先级降 1（画在存活的球之下），播完移除。
+//  单位菜单的动作演示（z_viewer）：组单位在球的图像已建立后（宿主 unit_viewer.preload_spawned 预载行为参数引用的单位）才生成三颗球；
+//   宿主预约 30 时以前方近距射程处为目标出击一次，回到原位后预约 10；40 / 50 直接预约 10。
+// 组单位的状态（客体对象内存，+0x1c–+0x43 不随状态切换清零）：+0x1c 阶段、+0x1d 编队槽数、+0x1e 集合槽数（0 为尚无集合圆）、+0x1f 出击时的球数、
+// +0x20 自开始攻击起的 tick、+0x22 阶段内计数（中立：再攻击等待；出击与集合：全部就位后的 tick；减速：已减速的 tick）、+0x24 / +0x26 / +0x28 三颗球的实例号、
+// +0x2a 标记（1 已生成、2 集合角已定、4 演示中出击）、+0x2c 集合中心 y（集合前为最近一次出发的目标 x）、+0x30 编队基准角、+0x34 集合基准角、
+// +0x38 发起攻击的 x、+0x3c 集合中心 x、+0x40 编队中心 y。
+// 球的状态：+0x1c 位置状态（0 编队、1 飞行、2 集合、3 集合圆心、4 已击毁）、+0x1d 编队槽、+0x1e 集合槽、+0x1f 颜色（255 未变色）、+0x20 出发次序（255 无）、
+// +0x21 路径段、+0x22 标记（1 已触地、2 攻击过程减伤、4 角度过渡、8 移向圆心、16 损毁已开始、32 已置身体状态、64 组单位已处理其损毁、128 到达集合圆的偏移过渡）、+0x23 动作（0 待机、1 变色前、2 已变色、3 俯冲、4 收尾）、
+// +0x24 组单位实例号、+0x26 过渡 tick、+0x28 角度差或移向圆心的 dx、+0x2c 移向圆心的 dy、+0x30 目标 x、+0x34 触地时的球心 y（到达后为到达偏移 x、y）、+0x38 / +0x3c 出发点、+0x40 弹回终点 x（飞行中）或集合圆上的角；+0x21 到达后为偏移过渡的计数。
+// 伪随机、静态状态均不使用；回滚快照随客体内存保存。浮点只用加减乘除与 sqrt，三角函数用原生整数表（IS_COS / IS_SIN / IS_ATAN）。
+static constexpr uint32_t EP_FLAG=536870912u,EP_W=53u;
+enum:uint32_t{EP_ROLE,EP_BALL,EP_DECK,EP_HIDDEN,EP_IDLE,EP_ABOUT,EP_CHARGED,EP_DIVE,EP_RECOVER,EP_WRECK,EP_TRAIL,EP_BUMP,EP_RING,EP_FIRE,
+ EP_SE_CHARGE,EP_SE_LAUNCH,EP_SE_FLAME,EP_RADIUS,EP_HEIGHT,EP_DIVE_SPEED,EP_PERIOD,EP_NPERIOD,EP_SPIN_UP,EP_SPIN_DOWN,EP_ABOUT_T,EP_HOLD,EP_HOLD1,
+ EP_GAP,EP_JOIN_WAIT,EP_REGROUP,EP_RECOVER_T,EP_REATTACK,EP_TAKEN,EP_TARGET};
+enum:uint8_t{EP_P_NONE,EP_P_NEUTRAL,EP_P_SPINUP,EP_P_ABOUT,EP_P_CHARGED,EP_P_ATTACK,EP_P_SPINDOWN,EP_P_RETURN};
+enum:uint8_t{EP_FORM,EP_FLY,EP_JOIN,EP_HOVER,EP_DEAD};
+enum:uint8_t{EP_M_IDLE,EP_M_ABOUT,EP_M_CHARGED,EP_M_DIVE,EP_M_RECOVER};
+static constexpr float EP_CY=20.0f,EP_TURN=4096.0f;
+static constexpr float EP_JOIN_CORR=52.15f,EP_SETTLED=6.52f,EP_SKIP=32.6f;   // 示意 join_corr 0.08、就位 0.01、越过判定 0.05（弧度 × 4096 / 2π）
+static constexpr float EP_EDGE=40.0f;   // R12：弹回终点与集合圆离双方据点（x）至少此距离（世界单位，球的直径）
+static constexpr uint8_t EP_COLORS[4][3]={{0,0,0},{2,0,0},{0,2,0},{0,1,2}};   // 存活球数 → 颜色（0 黄、1 蓝、2 红）
+static constexpr uint32_t EP_ATTR[3]={0u,2u,1u};                                // 颜色 → 攻击属性（黄 0 普通、蓝 2 爆炸、红 1 火焰）
+static uint32_t ep_unit(Context& c,uint32_t o){uint32_t s=o?zspec(c,o):0u;return s&&(zw(c,s,0)&EP_FLAG)?s:0u;}
+static int32_t ep_w(Context& c,uint32_t s,uint32_t i){return int32_t(zw(c,s,EP_W+i));}
+static float ep_wrap(float a){while(a>=2048.0f)a-=EP_TURN;while(a<-2048.0f)a+=EP_TURN;return a;}
+static float ep_cos(Context& c,float a){return float(int32_t(is_call(c,IS_COS,uint32_t(int32_t(std::floor(a+0.5f)))&0xfffu)))*(1.0f/4096.0f);}
+static float ep_sin(Context& c,float a){return float(int32_t(is_call(c,IS_SIN,uint32_t(int32_t(std::floor(a+0.5f)))&0xfffu)))*(1.0f/4096.0f);}
+// 朝向坐标下的角：cos ∝ 朝向 × dx，sin ∝ −dy（与 IS_ATAN(dx, dy) 的 (cos, sin) ∝ (dx, dy) 对应）
+static float ep_atan(Context& c,float dx,float dy){
+ if(std::fabs(dx)<0.001f&&std::fabs(dy)<0.001f)return 0.0f;
+ float k=4096.0f/std::max(std::fabs(dx),std::fabs(dy));
+ return float(is_call(c,IS_ATAN,uint32_t(int32_t(dx*k)),uint32_t(int32_t(dy*k)))&0xfffu);
+}
+static float ep_ease(Context& c,float p){p=std::max(0.0f,std::min(1.0f,p));return (1.0f-ep_cos(c,p*2048.0f))*0.5f;}
+// 地形：战斗中为 BattleStage::getAltitude；动作演示中为组单位的脚下（宿主放置的起点）
+static float ep_ground(Context& c,uint32_t g,float x){
+ if(z_viewer(c))return rd<float>(c,g+0x90u);
+ int32_t a=stage_altitude(c,int32_t(x));return a==9999?rd<float>(c,g+0x90u):float(a);
+}
+static bool ep_alive(Context& c,uint32_t b){return b&&rd<uint8_t>(c,b+0x1cu)!=EP_DEAD&&rd<int32_t>(c,b+0x308u)>0&&rd<uint32_t>(c,b+0x7cu)<100u;}
+// 对方队伍中离 x 最近（水平）的敌方单位或据点前缘：返回其 x（0 个时 found 为 false）。不以空中单位、隐形与不可选为目标者为目标（z_candidate 0x49）。
+// R13：maxd 大于 0 时只取水平距离在 maxd 以内者（出发时的索敌范围 target_range）
+static float ep_nearest(Context& c,uint32_t o,float x,bool& found,float maxd=0.0f){
+ found=false;if(z_viewer(c))return x;
+ uint32_t foe=(rd<uint32_t>(c,o+0x70u)&1u)^1u,head=is_call(c,IS_TEAM_UNITS,IS_MANAGER,foe,0u),u=head;float best=0.0f,bd=0.0f;
+ for(uint32_t k=0;u&&k<1024u;++k){
+  float ex;bool ok;
+  if(u==head){ok=rd<int32_t>(c,u+0x308u)>0;ex=wd_edge(c,u);}
+  else{ok=z_candidate(c,u,0x49u)&&rd<int32_t>(c,u+0x308u)>0&&rd<uint32_t>(c,u+0x7cu)<100u;ex=rd<float>(c,u+0x8cu);}
+  if(ok){float dd=std::fabs(ex-x);if((maxd<=0.0f||dd<=maxd)&&(!found||dd<bd)){found=true;bd=dd;best=ex;}}
+  uint32_t n=rd<uint32_t>(c,u+0x124u);u=n?n-0x11cu:0u;if(u==head)break;
+ }
+ return best;
+}
+static void ep_anim(Context& c,uint32_t b,uint32_t anim,uint8_t mode){is_call(c,IS_SET_ANIM,b,anim,1u,1u);wr<uint8_t>(c,b+0x23u,mode);}
+static void ep_fx(Context& c,uint32_t b,uint32_t id,int32_t prio){
+ const uint32_t stack[3]={uint32_t(prio),id,0xffffffffu};
+ msd_guest_call_stack(c,IS_ADD_EFFECT,rd<uint32_t>(c,b+0x58u),b,0u,0u,stack,3u,nullptr);
+}
+static void ep_se(Context& c,uint32_t b,int32_t se){if(se>0)msd_guest_call(c,Z_PLAY_SE,b,uint32_t(se),0u,0u,nullptr);}
+static void ep_place(Context& c,uint32_t b,float cx,float cy){ik_place(c,b,cx,cy+EP_CY);}
+static float ep_bx(Context& c,uint32_t b){return rd<float>(c,b+0x8cu);}
+static float ep_by(Context& c,uint32_t b){return rd<float>(c,b+0x90u)-EP_CY;}
+// 示意 Sim.free_path：自 a 沿圆周转到 target 的有向角，取较短方向；途中会越过其他球时改走另一方向
+static float ep_free_path(float a,float target,const float* others,uint32_t n){
+ float d=ep_wrap(target-a);if(std::fabs(d)<1e-3f)return 0.0f;
+ auto blocked=[&](float dd){
+  float sg=dd>0.0f?1.0f:-1.0f;
+  for(uint32_t i=0;i<n;++i){float rel=(others[i]-a)*sg;while(rel<0.0f)rel+=EP_TURN;while(rel>=EP_TURN)rel-=EP_TURN;if(rel>EP_SKIP&&rel<std::fabs(dd)-EP_SKIP)return true;}
+  return false;
+ };
+ if(blocked(d)){float alt=d>0.0f?d-EP_TURN:d+EP_TURN;if(!blocked(alt))return alt;}
+ return d;
+}
+struct EpGroup{
+ Context& c;uint32_t g,s;int32_t d;bool viewer;uint32_t m[3];float r;
+ int32_t W(uint32_t i)const{return ep_w(c,s,i);}
+ float omega()const{return EP_TURN/float(std::max(1,W(EP_PERIOD)));}
+ float omega_n()const{return EP_TURN/float(std::max(1,W(EP_NPERIOD)));}
+ float cx()const{return rd<float>(c,g+0x8cu);}
+ float cy()const{return rd<float>(c,g+0x40u);}
+ float c2x()const{return rd<float>(c,g+0x3cu);}
+ float c2y()const{return rd<float>(c,g+0x2cu);}
+ uint32_t live(uint32_t* out=nullptr)const{uint32_t n=0;for(uint32_t k=0;k<3u;++k)if(ep_alive(c,m[k])){if(out)out[n]=m[k];++n;}return n;}
+ // 角度过渡（均分）：起始时的角度差在 regroup_ticks 内按余弦缓动减到 0
+ float adj_now(uint32_t b){
+  uint8_t f=rd<uint8_t>(c,b+0x22u);if(!(f&4u))return 0.0f;
+  float s2=ep_ease(c,float(rd<uint16_t>(c,b+0x26u))/float(std::max(1,W(EP_REGROUP))));
+  if(s2>=1.0f){wr<uint8_t>(c,b+0x22u,uint8_t(f&~4u));return 0.0f;}
+  return rd<float>(c,b+0x28u)*(1.0f-s2);
+ }
+ bool toward_center(uint32_t b,float x,float y){   // 移向圆心：完成时返回 false
+  uint8_t f=rd<uint8_t>(c,b+0x22u);if(!(f&8u))return false;
+  float s2=ep_ease(c,float(rd<uint16_t>(c,b+0x26u))/float(std::max(1,W(EP_REGROUP))));
+  ep_place(c,b,x+rd<float>(c,b+0x28u)*(1.0f-s2),y+rd<float>(c,b+0x2cu)*(1.0f-s2));
+  if(s2>=1.0f)wr<uint8_t>(c,b+0x22u,uint8_t(f&~8u));
+  return true;
+ }
+ void at(uint32_t b,float ox,float oy,float a){ep_place(c,b,ox+float(d)*r*ep_cos(c,a),oy-r*ep_sin(c,a));}
+ // R12（用户：敌人从下方穿过后弹回飞出画面、飞回要很久）：弹回终点与集合中心的 x 限在发起攻击的位置前后 reach 之内（2 × 进入攻击的距离，
+ // 弹回终点另加半径），并限在双方据点之间、离据点至少 margin；动作演示中只按 reach 限制。
+ float clamp_x(float x,float reach,float margin){
+  float home=rd<float>(c,g+0x38u);x=std::max(home-reach,std::min(home+reach,x));
+  if(viewer)return x;
+  uint32_t team=rd<uint32_t>(c,g+0x70u)&1u,own=ik_base(c,team),foe=ik_base(c,team^1u);if(!own||!foe)return x;
+  float a=rd<float>(c,own+0x8cu),bx=rd<float>(c,foe+0x8cu),lo=std::min(a,bx)+margin,hi=std::max(a,bx)-margin;
+  return lo<hi?std::max(lo,std::min(hi,x)):x;
+ }
+ float reach()const{return 2.0f*float(is_status(c,g,6u));}
+ // 集合圆上的位置；R12：到达处不在集合圆上（弹回终点被限制，或各球目标不同）时，到达时的偏移在 regroup_ticks 内按余弦缓动减到 0（标记 128，计数 +0x21）
+ void at_join(uint32_t b,float a){
+  float x=c2x()+float(d)*r*ep_cos(c,a),y=c2y()-r*ep_sin(c,a);uint8_t f=rd<uint8_t>(c,b+0x22u);
+  if(f&128u){
+   float s2=ep_ease(c,float(rd<uint8_t>(c,b+0x21u))/float(std::max(1,W(EP_REGROUP))));
+   x+=rd<float>(c,b+0x30u)*(1.0f-s2);y+=rd<float>(c,b+0x34u)*(1.0f-s2);
+   if(s2>=1.0f)wr<uint8_t>(c,b+0x22u,uint8_t(f&~128u));
+  }
+  ep_place(c,b,x,y);
+ }
+ float ang_of(uint32_t b,float ox,float oy){return ep_atan(c,float(d)*(ep_bx(c,b)-ox),-(ep_by(c,b)-oy));}
+ void place_form(uint32_t b){
+  if(toward_center(b,cx(),cy()))return;
+  uint8_t n=rd<uint8_t>(c,g+0x1du);
+  if(n<=1u){ep_place(c,b,cx(),cy());return;}
+  at(b,cx(),cy(),rd<float>(c,g+0x30u)+EP_TURN*float(rd<uint8_t>(c,b+0x1du))/float(n)+adj_now(b));
+ }
+ float join_target(uint32_t b){uint8_t n=rd<uint8_t>(c,g+0x1eu);return rd<float>(c,g+0x34u)+EP_TURN*float(rd<uint8_t>(c,b+0x1eu))/float(std::max<uint8_t>(1u,n));}
+ void place_hover(uint32_t b){if(!toward_center(b,c2x(),c2y()))ep_place(c,b,c2x(),c2y());}
+ void place_join(){
+  for(uint32_t k=0;k<3u;++k){
+   uint32_t b=m[k];if(!ep_alive(c,b))continue;uint8_t st=rd<uint8_t>(c,b+0x1cu);
+   if(st==EP_JOIN){float a=join_target(b)+adj_now(b);wr<float>(c,b+0x40u,a);at_join(b,a);}
+   else if(st==EP_HOVER)place_hover(b);
+  }
+ }
+ // 示意 Sim.spacing：存活的球按逆时针次序取相邻的槽（自球号最小者起），基准角取各球现角度减槽角的圆周平均
+ float spacing(uint32_t* q,uint32_t n,float ox,float oy,float base_old,float* ang){
+  for(uint32_t i=0;i<n;++i)ang[i]=ang_of(q[i],ox,oy);
+  float ref=ang[0];
+  for(uint32_t i=1;i<n;++i)for(uint32_t j=i;j>0;--j){   // 按 (ang − ref) mod 一周 排序（插入排序，n ≤ 3）
+   auto key=[&](uint32_t t){float v=ang[t]-ref;while(v<0.0f)v+=EP_TURN;while(v>=EP_TURN)v-=EP_TURN;return v;};
+   if(key(j)<key(j-1)){std::swap(ang[j],ang[j-1]);std::swap(q[j],q[j-1]);}else break;
+  }
+  float sx=0.0f,sy=0.0f;
+  for(uint32_t i=0;i<n;++i){float a=ang[i]-EP_TURN*float(i)/float(n);sx+=ep_cos(c,a);sy+=ep_sin(c,a);}
+  float mean=float(is_call(c,IS_ATAN,uint32_t(int32_t(sx*4096.0f)),uint32_t(int32_t(sy*4096.0f)))&0xfffu);
+  return base_old+ep_wrap(mean-base_old);
+ }
+ void start_adj(uint32_t b,float delta){wr<float>(c,b+0x28u,delta);wr<uint16_t>(c,b+0x26u,0u);wr<uint8_t>(c,b+0x22u,uint8_t((rd<uint8_t>(c,b+0x22u)|4u)&~8u));}
+ void start_center(uint32_t b,float ox,float oy){
+  wr<float>(c,b+0x28u,ep_bx(c,b)-ox);wr<float>(c,b+0x2cu,ep_by(c,b)-oy);wr<uint16_t>(c,b+0x26u,0u);
+  wr<uint8_t>(c,b+0x22u,uint8_t((rd<uint8_t>(c,b+0x22u)|8u)&~4u));
+ }
+ void regroup_form(){
+  uint32_t q[3];uint32_t n=live(q);
+  if(n==1u){start_center(q[0],cx(),cy());wr<uint8_t>(c,g+0x1du,1u);return;}
+  float ang[3];float base=spacing(q,n,cx(),cy(),rd<float>(c,g+0x30u),ang);
+  for(uint32_t i=0;i<n;++i){wr<uint8_t>(c,q[i]+0x1du,uint8_t(i));start_adj(q[i],ep_wrap(ang[i]-(base+EP_TURN*float(i)/float(n))));}
+  wr<float>(c,g+0x30u,base);wr<uint8_t>(c,g+0x1du,uint8_t(n));
+ }
+ void regroup_join(uint8_t phase){
+  uint32_t q[3];uint32_t n=live(q);wr<uint16_t>(c,g+0x22u,0u);
+  if(n==1u){
+   if(rd<uint8_t>(c,q[0]+0x1cu)==EP_JOIN){wr<uint8_t>(c,q[0]+0x1cu,EP_HOVER);start_center(q[0],c2x(),c2y());}
+   wr<uint8_t>(c,g+0x1eu,1u);return;
+  }
+  wr<uint8_t>(c,g+0x1eu,uint8_t(n));
+  uint32_t j[3],nj=0;for(uint32_t i=0;i<n;++i)if(rd<uint8_t>(c,q[i]+0x1cu)==EP_JOIN)j[nj++]=q[i];
+  if(!nj)return;
+  float ang[3];float base=spacing(j,nj,c2x(),c2y(),rd<float>(c,g+0x34u),ang);
+  bool direct=phase==EP_P_SPINDOWN||phase==EP_P_RETURN;
+  for(uint32_t i=0;i<nj;++i){wr<uint8_t>(c,j[i]+0x1eu,uint8_t(i));if(direct)start_adj(j[i],ep_wrap(ang[i]-(base+EP_TURN*float(i)/float(n))));}
+  wr<float>(c,g+0x34u,base);
+ }
+ // R13（用户：最近的单位都被消灭后改向远处的据点俯冲，索敌范围不能这么远）：目标只取离编队中心水平 target_range 以内者。
+ // 范围内没有敌人时：本次出击尚无球出发（any 为假）返回 false，由调用者取消本次出击；已有球出发时沿用本次出击的目标
+ // （集合前为最近一次出发的目标；集合后为集合中心与发起攻击位置的中点，即镜像前的目标，R12 的限制之后）。
+ bool launch(uint32_t b,bool any){
+  bool found=false;float x0=ep_bx(c,b),y0=ep_by(c,b);float ex;
+  if(viewer)ex=rd<float>(c,g+0x38u)+float(d)*float(is_status(c,g,6u));
+  else{
+   ex=ep_nearest(c,g,cx(),found,float(W(EP_TARGET)));
+   if(!found){
+    if(!any)return false;
+    ex=(rd<uint16_t>(c,g+0x2au)&2u)?0.5f*(c2x()+rd<float>(c,g+0x38u)):rd<float>(c,g+0x2cu);
+   }
+  }
+  float gy=ep_ground(c,g,ex)-EP_CY;
+  wr<float>(c,b+0x30u,ex);wr<float>(c,b+0x34u,gy);wr<float>(c,b+0x38u,x0);wr<float>(c,b+0x3cu,y0);
+  wr<float>(c,b+0x40u,clamp_x(2.0f*ex-x0,reach()+r,EP_EDGE));   // 弹回终点 x（镜像点，R12 起限制范围）
+  wr<uint8_t>(c,b+0x1cu,EP_FLY);wr<uint8_t>(c,b+0x21u,0u);wr<uint8_t>(c,b+0x22u,uint8_t(rd<uint8_t>(c,b+0x22u)&~(1u|4u|8u|128u)));
+  if(!(rd<uint16_t>(c,g+0x2au)&2u))wr<float>(c,g+0x2cu,ex);   // 集合前：最近一次出发的目标
+  wr<uint32_t>(c,b+0x88u,30u);   // 近距组
+  ep_anim(c,b,uint32_t(W(EP_DIVE))+rd<uint8_t>(c,b+0x1fu),EP_M_DIVE);
+  ep_se(c,b,W(EP_SE_LAUNCH));
+  return true;
+ }
+ // R13：取消本次出击。编队圆就地转为集合圆（中心为编队中心、基准角为当前编队基准角），各球播放收尾动作，之后照常减速（二、三球）、
+ // “飞回”（距离 0，当帧完成）并回到中立，再攻击等待 reattack_wait。
+ void abort(float base_now){
+  uint32_t q[3];uint32_t n=live(q);uint8_t nr=std::max<uint8_t>(1u,rd<uint8_t>(c,g+0x1du));
+  wr<float>(c,g+0x3cu,cx());wr<float>(c,g+0x2cu,cy());wr<float>(c,g+0x34u,base_now);
+  wr<uint8_t>(c,g+0x1eu,nr);wr<uint16_t>(c,g+0x2au,uint16_t(rd<uint16_t>(c,g+0x2au)|2u));
+  for(uint32_t i=0;i<n;++i){
+   uint32_t b=q[i];uint8_t col=rd<uint8_t>(c,b+0x1fu),sl=rd<uint8_t>(c,b+0x1du);
+   if(col<3u)ep_anim(c,b,uint32_t(W(EP_RECOVER))+col,EP_M_RECOVER);
+   wr<uint8_t>(c,b+0x1eu,sl);wr<uint8_t>(c,b+0x1cu,n==1u||nr<=1u?EP_HOVER:EP_JOIN);
+   wr<float>(c,b+0x40u,base_now+EP_TURN*float(sl)/float(nr));wr<uint8_t>(c,b+0x22u,uint8_t(rd<uint8_t>(c,b+0x22u)&~128u));
+  }
+ }
+ void impact(uint32_t b){
+  uint8_t col=rd<uint8_t>(c,b+0x1fu);
+  ep_fx(c,b,uint32_t(W(EP_BUMP))+col,1);
+  if(col==2u){ep_fx(c,b,uint32_t(W(EP_FIRE)),1);ep_se(c,b,W(EP_SE_FLAME));}
+  else ep_fx(c,b,uint32_t(W(EP_RING))+(col==1u?1u:0u),1);
+  ep_se(c,b,W(EP_SE_LAUNCH));
+ }
+ void arrive(uint32_t b,uint8_t& phase){
+  ep_anim(c,b,uint32_t(W(EP_RECOVER))+rd<uint8_t>(c,b+0x1fu),EP_M_RECOVER);   // 回到原高度即停止释放能量（R2）
+  uint32_t q[3];uint32_t n=live(q);uint16_t gf=rd<uint16_t>(c,g+0x2au);
+  if(n==1u){
+   wr<uint8_t>(c,b+0x1cu,EP_HOVER);wr<float>(c,g+0x3cu,ep_bx(c,b));wr<float>(c,g+0x2cu,ep_by(c,b));
+   if(!(gf&2u))wr<float>(c,g+0x34u,0.0f);
+   wr<uint16_t>(c,g+0x2au,uint16_t(gf|2u));wr<uint8_t>(c,b+0x1eu,0u);wr<uint8_t>(c,g+0x1eu,1u);(void)phase;return;
+  }
+  if(!(gf&2u)){   // 第一颗到达：集合中心为发起攻击的位置关于目标的镜像（同高）
+   wr<float>(c,g+0x3cu,clamp_x(2.0f*rd<float>(c,g+0x2cu)-rd<float>(c,g+0x38u),reach(),r+EP_EDGE));wr<float>(c,g+0x2cu,cy());   // R12 起限制范围
+  }
+  if(!rd<uint8_t>(c,g+0x1eu))wr<uint8_t>(c,g+0x1eu,uint8_t(n));
+  uint8_t nj=rd<uint8_t>(c,g+0x1eu);
+  float a=ang_of(b,c2x(),c2y());
+  bool used[3]={false,false,false};float others[3];uint32_t no=0;
+  for(uint32_t i=0;i<n;++i)if(q[i]!=b&&rd<uint8_t>(c,q[i]+0x1cu)==EP_JOIN){uint8_t sl=rd<uint8_t>(c,q[i]+0x1eu);if(sl<3u)used[sl]=true;others[no++]=join_target(q[i]);}
+  uint8_t slot=0;
+  if(!(gf&2u)){for(uint8_t k=0;k<nj;++k)if(!used[k]){slot=k;break;}wr<float>(c,g+0x34u,a-EP_TURN*float(slot)/float(nj));}
+  else{
+   float bestv=0.0f;bool any=false;
+   for(uint8_t k=0;k<nj;++k)if(!used[k]){
+    float v=std::fabs(ep_free_path(a,rd<float>(c,g+0x34u)+EP_TURN*float(k)/float(nj),others,no));
+    if(!any||v<bestv){any=true;bestv=v;slot=k;}
+   }
+  }
+  wr<uint16_t>(c,g+0x2au,uint16_t(gf|2u));
+  wr<uint8_t>(c,b+0x1eu,slot);wr<float>(c,b+0x40u,a);wr<uint8_t>(c,b+0x1cu,EP_JOIN);
+  float ox=ep_bx(c,b)-(c2x()+float(d)*r*ep_cos(c,a)),oy=ep_by(c,b)-(c2y()-r*ep_sin(c,a));
+  if(ox*ox+oy*oy>0.25f){wr<float>(c,b+0x30u,ox);wr<float>(c,b+0x34u,oy);wr<uint8_t>(c,b+0x21u,0u);wr<uint8_t>(c,b+0x22u,uint8_t(rd<uint8_t>(c,b+0x22u)|128u));}
+ }
+ void fly(uint32_t b,uint8_t& phase){
+  float v=float(W(EP_DIVE_SPEED))*0.1f,left=v,x=ep_bx(c,b),y=ep_by(c,b);uint8_t seg=rd<uint8_t>(c,b+0x21u);
+  float y0=rd<float>(c,b+0x3cu),ex=rd<float>(c,b+0x30u),gy=rd<float>(c,b+0x34u);
+  bool hit=false;
+  for(uint32_t guard=0;left>0.0f&&seg<2u&&guard<4u;++guard){
+   float tx=seg==0u?ex:rd<float>(c,b+0x40u),ty=seg==0u?gy:y0,dx=tx-x,dy=ty-y,dd=std::sqrt(dx*dx+dy*dy);
+   if(dd<=left){x=tx;y=ty;left-=dd;++seg;if(seg==1u)hit=true;}
+   else{x+=dx/dd*left;y+=dy/dd*left;left=0.0f;}
+  }
+  if(hit&&!(rd<uint8_t>(c,b+0x22u)&1u)){   // 落点效果放在触地处（随后本 tick 继续弹起）
+   wr<uint8_t>(c,b+0x22u,uint8_t(rd<uint8_t>(c,b+0x22u)|1u));ep_place(c,b,ex,gy);impact(b);
+  }
+  ep_place(c,b,x,y);wr<uint8_t>(c,b+0x21u,seg);
+  ep_fx(c,b,uint32_t(W(EP_TRAIL))+rd<uint8_t>(c,b+0x1fu),-1);
+  if(seg>=2u)arrive(b,phase);
+ }
+ void join(uint32_t b,bool rotating){
+  float target=join_target(b),a=rd<float>(c,b+0x40u);
+  if(rotating)a+=omega();
+  float others[3];uint32_t no=0;
+  for(uint32_t k=0;k<3u;++k)if(m[k]!=b&&ep_alive(c,m[k])&&rd<uint8_t>(c,m[k]+0x1cu)==EP_JOIN)others[no++]=rd<float>(c,m[k]+0x40u);
+  float dd=ep_free_path(a,target,others,no);a+=std::max(-EP_JOIN_CORR,std::min(EP_JOIN_CORR,dd));
+  wr<float>(c,b+0x40u,a);at_join(b,a);
+ }
+};
+static void ep_init_ball(Context& c,uint32_t b,uint32_t g,uint8_t slot){
+ wr<uint8_t>(c,b+0x1cu,EP_FORM);wr<uint8_t>(c,b+0x1du,slot);wr<uint8_t>(c,b+0x1eu,0u);wr<uint8_t>(c,b+0x1fu,255u);
+ wr<uint8_t>(c,b+0x20u,255u);wr<uint8_t>(c,b+0x21u,0u);wr<uint8_t>(c,b+0x22u,0u);wr<uint8_t>(c,b+0x23u,EP_M_IDLE);
+ wr<uint16_t>(c,b+0x24u,rd<uint16_t>(c,g+0x62u));wr<uint16_t>(c,b+0x26u,0u);
+ for(uint32_t off=0x28u;off<=0x40u;off+=4u)wr<uint32_t>(c,b+off,0u);
+}
+// 球被击毁（生命为 0）时组单位的调整（示意 Sim.kill，第 5.3 节）
+static void ep_lost(EpGroup& G,uint8_t phase){
+ uint32_t q[3];uint32_t n=G.live(q);if(!n)return;
+ if(rd<uint16_t>(G.c,G.g+0x2au)&2u){G.regroup_join(phase);return;}
+ bool form=phase>=EP_P_NEUTRAL&&phase<=EP_P_CHARGED;
+ for(uint32_t i=0;i<n;++i)if(rd<uint8_t>(G.c,q[i]+0x1cu)!=EP_FORM)form=false;
+ if(form)G.regroup_form();
+}
+static bool ep_group_update(Context& c,uint32_t act,uint32_t o,uint32_t s,uint32_t state,bool first){
+ bool viewer=z_viewer(c);int32_t d=ik_dir(c,o);uint32_t team=rd<uint32_t>(c,o+0x70u)&1u,uid=uint32_t(ep_w(c,s,EP_BALL));
+ auto body=[&](uint32_t fn){is_call(c,fn,o,1u);};
+ EpGroup G{c,o,s,d,viewer,{0u,0u,0u},float(ep_w(c,s,EP_RADIUS))};
+ uint8_t phase=rd<uint8_t>(c,o+0x1cu);
+ if(phase==EP_P_NONE){
+  // 第一帧（演示中待球的图像建立后）：隐去并生成三颗球
+  if(viewer){
+   uint32_t f=is_call(c,UN_SF_INSTANCE,0u),idx=is_call(c,UN_IMAGE_INDEX,uid),arr=f?rd<uint32_t>(c,rd<uint32_t>(c,f+0xe108u)+idx*4u):0u,pg=arr?rd<uint32_t>(c,arr):0u;
+   if(!(pg>=0x10000000u&&pg<0x20000000u&&rd<uint32_t>(c,pg)==UN_IMAGE_VT)){
+    if(rd<uint32_t>(c,o+0xc4u)!=uint32_t(ep_w(c,s,EP_DECK)))is_call(c,IS_SET_ANIM,o,uint32_t(ep_w(c,s,EP_DECK)),1u,1u);
+    if(state!=10u)is_call(c,IS_RESERVE,o,10u,1u);
+    c.pc=c.r[14];return true;
+   }
+  }
+  for(uint32_t fn:{UN_GUARD,UN_INVISIBLE,WD_NO_TARGET,WD_DONT_TOCHE,UN_NK_GUARD,WD_AREA_THROUGH,WD_DONT_SHORT,UN_DONT_LONG,EC_DONT_SP})body(fn);
+  {uint32_t row=un_row(c,o);wr<int32_t>(c,row+45u*4u,0);wr<int32_t>(c,row+46u*4u,0);}
+  is_call(c,IS_SET_ANIM,o,uint32_t(ep_w(c,s,EP_HIDDEN)),1u,1u);
+  float cy=ep_ground(c,o,rd<float>(c,o+0x8cu))-float(ep_w(c,s,EP_HEIGHT));
+  wr<float>(c,o+0x40u,cy);wr<float>(c,o+0x30u,1024.0f);wr<float>(c,o+0x34u,0.0f);wr<float>(c,o+0x38u,rd<float>(c,o+0x8cu));
+  wr<float>(c,o+0x3cu,0.0f);wr<float>(c,o+0x2cu,0.0f);wr<uint32_t>(c,o+0x20u,0u);wr<uint16_t>(c,o+0x2au,1u);
+  wr<uint8_t>(c,o+0x1du,3u);wr<uint8_t>(c,o+0x1eu,0u);wr<uint8_t>(c,o+0x1fu,0u);
+  float gy=rd<float>(c,o+0x90u);
+  for(uint32_t k=0;k<3u;++k){
+   float a=1024.0f+EP_TURN*float(k)/3.0f;
+   int32_t dx=int32_t(G.r*ep_cos(c,a)),dy=int32_t(cy-G.r*ep_sin(c,a)+EP_CY-gy);
+   uint32_t b=un_spawn(c,o,uid,dx,dy);
+   wr<uint16_t>(c,o+0x24u+k*2u,b?rd<uint16_t>(c,b+0x62u):uint16_t(0u));
+   if(b){ep_init_ball(c,b,o,uint8_t(k));G.m[k]=b;G.place_form(b);is_call(c,IS_SET_ANIM,b,uint32_t(ep_w(c,s,EP_IDLE))+k,1u,1u);}
+  }
+  wr<uint8_t>(c,o+0x1cu,EP_P_NEUTRAL);
+  c.pc=c.r[14];return true;
+ }
+ for(uint32_t k=0;k<3u;++k)G.m[k]=un_find(c,team,rd<uint16_t>(c,o+0x24u+k*2u),uid);
+ // 被击毁的球（生命为 0 或已进入损毁状态）：只处理一次
+ bool any=false;
+ for(uint32_t k=0;k<3u;++k){
+  uint32_t b=G.m[k];if(!b)continue;any=true;
+  uint8_t f=rd<uint8_t>(c,b+0x22u);
+  if(!(f&64u)&&!(rd<uint8_t>(c,b+0x1cu)!=EP_DEAD&&rd<int32_t>(c,b+0x308u)>0&&rd<uint32_t>(c,b+0x7cu)<100u)){
+   wr<uint8_t>(c,b+0x1cu,EP_DEAD);wr<uint8_t>(c,b+0x22u,uint8_t((f|64u)&~(2u|4u|8u)));ep_lost(G,phase);
+  }
+ }
+ if(!any){if(!viewer){is_call(c,IS_KILL,o);c.pc=c.r[14];return true;}}
+ uint16_t ts=rd<uint16_t>(c,o+0x20u),cnt=rd<uint16_t>(c,o+0x22u);
+ float base=rd<float>(c,o+0x30u),base2=rd<float>(c,o+0x34u),om=G.omega(),omn=G.omega_n();
+ uint8_t nat=rd<uint8_t>(c,o+0x1fu);
+ // 演示：宿主预约 30 时出击一次（第一帧），40 / 50 直接回到待机
+ bool demo_start=false;
+ if(viewer&&first&&(state==40u||state==50u))is_call(c,IS_RESERVE,o,10u,1u);
+ if(viewer&&first&&state==30u&&phase==EP_P_NEUTRAL)demo_start=true;
+ // ---- 中立：缓慢旋转；最近的敌人在范围外时前进，范围内且等待已过时开始攻击 ----
+ if(phase==EP_P_NEUTRAL){
+  base+=omn;if(cnt)--cnt;
+  float x=G.cx(),range=float(is_status(c,o,6u));bool found=false,start=false;
+  if(viewer){start=demo_start;wr<float>(c,o+0x40u,rd<float>(c,o+0x90u)-float(ep_w(c,s,EP_HEIGHT)));}
+  else{
+   float ex=ep_nearest(c,o,x,found);
+   if(!found||std::fabs(ex-x)>range){
+    float step=float(rd<float>(c,un_row(c,o)+5u*4u)),ahead=float(d)*(ex-x);
+    if(found&&ahead>0.0f)step=std::min(step,ahead-range);
+    if(step>0.0f){x+=float(d)*step;ik_place(c,o,x,ep_ground(c,o,x));wr<float>(c,o+0x40u,ep_ground(c,o,x)-float(ep_w(c,s,EP_HEIGHT)));}
+   }else if(!cnt)start=true;
+  }
+  if(start&&G.live()){
+   nat=uint8_t(G.live());wr<uint8_t>(c,o+0x1fu,nat);ts=0u;cnt=0u;
+   wr<float>(c,o+0x38u,G.cx());wr<uint16_t>(c,o+0x2au,uint16_t(rd<uint16_t>(c,o+0x2au)&~2u));wr<uint8_t>(c,o+0x1eu,0u);
+   phase=nat>1u?EP_P_SPINUP:EP_P_ABOUT;
+   if(viewer)wr<uint16_t>(c,o+0x2au,uint16_t(rd<uint16_t>(c,o+0x2au)|4u));
+  }
+ }else ++ts;
+ wr<float>(c,o+0x30u,base);
+ // ---- 攻击时间线（ts = 自开始攻击起的 tick）----
+ if(phase>=EP_P_SPINUP&&phase<=EP_P_ATTACK){
+  uint32_t su=uint32_t(ep_w(c,s,EP_SPIN_UP)),t_about,hold;
+  if(nat>1u){
+   if(ts>0u&&ts<su)base+=omn+(om-omn)*float(ts)/float(su);
+   t_about=su;hold=uint32_t(ep_w(c,s,EP_HOLD));
+  }else{t_about=0u;hold=uint32_t(ep_w(c,s,EP_HOLD1));}
+  uint32_t t_charge=t_about+uint32_t(ep_w(c,s,EP_ABOUT_T)),t_launch=t_charge+hold;
+  uint32_t q[3];uint32_t n=G.live(q);
+  if(ts==t_about){
+   phase=EP_P_ABOUT;
+   for(uint32_t i=0;i<n;++i)for(uint32_t j=i+1;j<n;++j)if(rd<uint8_t>(c,q[j]+0x1du)<rd<uint8_t>(c,q[i]+0x1du))std::swap(q[i],q[j]);
+   for(uint32_t i=0;i<n;++i){
+    uint8_t col=EP_COLORS[n][i];wr<uint8_t>(c,q[i]+0x1fu,col);wr<uint8_t>(c,q[i]+0x20u,uint8_t(i));
+    wr<uint32_t>(c,un_row(c,q[i])+21u*4u,EP_ATTR[col]);   // 近距组属性（词 21）
+    ep_anim(c,q[i],uint32_t(ep_w(c,s,EP_ABOUT)),EP_M_ABOUT);
+   }
+   if(n)ep_se(c,q[0],ep_w(c,s,EP_SE_CHARGE));
+  }
+  if(ts==t_charge){
+   phase=EP_P_CHARGED;
+   for(uint32_t i=0;i<n;++i)ep_anim(c,q[i],uint32_t(ep_w(c,s,EP_CHARGED))+rd<uint8_t>(c,q[i]+0x1fu),EP_M_CHARGED);
+  }
+  for(uint32_t k=0;k<3u;++k){
+   uint32_t b=G.m[k];if(!ep_alive(c,b))continue;uint8_t ord=rd<uint8_t>(c,b+0x20u);
+   if(ord!=255u&&rd<uint8_t>(c,b+0x1cu)==EP_FORM&&ts==t_launch+uint32_t(ord)*uint32_t(ep_w(c,s,EP_GAP))){
+    if(G.launch(b,phase==EP_P_ATTACK))phase=EP_P_ATTACK;
+    else{base2=base;G.abort(base);phase=n>1u?EP_P_SPINDOWN:EP_P_RETURN;cnt=0u;break;}   // R13：范围内没有敌人，取消本次出击
+   }
+  }
+ }
+ bool rotating=nat>1u&&phase>=EP_P_ABOUT&&phase<=EP_P_ATTACK&&ts>=uint32_t(ep_w(c,s,EP_SPIN_UP));
+ if(rotating){base+=om;if(rd<uint16_t>(c,o+0x2au)&2u)base2+=om;}
+ wr<float>(c,o+0x30u,base);wr<float>(c,o+0x34u,base2);wr<uint8_t>(c,o+0x1cu,phase);
+ // ---- 各球 ----
+ for(uint32_t k=0;k<3u;++k){
+  uint32_t b=G.m[k];if(!ep_alive(c,b))continue;
+  if(viewer)wr<uint32_t>(c,b+0x3d0u,0u);   // 演示中不画绝招特效（同 UNION R15）
+  if(rd<uint8_t>(c,b+0x23u)==EP_M_RECOVER&&!rd<uint8_t>(c,b+0xc9u))ep_anim(c,b,uint32_t(ep_w(c,s,EP_IDLE))+k,EP_M_IDLE);
+  uint8_t st=rd<uint8_t>(c,b+0x1cu);
+  if(st==EP_FORM)G.place_form(b);
+  else if(st==EP_FLY){G.fly(b,phase);}
+  else if(st==EP_JOIN&&phase!=EP_P_SPINDOWN&&phase!=EP_P_RETURN)G.join(b,rotating);
+  else if(st==EP_HOVER&&phase!=EP_P_SPINDOWN&&phase!=EP_P_RETURN)G.place_hover(b);
+ }
+ // ---- 全部到齐、就位：等待 join_wait 后减速（单球直接飞回）----
+ uint32_t q[3];uint32_t n=G.live(q);
+ auto start_return=[&]{phase=EP_P_RETURN;cnt=0u;};
+ if(phase==EP_P_ATTACK&&n){
+  bool all=true,settled=true;
+  for(uint32_t i=0;i<n;++i){
+   uint8_t st=rd<uint8_t>(c,q[i]+0x1cu);
+   if(st!=EP_JOIN&&st!=EP_HOVER)all=false;
+   else if(st==EP_JOIN&&(std::fabs(ep_wrap(G.join_target(q[i])-rd<float>(c,q[i]+0x40u)))>=EP_SETTLED||(rd<uint8_t>(c,q[i]+0x22u)&128u)))settled=false;
+   else if(st==EP_HOVER&&(rd<uint8_t>(c,q[i]+0x22u)&8u))settled=false;
+  }
+  cnt=rd<uint16_t>(c,o+0x22u);
+  if(all&&settled){
+   if(!cnt)cnt=1u;
+   if(cnt>uint32_t(ep_w(c,s,EP_JOIN_WAIT))){
+    if(n>1u){phase=EP_P_SPINDOWN;cnt=0u;G.place_join();}else start_return();
+   }
+  }
+  if(cnt&&phase==EP_P_ATTACK)++cnt;
+ }else if(phase==EP_P_SPINDOWN){
+  ++cnt;uint32_t D=uint32_t(ep_w(c,s,EP_SPIN_DOWN));
+  if(cnt<D){base2+=om+(omn-om)*float(cnt)/float(D);wr<float>(c,o+0x34u,base2);G.place_join();}
+  else start_return();
+ }
+ if(phase==EP_P_RETURN){
+  // 以移速飞回发起攻击的位置，途中按中立转速旋转（R4、R7）
+  float hx=rd<float>(c,o+0x38u),hy=G.cy(),fx=G.c2x(),fy=G.c2y(),v=rd<float>(c,un_row(c,o)+5u*4u);
+  float dx=hx-fx,dy=hy-fy,dd=std::sqrt(dx*dx+dy*dy);
+  if(dd<=v||dd<1e-3f){fx=hx;fy=hy;}else{fx+=dx/dd*v;fy+=dy/dd*v;}
+  wr<float>(c,o+0x3cu,fx);wr<float>(c,o+0x2cu,fy);
+  if(n>1u){base2+=omn;wr<float>(c,o+0x34u,base2);}
+  G.place_join();
+  if(fx==hx&&fy==hy){
+   // 回到原位：集合圆转为编队圆，恢复中立（再攻击等待 reattack_wait）
+   wr<float>(c,o+0x30u,base2);wr<uint8_t>(c,o+0x1du,rd<uint8_t>(c,o+0x1eu));wr<uint8_t>(c,o+0x1eu,0u);
+   wr<uint16_t>(c,o+0x2au,uint16_t(rd<uint16_t>(c,o+0x2au)&~2u));
+   for(uint32_t i=0;i<n;++i){
+    uint8_t st=rd<uint8_t>(c,q[i]+0x1cu);
+    wr<uint8_t>(c,q[i]+0x1du,st==EP_HOVER?0u:rd<uint8_t>(c,q[i]+0x1eu));wr<uint8_t>(c,q[i]+0x1cu,EP_FORM);
+    wr<uint8_t>(c,q[i]+0x1fu,255u);wr<uint8_t>(c,q[i]+0x20u,255u);
+   }
+   if(n==1u)wr<uint8_t>(c,o+0x1du,1u);
+   phase=EP_P_NEUTRAL;cnt=uint16_t(ep_w(c,s,EP_REATTACK));
+   if(viewer&&(rd<uint16_t>(c,o+0x2au)&4u)){wr<uint16_t>(c,o+0x2au,uint16_t(rd<uint16_t>(c,o+0x2au)&~4u));cnt=0u;is_call(c,IS_RESERVE,o,10u,1u);}
+  }
+ }
+ // 攻击过程（加速至减速结束）的减伤标记与角度过渡计时
+ bool reduce=phase>=EP_P_SPINUP&&phase<=EP_P_SPINDOWN;
+ for(uint32_t k=0;k<3u;++k){
+  uint32_t b=G.m[k];if(!ep_alive(c,b))continue;
+  uint8_t f=rd<uint8_t>(c,b+0x22u);wr<uint8_t>(c,b+0x22u,uint8_t(reduce?f|2u:f&~2u));
+  if(f&12u)wr<uint16_t>(c,b+0x26u,uint16_t(rd<uint16_t>(c,b+0x26u)+1u));
+  if((f&128u)&&rd<uint8_t>(c,b+0x21u)<255u)wr<uint8_t>(c,b+0x21u,uint8_t(rd<uint8_t>(c,b+0x21u)+1u));
+ }
+ wr<uint8_t>(c,o+0x1cu,phase);wr<uint16_t>(c,o+0x20u,ts);wr<uint16_t>(c,o+0x22u,cnt);
+ (void)act;
+ c.pc=c.r[14];return true;
+}
+static bool ep_update(Context& c){
+ uint32_t act=c.r[0],o=c.r[1],state=c.r[2],s=ep_unit(c,o);if(!s)return false;
+ bool first=c.r[3]==0u;
+ if(ep_w(c,s,EP_ROLE)==0)return ep_group_update(c,act,o,s,state,first);
+ // ---- 球：身体状态与损毁；位置与其余动作由组单位写入 ----
+ uint8_t f=rd<uint8_t>(c,o+0x22u);
+ if(!(f&32u)){
+  f|=32u;
+  for(uint32_t fn:{WD_AREA_THROUGH,UN_STAGE_FX,WD_NO_TARGET,WD_DONT_TOCHE,WD_DONT_SHORT,UN_DONT_LONG,EC_DONT_SP})is_call(c,fn,o,1u);
+ }
+ if((state>=100u&&state<=140u)||rd<int32_t>(c,o+0x308u)<=0){   // 生命为 0 的那一帧起（原生随后预约 100 / 110 / 120）
+  if(!(f&16u)){
+   f|=16u;uint8_t mode=rd<uint8_t>(c,o+0x23u),col=rd<uint8_t>(c,o+0x1fu);
+   uint32_t v=(mode==EP_M_CHARGED||mode==EP_M_DIVE)&&col<3u?1u+col:0u;
+   wr<uint8_t>(c,o+0x1cu,EP_DEAD);wr<int32_t>(c,o+0xf0u,rd<int32_t>(c,o+0xf0u)-(1<<20));   // 画在存活的球之下（+0xf0 为 (优先级 + 100) << 20 | 建立序号，优先级降 1）
+   wr<uint8_t>(c,o+0x22u,f);
+   is_call(c,IS_SET_ANIM,o,uint32_t(ep_w(c,s,EP_WRECK))+v,1u,1u);
+  }else if(!rd<uint8_t>(c,o+0xc9u)){is_call(c,IS_KILL,o);c.pc=c.r[14];return true;}
+  ik_place(c,o,rd<float>(c,o+0x8cu),rd<float>(c,o+0x90u));   // 原地
+ }
+ wr<uint8_t>(c,o+0x22u,f);
+ (void)act;
+ c.pc=c.r[14];return true;
+}
+// 攻击过程中（组单位标记）球受到的伤害乘 attack_damage_taken / 100（BattleUnit::damage 0x101e0ab3 块的属性耐性倍率 s14，同 fc_damage）
+static void ep_damage(Context& c,uint32_t o){
+ uint32_t s=ep_unit(c,o);if(!s||ep_w(c,s,EP_ROLE)!=1||!(rd<uint8_t>(c,o+0x22u)&2u))return;
+ int32_t pct=ep_w(c,s,EP_TAKEN);if(pct>=0&&pct<100)setfs(c,14,fs(c,14)*float(pct)*0.01f);
+}
+// 对空目标（un_air_target）：存活、未损毁的球
+static bool ep_air(Context& c,uint32_t u){
+ uint32_t s=ep_unit(c,u);return s&&ep_w(c,s,EP_ROLE)==1&&ep_alive(c,u);
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_energy_pod_version(){return elder_centipede_hooks==10u&&union_aim_hooks==3u&&fc_hooks==2u?3u:0u;}   // 2（r132）：弹回终点与集合中心限制范围（R12）；3（r133）：出发时的索敌范围与取消出击（R13）
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
 // 2026-10-27（r99）：5 连发马克斯奈尔（BattleAction_McsnlFive::update 0x184ebc）的领队固定以 UnitID 187 生成 4 架僚机；
 // 基准为 187 的社区领队改为生成落地映射表登记的僚机单位（formation_unit_key），映射为 0 时保持原生。
 // 2026-10-31（r111）：叛军自爆摩托（ZSpec 标记 33554432）弃车时以 summonZakoBazooka 生成 45，同样改为落地映射表登记的骑手单位。
 static bool bb_flagged(Context& c,uint32_t o){uint32_t s=zspec(c,o);return s&&(zw(c,s,0)&33554432u);}
-HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&((rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0])||bb_flagged(c,c.r[0])||fc_unit(c,c.r[0]))&&c.r[1]==45u||rd<uint32_t>(c,p+4u)==187u&&c.r[1]==187u)&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
+HOOK(paratrooper_landing,0x101de225u, uint32_t uid=rd<uint32_t>(c,c.r[0]+0x128u);uint32_t p=record(c,uid);if(p&&((rd<uint32_t>(c,p+4u)==160u||z_throws(c,c.r[0])||bb_flagged(c,c.r[0])||fc_unit(c,c.r[0])||un_unit(c,c.r[0]))&&c.r[1]==45u||rd<uint32_t>(c,p+4u)==187u&&c.r[1]==187u)&&head(c,100)){uint32_t target=rd<uint32_t>(c,head(c,100)+(uid-U)*4u);if(target)c.r[1]=target;})
 extern "C" __declspec(dllexport) uint32_t msd_community_paratrooper_landing_version(){return 1u;}
 // 2026-10-31（r112，行为库 30：landing_keeps_hp，ZSpec 标记 67108864）：ParaTrooper::summonZakoBazooka 生成子单位之后（0x101af784，
 // r4 本单位、r0 子单位，原生随后登记 +0xfc 与 +0xf0）。带标记的单位落地时把当前生命（+0x308）交给生成的单位，不超过其最大生命
@@ -2705,7 +3806,7 @@ static void flame_knockback_limit(Context& c){
 }
 HOOK(kt21_flame_knockback_limit,0x101e0b5du, flame_knockback_limit(c);)
 // BattleObjectManager::initialize：战斗开始时清除上述记录。
-HOOK(kt21_flame_battle_reset,0x101e019du, flame_mark_count=0u;flame_owner_count=0u;)
+HOOK(kt21_flame_battle_reset,0x101e019du, flame_mark_count=0u;flame_owner_count=0u;un_aim_reset();)
 extern "C" __declspec(dllexport) uint32_t msd_community_flame_interrupt_version(){return 1u;}
 // 地面绝招沿用 HeavyB 状态 50 的更新：动画与攻击等待后，每帧调用 actionMove(object,0)。
 // 该流程保留脚本水平速度，并按原生规则处理坡地高度、阶差阻挡与下落。
@@ -3171,6 +4272,279 @@ static void sh_update(Context& c){
 static Block old_sh_damage;static void summon_hit_damage(Context& c){sh_damage(c);old_sh_damage(c);}
 static Block old_sh_update;static void summon_hit_update(Context& c){sh_update(c);old_sh_update(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_summon_on_hit_version(){return summon_hit_hooks==2u?1u:0u;}
+// ---------- 同场单位上限的计数（2026-11-02，核心 r134；docs/UNIT_CAP_2026-11-02.md 第 8 节 B1）----------
+// 原生 BattleObjectManager::getActiveUnitCount（0x101df640，r0 管理器、r1 队伍、r2 成员）遍历该队单位链表（表头为据点，不计），
+// 计数 vtable +0x5c（BattleUnit::isAlive，生命 > 0）为真、成员 +0x74 相符且 +0x34 ≠ −1 的单位；isUnitCountOver 两处以计数 > 49 为超限。
+// 此处按原生条件重写遍历，另跳过隐去的控制单位：能量弹组单位（energy_pod 角色 0，出场第一帧起隐去）与已隐去的 UNION 合体单位
+// （union 角色 0，+0x1c 位 8）。上限数值与其他单位的计数不变；只读客体内存，回滚安全。
+static uint32_t unit_count_hooks=0u;
+static bool uc_hidden_control(Context& c,uint32_t o){
+ uint32_t s=ep_unit(c,o);if(s)return ep_w(c,s,EP_ROLE)==0;
+ s=un_unit(c,o);return s&&un_w(c,s,UN_ROLE)==0&&(rd<uint32_t>(c,o+0x1cu)&8u);
+}
+// parents 非空时另数链表中顶层实例号（+0x62 低字节为 0）的对象个数，含死亡动画中的单位（第 12 节：每方 128 时实例号的占用）。
+static uint32_t uc_active_count(Context& c,uint32_t manager,uint32_t team,uint32_t member,uint32_t* parents=nullptr){
+ uint32_t base=rd<uint32_t>(c,manager+(team+6u)*4u);
+ if(parents)*parents=0u;
+ if(!base)return 0u;
+ uint32_t n=0u,link=rd<uint32_t>(c,base+0x124u),o=link?link-0x11cu:0u;
+ for(uint32_t guard=0u;o&&o!=base&&guard<4096u;++guard){
+  uint32_t fn=rd<uint32_t>(c,rd<uint32_t>(c,o)+0x5cu),alive=0u;
+  if(fn==0x101e063fu)alive=rd<int32_t>(c,o+0x308u)>0;else msd_guest_call(c,fn,o,0u,0u,0u,&alive);
+  if(alive&&rd<uint32_t>(c,o+0x74u)==member&&rd<int32_t>(c,o+0x34u)!=-1&&!uc_hidden_control(c,o))++n;
+  if(parents&&!(rd<uint16_t>(c,o+0x62u)&0xffu))++*parents;
+  link=rd<uint32_t>(c,o+0x124u);o=link?link-0x11cu:0u;
+ }
+ return n;
+}
+static void uc_count(Context& c){ret(c,uc_active_count(c,c.r[0],c.r[1],c.r[2]));}
+HOOK(active_unit_count,0x101df641u, if(active(c)){uc_count(c);return;})
+extern "C" __declspec(dllexport) uint32_t msd_community_unit_count_version(){return unit_count_hooks==1u?1u:0u;}
+// ---------- 每方 128 的上限与对象池扩充（2026-11-02，核心 r135；docs/UNIT_CAP_2026-11-02.md 第 12 节）----------
+// 上限：原生两处 isUnitCountOver（BattleObjectManager 0x10178a94：r0 管理器、r1 队伍、r2 成员；BattleController 0x101c9726：r0 控制器，
+// 队伍 +0x38c、成员 +0x39c）在 BattleGameMaster +0x4828 为 7（原版二对二）时以每名成员计数 > 24 为超限，否则以每方计数 > 49 为超限。
+// LAB 战斗（BattleInit_OnlinerMode 建立，游戏类型 2：LAB、VS CPU、本地双人、联机与回放）与自制场景（ID ≥ 138，即全部自制关卡）改为 > 127（每方 128）；
+// 原版关卡、原版 EVENT 与 PVZ EVENT（使用原版场景 116–118）保持原生阈值。计数为上一段的 uc_active_count。
+// 对象池：BattleObjectFactory 的单位 / 弹体 / 效果池（原生 256 / 256 / 128）与 BattleSpriteFactory 的精灵池（原生 600）按 128 / 50 扩为
+// 656 / 656 / 328 / 1536，适用于全部模式（池只在用尽时影响行为）。
+//  对象工厂（单例 +0 / +4 / +8 为三池的指针数组，+0xc / +0x10 / +0x14 为查找游标）：initialize（0x101d1094）、release（0x101d1116）、
+//   clear（0x101d119a）与 findUnusedUnit / Bullet / Effect（0x101d11fa / 0x101d1232 / 0x101d12ee）以 C++ 重写，逐项语义与原生相同、只换容量；
+//   数组与对象仍经客体 new[] / new 与原生构造函数建立，释放经各对象的虚析构与 delete[]。三个数组的地址记在 of_arrays，
+//   池由原生（256 / 256 / 128）建立时（钩子登记前）按原生容量处理。
+//  精灵工厂（静态单例：+4 起 600 个 0x60 字节的精灵，+0xe104 查找游标，+0xe108 图像表）：另以客体 new[] 建立 936 个后备精灵（社区内容启用后
+//   第一次找空位时建立，此时尚在标题或菜单，早于任何战斗与联机会话；此后不释放，回滚不会撤销这次分配），findUnusedMemory（0x101dcabc）按序号
+//   0–1535 查找（0–599 为内嵌精灵，游标仍在 +0xe104）；releaseUnusedResourcesAll 在原生标记 600 个精灵所用的图像之后（块 0x101dca52，
+//   r6 单例、r8 栈上的使用标记）补标后备精灵所用的图像，再由原生释放其余图像。精灵 +4 为图像序号，< 0 为空位（BattleSprite 构造写 −1）。
+static constexpr uint32_t UC_CAP_EXT=127u,UC_UNIT_POOL=656u,UC_BULLET_POOL=656u,UC_EFFECT_POOL=328u,UC_SPRITE_NATIVE=600u,UC_SPRITE_POOL=1536u;
+static constexpr uint32_t UC_NEW=0x102267d1u,UC_NEW_ARRAY=0x10226865u,UC_DELETE_ARRAY=0x10225f45u,UC_MANAGER=0x101de619u,UC_SPRITE_CTOR=0x101db6c9u;
+struct UcPool{uint32_t off,cursor,n,native,size,ctor;};
+static constexpr UcPool UC_POOLS[3]={{0u,0xcu,UC_UNIT_POOL,256u,0x3e8u,0x101e0cf5u},{4u,0x10u,UC_BULLET_POOL,256u,0x158u,0x101dcfe5u},
+ {8u,0x14u,UC_EFFECT_POOL,128u,0x12cu,0x101dd2fdu}};
+static uint32_t unit_cap_hooks=0u,of_arrays[3]={0u,0u,0u},sp_extra=0u,sp_factory=0u;
+static constexpr uint32_t BD_CAP=2048u;   // r136 绘制收集缓冲（两段各 2048 项，见“绘制收集与排序”段），与后备精灵同时建立
+static uint32_t bd_buf=0u;
+// 顶层实例号：BattleObjectManager::createUnitID（0x101dfe20）在高字节 1–254 中找链表里没有对象使用的号（死亡动画中的单位仍占号），用尽时返回 0，
+// 出兵事件随后以实例号 0 建立单位（与据点重号）。原生每方 50 时不会用尽；扩充模式下另以“顶层实例号已占 240 个”为超限，为在途出兵（LAB 约 13 帧）留出余量。
+static constexpr uint32_t UC_PARENT_LIMIT=239u;
+static uint32_t uc_limit(Context& c,uint32_t type){return type==7u?24u:(type==2u||custom_stage(c))?UC_CAP_EXT:49u;}
+static uint32_t uc_over(Context& c,uint32_t manager,uint32_t team,uint32_t member,uint32_t type){
+ uint32_t limit=uc_limit(c,type),parents=0u;
+ uint32_t n=uc_active_count(c,manager,team,type==7u?member:0u,limit==UC_CAP_EXT?&parents:nullptr);
+ return int32_t(n)>int32_t(limit)||parents>UC_PARENT_LIMIT?1u:0u;
+}
+static void uc_over_manager(Context& c){ret(c,uc_over(c,c.r[0],c.r[1],c.r[2],rd<uint32_t>(c,Z_GAME_MASTER+0x4828u)));}
+static void uc_over_controller(Context& c){
+ uint32_t ctrl=c.r[0],manager=0u;
+ msd_guest_call(c,UC_MANAGER,0u,0u,0u,0u,&manager);
+ ret(c,uc_over(c,manager,rd<uint32_t>(c,ctrl+0x38cu),rd<uint32_t>(c,ctrl+0x39cu),rd<uint32_t>(c,Z_GAME_MASTER+0x4828u)));
+}
+static uint32_t of_capacity(Context& c,uint32_t f,uint32_t k){
+ return rd<uint32_t>(c,f+UC_POOLS[k].off)==of_arrays[k]&&of_arrays[k]?UC_POOLS[k].n:UC_POOLS[k].native;
+}
+static bool of_initialize(Context& c){
+ uint32_t f=c.r[0];
+ if(rd<uint32_t>(c,f)){c.pc=c.r[14];return true;}
+ uint32_t arrays[3]={0u,0u,0u};
+ for(uint32_t k=0;k<3u;++k){
+  const UcPool& q=UC_POOLS[k];
+  if(!msd_guest_call(c,UC_NEW_ARRAY,q.n*4u,0u,0u,0u,&arrays[k])||!arrays[k])return k==0u?false:(c.error=3,c.error_address=f,true);
+  wr<uint32_t>(c,f+q.off,arrays[k]);
+  for(uint32_t i=0;i<q.n;++i){
+   uint32_t o=0u;msd_guest_call(c,UC_NEW,q.size,0u,0u,0u,&o);msd_guest_call(c,q.ctor,o,0u,0u,0u,nullptr);
+   wr<uint32_t>(c,arrays[k]+i*4u,o);
+  }
+ }
+ for(uint32_t k=0;k<3u;++k){of_arrays[k]=arrays[k];wr<uint32_t>(c,f+UC_POOLS[k].cursor,0u);}
+ c.pc=c.r[14];return true;
+}
+static void of_release(Context& c){
+ uint32_t f=c.r[0];
+ if(rd<uint32_t>(c,f)){
+  for(uint32_t k=0;k<3u;++k){
+   uint32_t n=of_capacity(c,f,k),arr=rd<uint32_t>(c,f+UC_POOLS[k].off);
+   for(uint32_t i=0;i<n;++i){
+    uint32_t o=rd<uint32_t>(c,arr+i*4u);
+    if(o){msd_guest_call(c,rd<uint32_t>(c,rd<uint32_t>(c,o)+4u),o,0u,0u,0u,nullptr);wr<uint32_t>(c,rd<uint32_t>(c,f+UC_POOLS[k].off)+i*4u,0u);}
+   }
+   arr=rd<uint32_t>(c,f+UC_POOLS[k].off);
+   if(arr){msd_guest_call(c,UC_DELETE_ARRAY,arr,0u,0u,0u,nullptr);wr<uint32_t>(c,f+UC_POOLS[k].off,0u);}
+   if(of_arrays[k]==arr)of_arrays[k]=0u;
+  }
+ }
+ c.pc=c.r[14];
+}
+static void of_clear(Context& c){
+ uint32_t f=c.r[0];
+ if(rd<uint32_t>(c,f)){
+  for(uint32_t k=0;k<3u;++k){
+   uint32_t n=of_capacity(c,f,k);
+   for(uint32_t i=0;i<n;++i){
+    uint32_t o=rd<uint32_t>(c,rd<uint32_t>(c,f+UC_POOLS[k].off)+i*4u);
+    if(rd<uint8_t>(c,o+4u))msd_guest_call(c,rd<uint32_t>(c,rd<uint32_t>(c,o)+0x88u),o,0u,0u,0u,nullptr);
+   }
+  }
+  for(uint32_t k=0;k<3u;++k)wr<uint32_t>(c,f+UC_POOLS[k].cursor,0u);
+ }
+ c.pc=c.r[14];
+}
+static void of_find(Context& c,uint32_t k){
+ uint32_t f=c.r[0],n=of_capacity(c,f,k),arr=rd<uint32_t>(c,f+UC_POOLS[k].off),cur=f+UC_POOLS[k].cursor,start=rd<uint32_t>(c,cur);
+ for(uint32_t i=start;int32_t(i)<=int32_t(n-1u);wr<uint32_t>(c,cur,++i)){uint32_t o=rd<uint32_t>(c,arr+i*4u);if(!rd<uint8_t>(c,o+4u)){ret(c,o);return;}}
+ wr<uint32_t>(c,cur,0u);
+ for(uint32_t i=0u;int32_t(i)<int32_t(start);wr<uint32_t>(c,cur,++i)){uint32_t o=rd<uint32_t>(c,arr+i*4u);if(!rd<uint8_t>(c,o+4u)){ret(c,o);return;}}
+ ret(c,0u);
+}
+static uint32_t sp_slot(uint32_t f,uint32_t i){return i<UC_SPRITE_NATIVE?f+4u+0x60u*i:sp_extra+0x60u*(i-UC_SPRITE_NATIVE);}
+static void sp_find(Context& c){
+ uint32_t f=c.r[0];
+ if(!sp_extra){
+  uint32_t arr=0u,extra=UC_SPRITE_POOL-UC_SPRITE_NATIVE;
+  if(msd_guest_call(c,UC_NEW_ARRAY,extra*0x60u,0u,0u,0u,&arr)&&arr){
+   for(uint32_t k=0;k<extra;++k)msd_guest_call(c,UC_SPRITE_CTOR,arr+k*0x60u,0u,0u,0u,nullptr);
+   sp_extra=arr;sp_factory=f;
+   uint32_t buf=0u;if(msd_guest_call(c,UC_NEW_ARRAY,2u*BD_CAP*4u,0u,0u,0u,&buf)&&buf)bd_buf=buf;
+  }
+ }
+ uint32_t n=sp_extra&&sp_factory==f?UC_SPRITE_POOL:UC_SPRITE_NATIVE,cur=f+0xe104u,start=rd<uint32_t>(c,cur);
+ for(uint32_t i=start;int32_t(i)<=int32_t(n-1u);wr<uint32_t>(c,cur,++i)){uint32_t o=sp_slot(f,i);if(rd<int32_t>(c,o+4u)<0){ret(c,o);return;}}
+ wr<uint32_t>(c,cur,0u);
+ for(uint32_t i=0u;int32_t(i)<int32_t(start);wr<uint32_t>(c,cur,++i)){uint32_t o=sp_slot(f,i);if(rd<int32_t>(c,o+4u)<0){ret(c,o);return;}}
+ ret(c,0u);
+}
+static void sp_mark_extra(Context& c){
+ if(!sp_extra||sp_factory!=c.r[6])return;
+ for(uint32_t k=0;k<UC_SPRITE_POOL-UC_SPRITE_NATIVE;++k){
+  int32_t id=rd<int32_t>(c,sp_extra+k*0x60u+4u);
+  if(id>=0&&id<0x1a7)wr<uint8_t>(c,c.r[8]+uint32_t(id),1u);
+ }
+}
+// 原生 keepData（BattleScene::advanceFrame 每 30 帧调用，供原版 Wi-Fi 联机回退）按 5 帧保存全部单位与弹体，每个对象取一个 0x1e4 字节的节点。
+// createKeepDataBuffer（0x101e0254，r0 管理器、r1 个数；+0x78 空闲链表、+0x7c 空闲数，节点 +0x1e0 为下一个）在空闲数不足时只补 1 + 100 个，
+// 需求一次增加更多时沿链表越过末尾（读地址 0x1e0 停止，每方 128 时出现）。此处按原生方式补充（每批 100 个，客体 new 后清零、插入链表头），
+// 不足时重复补充；原生不出错的情形与原生逐项相同。
+static uint32_t kd_node(Context& c,uint32_t next){
+ uint32_t o=0u;msd_guest_call(c,UC_NEW,0x1e4u,0u,0u,0u,&o);
+ for(uint32_t i=0;i<0x1e4u;i+=4u)wr<uint32_t>(c,o+i,0u);
+ wr<uint32_t>(c,o+0x1e0u,next);return o;
+}
+static void kd_create(Context& c){
+ uint32_t m=c.r[0],n=c.r[1];
+ if(!n){ret(c,0u);return;}
+ if(int32_t(rd<uint32_t>(c,m+0x7cu))<int32_t(n)){
+  if(!rd<uint32_t>(c,m+0x78u)){wr<uint32_t>(c,m+0x78u,kd_node(c,0u));wr<uint32_t>(c,m+0x7cu,rd<uint32_t>(c,m+0x7cu)+1u);}
+  do{
+   for(uint32_t k=0;k<100u;++k)wr<uint32_t>(c,m+0x78u,kd_node(c,rd<uint32_t>(c,m+0x78u)));
+   wr<uint32_t>(c,m+0x7cu,rd<uint32_t>(c,m+0x7cu)+100u);
+  }while(int32_t(rd<uint32_t>(c,m+0x7cu))<int32_t(n));
+ }
+ uint32_t first=rd<uint32_t>(c,m+0x78u),last=first;
+ for(int32_t i=0;i<int32_t(n)-1;++i)last=rd<uint32_t>(c,last+0x1e0u);
+ wr<uint32_t>(c,m+0x78u,rd<uint32_t>(c,last+0x1e0u));wr<uint32_t>(c,m+0x7cu,rd<uint32_t>(c,m+0x7cu)-n);wr<uint32_t>(c,last+0x1e0u,0u);
+ ret(c,first);
+}
+HOOK(keep_data_buffer,0x101e0255u, kd_create(c);return;)
+// ---------- 绘制收集与排序（2026-11-02，核心 r136；docs/UNIT_CAP_2026-11-02.md 第 13 节）----------
+// 1. BattleObjectManager::draw（0x101de69c）把双方单位（+0x116 为 0，自据点起沿 +0x120 一周）、弹体（自表头沿 +0x124）与效果（+0x28 起沿 +0x120）的
+//    指针收集到静态数组 0x10979310，drawFront（0x101de7a8）把 +0x116 非 0 的单位与弹体收集到 0x10979d10；两数组各 640 项（原生三池之和），
+//    对象池扩充后会越界。此处按原生顺序收集到客体堆上的 bd_buf（两段各 2048 项，与后备精灵同时建立），排序后按原生序言建栈并设置寄存器，
+//    跳入原生的逐个绘制循环（0x101de768 / 0x101de854）；各对象的绘制、drawFront 的 front 效果与返回仍由原生完成。bd_buf 未建立时走原生。
+// 2. 排序例程（重编译器提供的稳定插入排序，0x1f010000：r0 数组、r1 个数、r2 元素大小、r3 比较函数）比较 O(n²) 次且逐字节交换。
+//    元素为 4 字节、比较函数为 qsortComp（0x101de4b8：+0xf0 有符号，再 +0x60）或 compareDrawStack（0x1014161a：先按 +0x14 是否为 0，为 0 时
+//    +0x10 无符号、+0xc 有符号，否则 +0xc、+0x10）时以核心中的稳定排序代替：两者均为按键的字典序比较，稳定排序的结果唯一，与原插入排序相同。
+//    其余情形仍由原生例程处理。
+#include <vector>
+static uint32_t draw_sort_hooks=0u;
+static int32_t bd_cmp_object(Context& c,uint32_t a,uint32_t b){
+ int32_t fa=rd<int32_t>(c,a+0xf0u),fb=rd<int32_t>(c,b+0xf0u);
+ if(fa!=fb)return fa>fb?1:-1;
+ return int32_t(rd<uint16_t>(c,a+0x60u))-int32_t(rd<uint16_t>(c,b+0x60u));
+}
+static int32_t bd_cmp_stack(Context& c,uint32_t a,uint32_t b){
+ uint32_t za=rd<uint32_t>(c,a+0x14u),zb=rd<uint32_t>(c,b+0x14u);
+ if(!za!=!zb)return za?1:-1;
+ uint32_t ua=rd<uint32_t>(c,a+0x10u),ub=rd<uint32_t>(c,b+0x10u);int32_t sa=rd<int32_t>(c,a+0xcu),sb=rd<int32_t>(c,b+0xcu);
+ if(!za){if(ua!=ub)return ua<ub?-1:1;if(sa!=sb)return sa<sb?-1:1;return 0;}
+ if(sa!=sb)return sa<sb?-1:1;if(ua!=ub)return ua<ub?-1:1;return 0;
+}
+static void bd_sort(Context& c,uint32_t arr,uint32_t n,int32_t(*cmp)(Context&,uint32_t,uint32_t)){
+ if(n<2u)return;
+ std::vector<uint32_t> v(n);
+ for(uint32_t i=0;i<n;++i)v[i]=rd<uint32_t>(c,arr+i*4u);
+ // 插入排序在 cmp(左, 右) > 0 时交换；稳定排序以 comp(x, y) = cmp(y, x) > 0 得到同一次序
+ std::stable_sort(v.begin(),v.end(),[&](uint32_t x,uint32_t y){return cmp(c,y,x)>0;});
+ for(uint32_t i=0;i<n;++i)wr<uint32_t>(c,arr+i*4u,v[i]);
+}
+static bool bd_qsort(Context& c){
+ uint32_t fn=c.r[3]&~1u;
+ int32_t(*cmp)(Context&,uint32_t,uint32_t)=c.r[2]!=4u?nullptr:fn==0x101de4b8u?bd_cmp_object:fn==0x1014161au?bd_cmp_stack:nullptr;
+ if(!cmp)return false;
+ bd_sort(c,c.r[0],c.r[1],cmp);c.pc=c.r[14];return true;
+}
+static uint32_t bd_collect(Context& c,uint32_t mgr,bool front,uint32_t out){
+ uint32_t n=0u;
+ auto push=[&](uint32_t o){if(n<BD_CAP)wr<uint32_t>(c,out+4u*n,o);++n;};
+ for(uint32_t t=0;t<2u;++t){
+  uint32_t head=rd<uint32_t>(c,mgr+0x18u+4u*t);
+  if(head){uint32_t o=head;for(uint32_t g=0;g<8192u;++g){if((rd<uint8_t>(c,o+0x116u)!=0u)==front)push(o);uint32_t l=rd<uint32_t>(c,o+0x120u);if(!l)break;o=l-0x11cu;if(o==head)break;}}
+  uint32_t bh=rd<uint32_t>(c,mgr+0x20u+4u*t);
+  if(bh){uint32_t l=rd<uint32_t>(c,bh+0x124u),o=l?l-0x11cu:0u;
+   for(uint32_t g=0;g<8192u&&o&&o!=bh;++g){if((rd<uint8_t>(c,o+0x116u)!=0u)==front)push(o);l=rd<uint32_t>(c,o+0x124u);o=l?l-0x11cu:0u;}}
+ }
+ if(!front){uint32_t eh=rd<uint32_t>(c,mgr+0x28u);if(eh){uint32_t o=eh;for(uint32_t g=0;g<8192u;++g){push(o);uint32_t l=rd<uint32_t>(c,o+0x120u);if(!l)break;o=l-0x11cu;if(o==eh)break;}}}
+ return n<BD_CAP?n:BD_CAP;
+}
+static bool bd_draw(Context& c,bool front){
+ if(!bd_buf)return false;
+ uint32_t mgr=c.r[0],out=bd_buf+(front?BD_CAP*4u:0u),sp=c.r[13];
+ // 原生序言：draw 为 push {r3–r7, lr}，drawFront 为 push {r4–r10, lr}；两者再 vpush {d8}
+ if(!front){sp-=24u;wr<uint32_t>(c,sp,c.r[3]);for(uint32_t k=0;k<4u;++k)wr<uint32_t>(c,sp+4u+4u*k,c.r[4u+k]);wr<uint32_t>(c,sp+20u,c.r[14]);}
+ else{sp-=32u;for(uint32_t k=0;k<7u;++k)wr<uint32_t>(c,sp+4u*k,c.r[4u+k]);wr<uint32_t>(c,sp+28u,c.r[14]);}
+ sp-=8u;wr<uint64_t>(c,sp,c.d[8]);c.r[13]=sp;
+ setsbits(c,16,c.r[2]);setsbits(c,17,c.r[1]);c.r[6]=c.r[3];
+ uint32_t n=bd_collect(c,mgr,front,out);
+ bd_sort(c,out,n,bd_cmp_object);
+ c.r[4]=n;c.r[5]=0u;
+ if(!front){
+  setsbits(c,17,cvti(fs(c,17),true));setsbits(c,16,cvti(fs(c,16),true));
+  c.r[7]=out-0x2ccu;c.pc=0x101de769u;   // 循环 r7 + 0x2cc 取数组
+ }else{
+  c.r[7]=mgr;
+  setsbits(c,15,cvti(fs(c,17),true));c.r[9]=sbits(c,15);setsbits(c,15,cvti(fs(c,16),true));c.r[10]=sbits(c,15);
+  c.r[8]=out-0xcccu;c.pc=0x101de855u;   // 循环 r8 + 0xccc 取数组，之后以 r7 绘制 front 效果
+ }
+ return true;
+}
+// 3. BattleUnit::isPossibleDamage（0x101e0ef8，r0 单位、r1 攻击 ID）：身体状态位 1（+0x6c & 1）、+0x3d8 > 0 或生命 ≤ 0 时为 0，攻击 ID 为 0 时为 1，
+//    否则在 +0x328 起 80 个 16 位的受击 ID 中查找，找到为 0、找不到为 1。advanceFrame 的碰撞判定对每个攻击框与每个目标调用（每方 128 时
+//    每帧数万次），此处以核心中的同一逻辑代替（比较按原生以完整的 r1 与 16 位记录相比）。
+static void pd_check(Context& c){
+ uint32_t o=c.r[0],id=c.r[1];
+ if((rd<uint32_t>(c,o+0x6cu)&1u)||rd<int32_t>(c,o+0x3d8u)>0||rd<int32_t>(c,o+0x308u)<=0){ret(c,0u);return;}
+ if(!id){ret(c,1u);return;}
+ for(uint32_t i=0;i<0xa0u;i+=2u)if(uint32_t(rd<uint16_t>(c,o+0x328u+i))==id){ret(c,0u);return;}
+ ret(c,1u);
+}
+HOOK(object_draw,0x101de69du, if(bd_draw(c,false))return;)
+HOOK(object_draw_front,0x101de7a9u, if(bd_draw(c,true))return;)
+HOOK(draw_sort,0x1f010000u, if(bd_qsort(c))return;)
+HOOK(possible_damage,0x101e0ef9u, pd_check(c);return;)
+extern "C" __declspec(dllexport) uint32_t msd_community_draw_sort_version(){return draw_sort_hooks==4u?1u:0u;}
+HOOK(unit_cap_manager,0x10178a95u, if(active(c)){uc_over_manager(c);return;})
+HOOK(unit_cap_controller,0x101c9727u, if(active(c)){uc_over_controller(c);return;})
+HOOK(object_pool_initialize,0x101d1095u, if(of_initialize(c))return;)
+HOOK(object_pool_release,0x101d1117u, of_release(c);return;)
+HOOK(object_pool_clear,0x101d119bu, of_clear(c);return;)
+HOOK(object_pool_find_unit,0x101d11fbu, of_find(c,0u);return;)
+HOOK(object_pool_find_bullet,0x101d1233u, of_find(c,1u);return;)
+HOOK(object_pool_find_effect,0x101d12efu, of_find(c,2u);return;)
+HOOK(sprite_pool_find,0x101dcabdu, sp_find(c);return;)
+HOOK(sprite_pool_mark,0x101dca53u, sp_mark_extra(c);)
+extern "C" __declspec(dllexport) uint32_t msd_community_unit_cap_version(){return unit_cap_hooks==11u?1u:0u;}
+// 验证用：k = 0–3 为单位 / 弹体 / 效果 / 精灵池容量，4 为扩充后的每方上限，5 为后备精灵数组的客体地址（未建立时为 0）。
+extern "C" __declspec(dllexport) uint32_t msd_community_unit_cap_info(uint32_t k){
+ static const uint32_t v[5]={UC_UNIT_POOL,UC_BULLET_POOL,UC_EFFECT_POOL,UC_SPRITE_POOL,UC_CAP_EXT+1u};
+ return k<5u?v[k]:k==5u?sp_extra:0u;
+}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

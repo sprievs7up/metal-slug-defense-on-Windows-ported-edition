@@ -80,7 +80,13 @@
     "s1xlv.rebel_bomb_bike_rider": 1089,
     "s1xlv.rebel_bomb_bike_rocketeer": 1090,
     "s1xlv.fall_climber": 1091,
-    "s1xlv.fall_climber_form2": 1092
+    "s1xlv.fall_climber_form2": 1092,
+    "s1xlv.union": 1093,
+    "s1xlv.union_01": 1094,
+    "s1xlv.union_02": 1095,
+    "s1xlv.union_03": 1096,
+    "s1xlv.energy_pod": 1097,
+    "s1xlv.energy_pod_ball": 1098
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -163,7 +169,11 @@
     "fall_climber_0.obm": "f99f0a5121a00f1365c502379a46d61e3cbc769daeb732c381caea103936b98a",
     "fall_climber_1.obm": "73ecc40df03f6fcf45bef3c3c6c48a4b80129dc9f81ba44359978ad89eb12a15",
     "fall_climber_2.obm": "54b977d6e9753c46160e4267cd7edc83224b4fa8eae3b9d25cdd4850ca38355d",
-    "fall_climber_3.obm": "125f2c7fa0f4a6f6ac09fd47f9a79a2a792d089ffa8d25f696ee8828fb5422ce"
+    "fall_climber_3.obm": "125f2c7fa0f4a6f6ac09fd47f9a79a2a792d089ffa8d25f696ee8828fb5422ce",
+    "union_0.obm": "b458466eb9a724a81d260c4f28a343d717bb378cef27c1f79b9edb6a830fd5df",
+    "union_1.obm": "301edd744ef4969ef1bda032cd045b6ec740a2b63f985bf66248881af13515fd",
+    "union_2.obm": "7c2428688fd7a2f5bff412b1d5c690428abf557866c9433d3639451ed621c86f",
+    "energy_pod.obm": "a6dd62ae4b1a7eba09813e7677eafe0e2b90f2f85844e5acf224fde4353ea9a1"
   },
   "stock_sprites": {
     "381": "tyra_elson_sprite.json",
@@ -740,6 +750,39 @@
       "file": "fall_climber_laser.msdf",
       "type": "se",
       "volume": 100
+    },
+    {
+      "key": "s1xlv.union_charge",
+      "file": "union_charge.msdf",
+      "type": "se",
+      "volume": 90
+    },
+    {
+      "key": "s1xlv.epod_charge",
+      "file": "epod_charge.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.epod_warp",
+      "file": "epod_warp.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.epod_flame",
+      "file": "epod_flame.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.bgm_ms7_m5",
+      "file": "bgm_ms7_m5.msdf",
+      "type": "bgm",
+      "loop": [
+        80.41068,
+        176.404875
+      ]
     }
   ]
 }

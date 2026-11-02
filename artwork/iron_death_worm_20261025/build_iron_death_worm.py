@@ -833,7 +833,8 @@ def unit_file(animations, icon_rect):
             'production_reference_id': BASE, 'production_interval_multiplier': v['production_interval_multiplier'],
             'status_word_values': v['status_word_values'], 'status_float_values': v['status_float_values'],
             'attack_attributes': v['attack_attributes'], 'attribute_resistance_tiers': v['attribute_resistance_tiers'],
-            'image_direction': 90, 'special_effect_size': [90, 120], 'minimap_marker': [10, 20],
+            # 绘制优先级 −90（2026-11-02 用户：巨型单位画在最下层，同钢铁哨兵；第 319 节 R11，单位文件直接改写，本脚本未重新运行）
+            'image_direction': 90, 'draw_priority': -90, 'special_effect_size': [90, 120], 'minimap_marker': [10, 20],
             'icon': {'page': 1, 'rect': list(icon_rect), 'anchor': ICON_ANCHOR},
             'textures': list(TEXTURES), 'sprite_descriptor': DESCRIPTOR,
             'animations': {str(k): animations[k] for k in sorted(animations)},

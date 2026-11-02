@@ -1,10 +1,19 @@
 {
   "schema": 1,
-  "stage_id": 13012,
+  "stage_id": 13102,
   "enemy_deck": [
-    null,
-    null,
-    null,
+    [
+      1097,
+      40
+    ],
+    [
+      1093,
+      40
+    ],
+    [
+      1028,
+      40
+    ],
     null,
     null,
     null,
@@ -14,9 +23,18 @@
     null
   ],
   "player_deck": [
-    null,
-    null,
-    null,
+    [
+      1097,
+      40
+    ],
+    [
+      1093,
+      40
+    ],
+    [
+      1028,
+      40
+    ],
     null,
     null,
     null,
@@ -29,8 +47,8 @@
   "enemy_base_level": 0,
   "player_hp_boost": 0,
   "player_atk_boost": 0,
-  "enemy_hp_boost": 0,
-  "enemy_atk_boost": 0,
+  "enemy_hp_boost": 7,
+  "enemy_atk_boost": 7,
   "full_control": true,
   "enemy_ai": false,
   "player_ai": false,

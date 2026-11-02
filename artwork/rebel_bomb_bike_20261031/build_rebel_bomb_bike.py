@@ -147,8 +147,8 @@ LOCALIZATION = {   # R9：名称按用户定为「机动兵」，各语言沿用
     'FR': ('SOLDAT MOTARD', 'ATT. STAND : Lancer de moto   ATT. SPÉ : Lancer de moto\nSoldat fanatique de l\'escadron motorisé rebelle.\nIl projette sa moto pour un coup fatal et continue de combattre.'),
     'DE': ('MOTORRADSOLDAT', 'NORM. ANGR.: Motorradwurf SPEZ. ANGR.: Motorradwurf\nFanatischer Soldat der Motorradstaffel der Rebellen.\nSchleudert das Motorrad als tödlichen Schlag und kämpft danach weiter.'),
     'IT': ('SOLDATO MOTOCICLISTA', 'ATC STAND.: Lancio moto   ATC SPEC.: Lancio moto\nSoldato fanatico della squadra motociclisti ribelle.\nScaglia la moto come colpo letale e continua a combattere.'),
-    'ZT': ('機動兵', '普通攻擊：拋擲機車     特殊攻擊：拋擲機車\n叛軍機車部隊的狂熱士兵。拋出機車使出致命一擊。\n哪怕拋出機車也會繼續作戰'),
-    'ZS': ('机动兵', '普通攻击：抛掷机车     特殊攻击：抛掷机车\n叛军机车部队的狂热士兵。抛出机车使出致命一击。\n哪怕抛出机车也会继续作战'),
+    'ZT': ('機動兵', '普通攻擊：拋擲機車     特殊攻擊：拋擲機車\n莫丁軍機車部隊的狂熱士兵。拋出機車使出致命一擊。\n哪怕拋出機車也會繼續作戰'),
+    'ZS': ('机动兵', '普通攻击：抛掷机车     特殊攻击：抛掷机车\n莫丁军机车部队的狂热士兵。抛出机车使出致命一击。\n哪怕抛出机车也会继续作战'),
 }
 # R9（用户 2026-10-31）：头像改用用户在原生绿格上画好的构图（handoff/，导出素材见 make_icon_handoff.py）；R4–R8 为平骑帧翻转朝右、
 # 46×43、锚点 [−5, −2]。取格内 x 5–49、y 4–44（头盔顶压在上边框第 4 行，前轮压在右侧边框上）

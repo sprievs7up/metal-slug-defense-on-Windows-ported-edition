@@ -117,8 +117,8 @@ LOCALIZATION = {   # 名称与说明由代理撰写，待用户确定与校对
         'FR': ('TOURELLE DCA', 'ATT. STAND : Canon   ATT. SPÉ : -\nTourelle antiaérienne des rebelles sur l\'île de la Ferraille.\nTire des obus incendiaires droit devant.'),
         'DE': ('FLAK-GESCHÜTZ', 'STD.-ANGR. : Kanone   SPEZ.-ANGR. : -\nFlakgeschütz der Rebellenarmee auf der Schrottinsel.\nFeuert Brandgranaten geradeaus.'),
         'IT': ('TORRETTA AA', 'ATC STAND.: Cannone   ATC SPEC.: -\nTorretta antiaerea dei ribelli sull\'Isola dei Rottami.\nSpara proiettili incendiari in linea retta.'),
-        'ZT': ('防空砲台', '普通攻擊：砲擊     特殊攻擊：‐\n摩登軍設置在廢鐵島上的防空砲台。\n向正前方發射火焰砲彈。'),
-        'ZS': ('防空炮台', '普通攻击：炮击     特殊攻击：‐\n摩登军设置在废品岛上的防空炮台。\n向正前方发射火焰炮弹。'),
+        'ZT': ('防空砲台', '普通攻擊：砲擊     特殊攻擊：‐\n莫丁軍設置在廢鐵島上的防空砲台。\n向正前方發射火焰砲彈。'),
+        'ZS': ('防空炮台', '普通攻击：炮击     特殊攻击：‐\n莫丁军设置在废品岛上的防空炮台。\n向正前方发射火焰炮弹。'),
     },
     'broken_a': {
         # R5：名称按用户“破损炮台”α / β，其他语言同样去掉“防空”；末句改为爆炸炮弹、射程远、射速快（不再写火焰）

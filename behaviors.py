@@ -15,7 +15,7 @@ INTERNAL_FIELDS = frozenset((
     'summon_interval_multiplier', 'summon_interval_additional_multiplier', 'landing_unit_key',
     'shot_action_reference_id', 'recovery_animation', 'flame_interrupt', 'ground_special_attack',
     'retained_special_weapon', 'zombie_spec', 'throw_child_key', 'native_action', 'second_form_key',
-    'formation_unit_key', 'summoned_internal_key'))
+    'formation_unit_key', 'summoned_internal_key', 'union_child_key'))
 # 与 content_sounds.KEY_PATTERN 相同（音效稳定键）。
 SOUND_KEY_PATTERN = re.compile(r'[a-z][a-z0-9_]{1,31}\.[a-z0-9_][a-z0-9_.\-]{0,63}')
 
@@ -467,6 +467,87 @@ def internal_fields(resolved):
         )] + v['upper_box'] + v['lower_box'] + v['body_box'], climber_sounds=list(v['step_sounds']), climber_more=[v['shot_distance'], v['wrist_x'], v['wrist_y'], v['burst_shots'], v['burst_cooldown'], v['special_move_damage_taken'], v['special_laser_damage_taken']])
         if v['second_form']:
             fields['second_form_key'] = v['second_form']
+    # 2026-11-01 UNION（行为库 v32 / 行为 v1，核心 r118，基准 192 侵略者类，ZSpec 标记 268435456，字 53–127，与 elder_centipede /
+    # invader_king / iron_death_worm / fall_climber 互斥）：角色、三机的单位号（加载器按 union_units 换为 UnitID 写入字 54–56）、动作号、
+    # 分离帧与三机的生成偏移、推挤间距、2 号机悬停高度与升降、损毁冲撞、炸弹与分离弹体脚本、单位宽度（R5，行为 v2 / 行为库 v33，核心 r119，字 87）、
+    # 合体单位受伤百分比（R6，行为 v3 / 行为库 v34，核心 r120，字 88）、合体状态限时（R7，行为 v4 / 行为库 v35，核心 r121，字 89）、
+    # 2 号机触地的机体下缘与触地爆炸动作（R9，行为 v6 / 行为库 v37，核心 r125，字 90、91）、隐去后的空白动作（R12，行为 v7 / 行为库 v38，核心 r127，字 92）、
+    # 分离中随地形升降的效果（R14，行为 v8 / 行为库 v39，核心 r129，字 93、94）、弹体表（字 95 为项数，96 起每项 4 字）。
+    # 开战预载：合体单位的子单位字为 1 号机，1 号机为 2 号机（union_child_key，只写子单位字，不改属性面板；原生预载只到第二级）；
+    # 3 号机由原生 summonZakoBazooka 生成（落地映射表，加载器写入），不需预载。
+    if 'union' in resolved:
+        v = resolved['union']
+        units = [v['first_unit'], v['second_unit'], v['third_unit']]
+        if any(k is None for k in units):
+            raise ValueError('union requires first_unit, second_unit and third_unit')
+        if len(v['bullets']) % 4:
+            raise ValueError('union.bullets must hold 4 integers per entry')
+        zombie.update(flags=zombie['flags'] | 268435456, union_units=units, union=[v['role'], 0, 0, 0] + [v[k] for k in (
+            'neutral_animation',
+            'move_animation',
+            'near_animation',
+            'far_animation',
+            'special_animation',
+            'divide_animation',
+            'knockback_animation',
+            'death_animation',
+            'death_loop_animation',
+            'split_tick',
+        )] + v['first_offset'] + v['second_offset'] + v['third_offset'] + v['spacing'] + [v[k] for k in (
+            'hover',
+            'descend_speed',
+            'rise_ticks',
+            'rise_top',
+            'untargetable',
+            'crash_speed',
+        )] + v['crash_damage'] + [v['death_burst_ticks'], v['bomb_bullet'], v['split_bullet'], v['object_width'], v['combined_damage_taken'], v['max_combined_ticks'], v['touchdown_offset'], v['crash_animation'], v['hidden_animation'], v['ground_follow_first'], v['ground_follow_count'], len(v['bullets']) // 4] + v['bullets'])
+        chain = {0: units[0], 1: units[1]}.get(v['role'])
+        if chain:
+            fields['union_child_key'] = chain
+    # 2026-11-02 Energy Pod（行为库 v40 / 行为 v1，核心 r131，基准 192 侵略者类，ZSpec 标记 536870912，字 53–86，与 elder_centipede /
+    # invader_king / iron_death_worm / fall_climber / union 互斥）：角色、球的单位号（加载器按 epod_unit 换为 UnitID 写入字 54）、动作与效果号、
+    # 三个音效（epod_sounds，加载器换为 SoundID 写入字 67–69）、编队与旋转、俯冲、各段时长与攻击过程受伤百分比；
+    # R13 起行为 v2 / 行为库 v41（核心 r133）：出发时的索敌范围 target_range（字 86）。
+    # 开战预载：组单位的子单位字为球（union_child_key，只写子单位字）。
+    if 'energy_pod' in resolved:
+        v = resolved['energy_pod']
+        if v['ball_unit'] is None or any(v[k] is None for k in ('charge_sound', 'launch_sound', 'flame_sound')):
+            raise ValueError('energy_pod requires ball_unit, charge_sound, launch_sound and flame_sound')
+        zombie.update(flags=zombie['flags'] | 536870912, epod_unit=v['ball_unit'],
+                      epod_sounds=[v['charge_sound'], v['launch_sound'], v['flame_sound']], epod=[v['role'], 0] + [v[k] for k in (
+                          'deck_animation',
+                          'hidden_animation',
+                          'idle_animation',
+                          'about_animation',
+                          'charged_animation',
+                          'dive_animation',
+                          'recover_animation',
+                          'wreck_animation',
+                          'trail_effect',
+                          'bump_effect',
+                          'ring_effect',
+                          'fire_effect',
+                      )] + [0, 0, 0] + [v[k] for k in (
+                          'radius',
+                          'height',
+                          'dive_speed',
+                          'period',
+                          'neutral_period',
+                          'spin_up',
+                          'spin_down',
+                          'about_ticks',
+                          'charged_hold',
+                          'single_hold',
+                          'launch_gap',
+                          'join_wait',
+                          'regroup_ticks',
+                          'recover_ticks',
+                          'reattack_wait',
+                          'attack_damage_taken',
+                          'target_range',
+                      )])
+        if v['role'] == 0:
+            fields['union_child_key'] = v['ball_unit']
     # 2026-10-31 R9 落地延续生命（行为库 v30，核心 r112，基准 160）：ZSpec 标记 67108864，无参数字。
     if 'landing_keeps_hp' in resolved:
         zombie['flags'] |= 67108864
@@ -476,10 +557,11 @@ def internal_fields(resolved):
 
 
 def sound_keys(unit):
-    """行为参数中引用的音效键（生命分档单位的防具受击、击毙与气球出场音效，Fall Climber 的手落地音效）。"""
+    """行为参数中引用的音效键（生命分档单位的防具受击、击毙与气球出场音效，Fall Climber 的手落地音效，Energy Pod 的三个音效）。"""
     spec = unit.get('zombie_spec') or {}
     return (list(spec.get('armor_sounds', [])) + ([spec['kill_sound']] if spec.get('kill_sound') else [])
-            + ([spec['launch_sound']] if spec.get('launch_sound') else []) + list(spec.get('climber_sounds', [])))
+            + ([spec['launch_sound']] if spec.get('launch_sound') else []) + list(spec.get('climber_sounds', []))
+            + list(spec.get('epod_sounds', [])))
 
 
 def apply(units_by_key, library):

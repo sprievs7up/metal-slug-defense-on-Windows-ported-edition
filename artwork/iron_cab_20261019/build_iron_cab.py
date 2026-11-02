@@ -150,9 +150,9 @@ TEXT = {
     'IT': ('IRON CAB', 'ATC STAND.: Raffica di missili  ATC SPEC.: Laser perforante\n'
                        'Arma camminante a più zampe costruita dai ribelli con una locomotiva.\n'
                        'Il cannone laser sotto lo scafo trafigge un’intera fila di nemici.'),
-    'ZT': ('鐵甲車頭', '普通攻擊：飛彈齊射     特殊攻擊：貫穿雷射\n叛軍以蒸汽機車改造的多足步行兵器。\n'
+    'ZT': ('鐵甲車頭', '普通攻擊：飛彈齊射     特殊攻擊：貫穿雷射\n摩登軍以蒸汽機車改造的多足步行兵器。\n'
                    '車底的雷射砲能貫穿一整排敵人。'),
-    'ZS': ('铁甲车头', '普通攻击：导弹齐射     特殊攻击：贯穿激光\n叛军以蒸汽机车改造的多足步行兵器。\n'
+    'ZS': ('铁甲车头', '普通攻击：导弹齐射     特殊攻击：贯穿激光\n摩登军以蒸汽机车改造的多足步行兵器。\n'
                    '车底的激光炮能贯穿一整排敌人。'),
 }
 

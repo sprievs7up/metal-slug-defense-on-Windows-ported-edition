@@ -298,6 +298,9 @@ def check_references(u,by_key):
     # 2026-10-27 5 连发马克斯奈尔的僚机（行为 formation_wingmen，核心 r99）：领队与僚机的基准均为 187，僚机为内部单位。
     wingman=u.get('formation_unit_key')
     if wingman is not None and (u['base_id']!=187 or wingman not in by_key or not by_key[wingman].get('internal_only') or by_key[wingman]['base_id']!=187 or wingman==u['key']):raise ValueError('Invalid formation wingman reference')
+    # 2026-11-01 UNION（行为 union，核心 r118）：开战预载链（合体单位 → 3 号机 → 2 号机 → 1 号机），只写子单位字。
+    chain=u.get('union_child_key')
+    if chain is not None and (chain not in by_key or not by_key[chain].get('internal_only') or chain==u['key']):raise ValueError('Invalid union preload reference')
 
 def check_sprite_descriptor(u,dims,descriptor_path):
     """精灵描述符与动作脚本的检查（社区单位与原版单位外观替换共用）；u 含 textures、sprite_descriptor、animations；无描述符时返回 None。"""
@@ -540,6 +543,10 @@ class CommunityContent:
         if any(u['zombie_spec']['flags']&67108864 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_landing_hp_version') or p.uc.lib.msd_community_landing_hp_version()<1):raise RuntimeError('Native core lacks landing HP carry-over')
         # 2026-11-01 Fall Climber（fall_climber，标记 134217728）：侵略者类的块与三遍裁切绘制、部件判定（核心 r115）。
         if any(u['zombie_spec']['flags']&134217728 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_fall_climber_version') or p.uc.lib.msd_community_fall_climber_version()<3):raise RuntimeError('Native core lacks fall climber behavior')
+        # 2026-11-01 UNION（union，标记 268435456）：侵略者类的块（合体单位分离生成三机、三机各自的 MSA 流程与弹体），核心 r118。
+        if any(u['zombie_spec']['flags']&268435456 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_union_version') or p.uc.lib.msd_community_union_version()<8):raise RuntimeError('Native core lacks union behavior')
+        # 2026-11-02 Energy Pod（energy_pod，标记 536870912）：侵略者类的块（组单位生成三颗球并控制编队、俯冲与集合，球的受伤百分比与对空目标），核心 r131；R12 起弹回终点与集合中心限制范围，核心 r132（版本 2）；R13 起出发时的索敌范围（字 86），核心 r133（版本 3）。
+        if any(u['zombie_spec']['flags']&536870912 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_energy_pod_version') or p.uc.lib.msd_community_energy_pod_version()<3):raise RuntimeError('Native core lacks energy pod behavior')
         if any(u['zombie_spec']['flags']&4194304 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_mole_missile_version') or p.uc.lib.msd_community_mole_missile_version()<2 or not hasattr(p.uc.lib,'msd_community_elder_centipede_version') or p.uc.lib.msd_community_elder_centipede_version()<1):raise RuntimeError('Native core lacks mole missile behavior')
         self.ready=False
 
@@ -794,7 +801,7 @@ class CommunityContent:
             struct.pack_into('<i',row,0x378,u['faction']);rows+=row
             # 2026-10-31 R9：para_drop_transform 的落地单位同样写入子单位字，开战时随本单位预载其图像与音效（机动兵骑手落成原版 162 时，
             # 原生子单位字 45 不预载 162，其死亡音效 864 无声）；原版 UnitID 直接写入。
-            child_key=u.get('child_unit_key') or u.get('summoned_unit_key') or u.get('summoned_internal_key') or u.get('throw_child_key') or u.get('second_form_key') or u.get('landing_unit_key')
+            child_key=u.get('child_unit_key') or u.get('summoned_unit_key') or u.get('summoned_internal_key') or u.get('throw_child_key') or u.get('second_form_key') or u.get('landing_unit_key') or u.get('union_child_key')
             if child_key:
                 child=child_key if isinstance(child_key,int) else next(entry['id'] for entry in self.units if entry['key']==child_key)
                 struct.pack_into('<I',rows,len(rows)-0x390+0xa4,child)
@@ -904,10 +911,14 @@ class CommunityContent:
         # 基准 187 的编队领队登记僚机单位（原生以固定 UnitID 187 生成，2026-10-27）。
         # 2026-11-01 Fall Climber（标记 134217728）：第一形态生命耗尽时以 summonZakoBazooka 生成第二形态（固定 UnitID 45 → second_form_key）。
         def climber_form(u):return u.get('second_form_key') if u and ((u.get('zombie_spec') or {}).get('flags',0)&134217728) else None
+        # 2026-11-01 UNION（标记 268435456）：合体单位分离时以 summonZakoBazooka 在原处生成 3 号机（固定 UnitID 45 → union_units[2]）。
+        def union_third(u):
+            spec=(u or {}).get('zombie_spec') or {}
+            return spec['union_units'][2] if spec.get('flags',0)&268435456 and spec.get('union',[1])[0]==0 else None
         def landing_of(u):
-            key=u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key') or climber_form(u)
+            key=u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key') or climber_form(u) or union_third(u)
             return key if isinstance(key,int) else landing_ids[key]   # 原版 UnitID 直接写入（2026-10-31）
-        landings=struct.pack('<'+'I'*n,*(landing_of(u) if u and (u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key') or climber_form(u)) else 0 for u in units))
+        landings=struct.pack('<'+'I'*n,*(landing_of(u) if u and (u.get('landing_unit_key') or u.get('throw_child_key') or u.get('formation_unit_key') or climber_form(u) or union_third(u)) else 0 for u in units))
         display_ids=struct.pack('<'+'I'*n,*(landing_ids[u['child_unit_key']] if u and u.get('child_unit_key') else UNIT_ID_BASE+i for i,u in enumerate(units)))
         fields+=(pack_pointer,self.alloc(landings),self.alloc(display_ids))
         recoveries=struct.pack('<'+'I'*n,*((u or empty).get('recovery_animation',26) for u in units))
@@ -1103,6 +1114,16 @@ class CommunityContent:
             # 冲刺上限 tick、蓄力与弃车 tick、最大水平抛射距离（R10，核心 r113）（140 字，139 保留）
             for i,v in enumerate(spec.get('bike',[])):words[121+i]=v
             for i,v in enumerate(spec.get('bike_extra',[])):words[134+i]=v
+            # 2026-11-01：53–135 UNION（union v8，核心 r129；与 elder_centipede / invader_king / iron_death_worm / fall_climber 互斥）：角色、
+            # 54–56 三机的 UnitID（union_units 的稳定键）、动作号、分离帧、三机生成偏移、推挤间距、2 号机悬停与升降、损毁冲撞、炸弹与分离弹体、
+            # 87 单位宽度（R5）、88 合体单位受伤百分比（R6）、89 合体状态限时（R7）、90 / 91 2 号机触地下缘与触地爆炸动作（R9）、92 隐去后的空白动作（R12）、93 / 94 分离中随地形升降的效果（R14）、95 弹体表项数与 96 起的弹体表（见行为库说明）
+            for i,v in enumerate(spec.get('union',[])):words[53+i]=v&0xffffffff
+            for i,k in enumerate(spec.get('union_units',[])):words[54+i]=next(e['id'] for e in units if e and e['key']==k)
+            # 2026-11-02：53–86 Energy Pod（energy_pod v2，核心 r133；与 elder_centipede / invader_king / iron_death_worm / fall_climber / union 互斥）：角色、
+            # 54 球的 UnitID（epod_unit 的稳定键）、55–66 动作与效果号、67–69 变色 / 发射与落地 / 火柱音效的 SoundID（epod_sounds）、70–85 编队、旋转、俯冲、各段时长与攻击过程受伤百分比、86 出发时的索敌范围（R13，见行为库说明）
+            for i,v in enumerate(spec.get('epod',[])):words[53+i]=v&0xffffffff
+            if spec.get('epod_unit'):words[54]=next(e['id'] for e in units if e and e['key']==spec['epod_unit'])
+            for i,k in enumerate(spec.get('epod_sounds',[])):words[67+i]=self.sound_ids[k]
             # 2026-10-29：132 受击召唤的冷却 tick（summon_on_hit，核心 r105）
             words[132]=spec.get('hit_summon_cooldown',0)
             # 2026-10-29：133 钢铁死亡蠕虫的钻离 / 钻击中开始扣击退计量的脚本 tick（iron_death_worm v5，核心 r109）

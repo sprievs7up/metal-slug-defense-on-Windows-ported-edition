@@ -78,6 +78,7 @@
     0
   ],
   "image_direction": 90,
+  "draw_priority": -90,
   "special_effect_size": [
     90,
     120

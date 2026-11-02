@@ -104,6 +104,14 @@ class CpuBattle:
         lab, p = self.lab, self.p
         human_team = p.word(self.human() + 0x38c)
         red = lab.ensure_red_renderer() if self.side == 1 else 0
+        fast = getattr(p.uc.lib, 'msd_lab_fix_units', None)
+        if fast is not None and len(self.controllers) == 2:
+            # 核心 r136 起：同一逐单位读写在核心中完成（src/lab_hooks.cpp msd_lab_fix_units，mode 1），每帧一次调用
+            import ctypes
+            manager = p.call('_ZN19BattleObjectManager11getInstanceEv')
+            fast(ctypes.byref(p.uc.ctx), *(ctypes.c_uint32(v & 0xffffffff) for v in (
+                manager, 1, human_team, 0xffffffff, red or 0, *self.controllers)))
+            return
         for team in (0, 1):
             manager, units = lab.team_list(team)
             renderer = p.word(manager + 64)

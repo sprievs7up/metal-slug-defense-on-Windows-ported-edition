@@ -123,7 +123,7 @@ double msd_det_cos(double x){
     }
 }
 
-static void state_io(StateIO& io){msd_lab_netplay_state(io);msd_flame_netplay_state(io);}
+static void state_io(StateIO& io){msd_lab_netplay_state(io);msd_flame_netplay_state(io);msd_union_netplay_state(io);}
 extern "C" __declspec(dllexport) uint32_t msd_netplay_version(){return 2u;}   // 2：快照页复制
 extern "C" __declspec(dllexport) void msd_netplay_set_flags(uint32_t flags){msd_netplay_flags=flags;}
 extern "C" __declspec(dllexport) uint32_t msd_netplay_get_flags(){return msd_netplay_flags;}

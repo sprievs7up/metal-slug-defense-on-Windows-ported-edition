@@ -57,6 +57,7 @@ from content_digest import blake2
 
 STATE_NEUTRAL = 10
 ACTION_STATES = {'neutral': STATE_NEUTRAL, 'near': 30, 'normal': 40, 'special': 50}
+SHARED_EFFECT_ID = 402            # 原生共用效果（0xffNN）的图片描述符，按 UnitID 传给 BattleSpriteFactory::setupResource
 CANVAS = 1.125                    # 原生 960 基准到 1280×720 画布
 SOUND_BLOCK = 3                   # Sound_RequestPlaySE（位 0）与 Sound_RequestPlayVO（位 1）的请求屏蔽
 VIEWER_FLAGS = 0xb8c0             # app+0xb8c0 原生浏览的触点请求、+0xb8c1 特殊攻击进行中（非 0 时跳过自动演示循环）
@@ -277,6 +278,7 @@ class UnitViewer:
         """建立演示单位（原生 UnitActionViewerUnitSetup：清除旧对象、浏览模式、按 UnitID 设定起点、载入音效）。"""
         p, app = self.p, self.app()
         p.call('_ZN7AppMain25UnitActionViewerUnitSetupE6UnitID', app, uid)
+        self.preload_spawned(uid)
         if self.action_class(uid) in STAGE_VTABLES:
             self.load_stage()
         self.uid = uid
@@ -287,6 +289,25 @@ class UnitViewer:
         self.worker_x, self.worker_step = None, WORKER_SPEED
         self.fresh = True
         self.specialed = False
+
+    def preload_spawned(self, uid):
+        """为演示单位行为参数引用的社区单位建立图像与音效（BattleSpriteFactory::setupResource / setupSoundResource）。
+
+        2026-11-02 UNION（AGENTS 第 319 节 R15）：原生演示只为演示单位建立图像（建立对象时按需新建），开战时则沿子单位字链预载。
+        核心钩子内嵌套建立的单位（UNION 的 1、2 号机）不能新建图像，所得精灵的纹理未载入，绘制时不显示或在 Graphics::drawImageSE 停止。
+        共用效果图像 402（命中、爆炸等 0xffNN 效果）同理：核心钩子在演示中经嵌套调用放出共用效果时留下页为空的图像，社区单位的演示一并预载。
+        UnitActionViewerUnitSetup 释放上一演示的资源后由此预载；UNION 在三机图像都已建立后才生成三机。"""
+        units = getattr(getattr(self.p, 'community', None), 'units', None) or ()
+        unit = next((u for u in units if u.get('id') == uid), None)
+        if unit is None:
+            return
+        keys = {v for b in unit.get('behaviors') or () for v in (b.get('params') or {}).values() if isinstance(v, str)}
+        ids = [u['id'] for u in units if u.get('key') in keys and u.get('id') not in (None, uid)]
+        factory = self.p.call('_ZN19BattleSpriteFactory11getInstanceEv')
+        self.p.call('_ZN19BattleSpriteFactory13setupResourceE6UnitID', factory, SHARED_EFFECT_ID)
+        for child in ids:
+            self.p.call('_ZN19BattleSpriteFactory13setupResourceE6UnitID', factory, child)
+            self.p.call('_ZN19BattleSpriteFactory18setupSoundResourceE6UnitID', factory, child)
 
     def clear(self):
         if self.uid is None:

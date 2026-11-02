@@ -1906,6 +1906,41 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     return n;
 }
 extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 26u;}
+// 2026-11-02（核心 r136，docs/UNIT_CAP_2026-11-02.md 第 13 节）：LAB 每帧的单位修正（lab.py Lab.fix_units、vs_cpu.py VsCpu.fix_units）的核心实现，
+// 逐单位读写与宿主原代码相同，只省去每个单位数次跨 FFI 的读取。单位按 Lab.team_list 遍历：getTeamUnitList（管理器 + (队伍 + 6) × 4）起沿 +0x120，
+// 回到起点、地址无效（不在 0x10000000–0x1fffefff）或满 4096 个为止。mode 0 为 Lab.fix_units（team = 敌方队伍，red_team 为 0xffffffff 表示无），
+// mode 1 为 VsCpu.fix_units（team = 玩家队伍）；red 为第二渲染器（0 表示无）。返回 +981 被清零的单位与据点个数。
+extern "C" __declspec(dllexport) uint32_t msd_lab_fix_units(Context* cp,uint32_t manager,uint32_t mode,uint32_t team_arg,uint32_t red_team,
+                                                            uint32_t red,uint32_t ctrl0,uint32_t ctrl1){
+    Context& c=*cp;uint32_t cleared=0;
+    constexpr uint32_t SET_EFFECT=0x101e0fa9u,GET_BASE=0x101c9765u;
+    auto valid=[](uint32_t a){return a>=0x10000000u&&a<0x1ffff000u;};
+    for(uint32_t team=0;team<2u;++team){
+        uint32_t renderer=rd<uint32_t>(c,manager+64u);
+        if(red&&renderer)wr<uint32_t>(c,red+8u,rd<uint32_t>(c,renderer+8u));
+        uint32_t enemy_renderer=red?red:renderer;
+        uint32_t first=rd<uint32_t>(c,manager+(team+6u)*4u),unit=first;
+        for(uint32_t n=0;unit&&valid(unit)&&n<4096u;++n){
+            if(rd<uint8_t>(c,unit+981u)){wr<uint8_t>(c,unit+981u,0u);++cleared;}
+            if(mode==0u){
+                if(team==team_arg&&enemy_renderer&&rd<uint32_t>(c,unit+972u)!=enemy_renderer)guest_call(c,SET_EFFECT,unit,enemy_renderer,1u);
+                else if(red_team!=0xffffffffu&&team!=team_arg&&renderer&&(rd<uint32_t>(c,unit+972u)!=renderer||rd<uint32_t>(c,unit+976u)!=1u))
+                    guest_call(c,SET_EFFECT,unit,renderer,1u);
+            }else{
+                uint32_t kind=rd<uint32_t>(c,unit+976u);
+                if(team==team_arg){if(red&&(rd<uint32_t>(c,unit+972u)!=red||kind!=1u))guest_call(c,SET_EFFECT,unit,red,1u);}
+                else if(kind!=0u)guest_call(c,SET_EFFECT,unit,rd<uint32_t>(c,unit+972u),0u);
+            }
+            uint32_t link=rd<uint32_t>(c,unit+0x120u);unit=link?link-0x11cu:0u;
+            if(unit==first)break;
+        }
+    }
+    for(uint32_t ctrl:{ctrl0,ctrl1}){
+        uint32_t base=0u;guest_call(c,GET_BASE,ctrl,0u,0u,0u,nullptr,0u,&base);
+        if(valid(base)&&rd<uint8_t>(c,base+981u)){wr<uint8_t>(c,base+981u,0u);++cleared;}
+    }
+    return cleared;
+}
 extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     static bool installed=false;
     if(installed)return;

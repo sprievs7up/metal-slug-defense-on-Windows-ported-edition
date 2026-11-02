@@ -126,8 +126,8 @@ LOCALIZATION = {   # 名称为 MSA 官方译名（鼹鼠弹 / 鼴鼠彈 / モグ
     'FR': ('MISSILE TAUPE', 'ATT. STAND : Autodestruction   ATT. SPÉ : Autodestruction massive\nMissile foreur développé par l\'armée rebelle du futur.\nIl avance en silence jusqu\'à la ligne de front, puis explose.'),
     'DE': ('MAULWURFSRAKETE', 'NORM. ANGR.: Explosion SPEZ. ANGR.: Große Explosion\nBohrrakete, entwickelt von der Rebellenarmee der Zukunft.\nRückt lautlos bis zur Front vor und explodiert.'),
     'IT': ('MISSILE TALPA', 'ATC STAND.: Autodistruzione   ATC SPEC.: Potente Autodistruzione\nMissile perforante sviluppato dall\'esercito ribelle del futuro.\nAvanza silenziosamente fino al fronte, poi esplode.'),
-    'ZT': ('鼴鼠彈', '普通攻擊：自爆     特殊攻擊：自爆（大）\n未來叛軍研製的鑽地飛彈。\n悄無聲息地前進至前線然後爆炸。'),   # 用户 2026-10-26 文本（简体）的逐字转写
-    'ZS': ('鼹鼠弹', '普通攻击：自爆     特殊攻击：自爆（大）\n未来叛军研制的钻地飞弹。\n悄无声息地前进至前线然后爆炸。'),   # 用户 2026-10-26 文本
+    'ZT': ('鼴鼠彈', '普通攻擊：自爆     特殊攻擊：自爆（大）\n未來莫丁軍研製的鑽地飛彈。\n悄無聲息地前進至前線然後爆炸。'),   # 用户 2026-10-26 文本（简体）的逐字转写
+    'ZS': ('鼹鼠弹', '普通攻击：自爆     特殊攻击：自爆（大）\n未来莫丁军研制的钻地飞弹。\n悄无声息地前进至前线然后爆炸。'),   # 用户 2026-10-26 文本
 }
 ICON_SIZE = (46, 43)
 ICON_ANCHOR = [-5, -2]
