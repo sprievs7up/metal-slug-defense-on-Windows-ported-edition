@@ -981,7 +981,7 @@ class CommunityContent:
         # 头部偏移 176/180：按生命计算的修筑类单位表（每项 UnitID、百分比、下限）与项数；无此类单位时为 0。
         fields+=self.install_engineer_hp(action_rows,units)
         # 头部偏移 184：自制场景（ID 138 起，manifest['stages'] 顺序）逐场景的效果记录指针表（水花 water、子弹墙 bullet_walls、背景图层视差 parallax、
-        # 背景图层换帧间隔 frame_updates）；无此类场景时为 0。
+        # 背景图层换帧间隔 frame_updates、图层混合方式 blend / front_blend）；无此类场景时为 0。
         fields+=(self.install_scene_fx(stage_rows),)
         p.write(HEADER,struct.pack('<%dI'%len(fields),*fields));self.ready=True
         self.map_initial_choices_applied=not (self.manifest.get('missions') or self.manifest.get('campaign_choices'))
@@ -994,9 +994,10 @@ class CommunityContent:
         与染色强度（float，0–1，GraphicsOpt::setSpriteFog）；9 已建立 WaterFunc 的场景对象（核心写入）；10–17 WaterFunc 存储（核心使用）；
         18 子弹墙多边形数；19 多边形数据（每个多边形：点数 n，再 n 对 x、y，int32）；20 视差表的背景层数；21 视差表（逐背景层的卷动比例，
         int32 千分比，1000 为与镜头同速；2026-10-28 起，核心 stage_parallax）；22 换帧间隔表的背景层数；23 换帧间隔表（逐背景层每帧保持的
-        更新次数，int32，原生为 2；2026-10-29 起，核心 stage_back_frame，此前记录为 22 个字）。"""
+        更新次数，int32，原生为 2；2026-10-29 起，核心 stage_back_frame，此前记录为 22 个字）。有图层混合方式时记录为 28 个字（标记位 4）：
+        24 背景层数、25 逐背景层混合方式表、26 前景层数、27 逐前景层混合方式表（int32：0 原生、1 混合、2 加色；2026-11-03 起，核心 stage_blend）。"""
         p=self.p
-        if not any('water' in s or 'bullet_walls' in s or 'parallax' in s or 'frame_updates' in s for s in stage_rows):return 0
+        if not any(k in s for s in stage_rows for k in ('water','bullet_walls','parallax','frame_updates','blend','front_blend')):return 0
         if not hasattr(p.uc.lib,'msd_community_scene_fx_version') or p.uc.lib.msd_community_scene_fx_version()!=1:
             raise RuntimeError('Native core lacks scene water / bullet wall hooks (scene_fx)')
         if any('parallax' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_parallax_version')
@@ -1005,12 +1006,16 @@ class CommunityContent:
         if any('frame_updates' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_frame_rate_version')
                                                              or p.uc.lib.msd_community_stage_frame_rate_version()!=1):
             raise RuntimeError('Native core lacks scene layer frame rates (stage_back_frame)')
+        if any('blend' in s or 'front_blend' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_blend_version')
+                                                                           or p.uc.lib.msd_community_stage_blend_version()!=1):
+            raise RuntimeError('Native core lacks scene layer blending (stage_blend)')
         f32=lambda v:struct.unpack('<I',struct.pack('<f',v))[0]
         pointers=[]
         for s in stage_rows:
             water,walls,parallax,frames=s.get('water'),s.get('bullet_walls'),s.get('parallax'),s.get('frame_updates')
-            if not water and not walls and not parallax and not frames:pointers.append(0);continue
-            words=[0]*24
+            blend,front_blend=s.get('blend'),s.get('front_blend')
+            if not water and not walls and not parallax and not frames and not blend and not front_blend:pointers.append(0);continue
+            words=[0]*(28 if blend or front_blend else 24)
             if water:
                 words[0]|=1;words[1:5]=[*water['range'],water['min_y'],water['draw_y']]
                 words[5:9]=[f32(v/255) for v in (*water['color'],water.get('strength',230))]
@@ -1023,7 +1028,11 @@ class CommunityContent:
             if frames:
                 words[0]|=8;words[22]=len(frames)
                 words[23]=self.alloc(struct.pack('<%di'%len(frames),*frames))
-            pointers.append(self.alloc(struct.pack('<24I',*(w&0xffffffff for w in words))))
+            for k,modes in ((24,blend),(26,front_blend)):
+                if modes:
+                    words[0]|=16;words[k]=len(modes)
+                    words[k+1]=self.alloc(struct.pack('<%di'%len(modes),*modes))
+            pointers.append(self.alloc(struct.pack('<%dI'%len(words),*(w&0xffffffff for w in words))))
         return self.alloc(struct.pack('<%dI'%len(pointers),*pointers))
 
     def install_engineer_hp(self,action_rows,units):

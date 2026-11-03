@@ -10,9 +10,10 @@ This edition adds keyboard controls and a **16:9 layout**. Expanded backgrounds 
 
 **Stamina regenerates at 1 point per second.** The original Android version regenerates 1 point per minute.
 
-**Update 26.11.1**
+**Update 26.11.3**
 
-- Added Mission 4 content from Metal Slug 7.
+- Added Missions 5 and 6 from Metal Slug 7, now playable.
+- The total unit limit in LAB and similar modes is now 256 (128 per side).
 
 Earlier updates are listed in [Update history](#update-history).
 
@@ -72,6 +73,10 @@ Worlds and stages, community units, custom EVENTs, independent scenes and music 
 Mods go in `mods/`, one folder per mod; the format is described in [mods/README.md](mods/README.md). Enable or disable them under MODS in the title-screen OPTION menu; changes take effect after the game restarts. Unit behaviors available to mods are listed in [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md).
 
 ### Update history
+
+**Update 26.11.1**
+
+- Added Mission 4 content from Metal Slug 7.
 
 **Update 26.10.10**
 
@@ -166,9 +171,10 @@ Esta edición añade controles de teclado y un **formato 16:9**. Los fondos ampl
 
 **La energía (stamina) se recupera a 1 punto por segundo.** La versión original de Android recupera 1 punto por minuto.
 
-**Actualización 26.11.1**
+**Actualización 26.11.3**
 
-- Se añadió el contenido de la Misión 4 de Metal Slug 7.
+- Se añadieron las Misiones 5 y 6 de Metal Slug 7, ya disponibles para jugar.
+- El límite total de unidades en LAB y modos similares ahora es de 256 (128 por bando).
 
 Las actualizaciones anteriores se encuentran en [Historial de actualizaciones](#historial-de-actualizaciones).
 
@@ -228,6 +234,10 @@ Los mundos y etapas, las unidades comunitarias, los EVENT propios, y los escenar
 Los mods se colocan en `mods/`, una carpeta por mod; el formato se describe en [mods/README.md](mods/README.md). Actívalos o desactívalos en MODS, dentro del menú OPTION de la pantalla de título; los cambios se aplican al reiniciar el juego. Los comportamientos de unidad disponibles para los mods se enumeran en [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md).
 
 ### Historial de actualizaciones
+
+**Actualización 26.11.1**
+
+- Se añadió el contenido de la Misión 4 de Metal Slug 7.
 
 **Actualización 26.10.10**
 
@@ -322,9 +332,10 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 
 **体力每秒恢复 1 点。** 安卓原版的恢复速率为每分钟 1 点。
 
-**26.11.1 更新**
+**26.11.3 更新**
 
-- 新增了《合金弹头7》的 MISSION4 内容
+- 加入了《合金弹头7》的 MISSION5 以及 MISSION6 以供游玩
+- LAB 等模式的总单位上限改为 256（两边各自 128）
 
 此前的更新见[更新记录](#更新记录)。
 
@@ -384,6 +395,10 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 模组放在 `mods/` 下，每个模组一个文件夹，格式见 [mods/README.md](mods/README.md)。在标题画面 OPTION 的「MOD 設定」中启用或停用，重启游戏后生效。模组可调用的单位行为见 [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md)。
 
 ### 更新记录
+
+**26.11.1 更新**
+
+- 新增了《合金弹头7》的 MISSION4 内容
 
 **26.10.10 更新**
 

@@ -155,6 +155,14 @@ class Catalog:
                 if 'graphics' not in scene or not isinstance(frames,list) or len(frames)!=len(scene['graphics'].get('back',[])):
                     raise ValueError('frame_updates 须与 graphics.back 逐层对应')
                 for v in frames:integer(v,1,8)
+            # blend / front_blend：场景图层混合方式（2026-11-03 起，需核心 stage_blend）。逐个 graphics.back / graphics.front 层的整数：
+            # 0 原生（不混合，半透明像素近似按原色不透明显示）、1 混合（按 alpha 与下层混合，用于雾、雾霭）、2 加色（按 alpha 叠加亮度）。
+            for field,group in (('blend','back'),('front_blend','front')):
+                modes=scene.get(field)
+                if modes is not None:
+                    if 'graphics' not in scene or not isinstance(modes,list) or len(modes)!=len(scene['graphics'].get(group,[])):
+                        raise ValueError(field+' 须与 graphics.'+group+' 逐层对应')
+                    for v in modes:integer(v,0,2)
         for music in self.music.values():
             if music.get('file') not in self.assets or not music['file'].endswith('.msdf') or not self.assets[music['file']].startswith(b'OggS'):
                 raise ValueError('音乐要求包含 Vorbis 数据的 .msdf 文件')

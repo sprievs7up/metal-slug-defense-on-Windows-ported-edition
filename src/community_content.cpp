@@ -925,6 +925,37 @@ static int32_t stage_parallax(Context& c,uint32_t st){
  if(idx>=rd<uint32_t>(c,r+80u))return 1000;
  return rd<int32_t>(c,rd<uint32_t>(c,r+84u)+4u*idx);
 }
+// 场景图层混合方式（2026-11-03，MS7 任务 6 第 1、2 关的雾层与第 5、6 关森林的雾霭；核心 r137）：原生 drawBack / drawFront 开头以
+// GraphicsOpt::setRenderMode(0, 255)（0x10137711 → Graphics::setRenderMode 0x10142ecd）关闭混合并写深度，各层经 GraphicsOpt::drawConv
+// 绘制，半透明像素因此近似按原色不透明显示（第 304 节 R1 实测）。Graphics::setRenderMode 的模式（TBB 表 0x10142ee0，
+// verification/scene_blend_20261103/render_modes.py）：0 关闭混合、写深度；1 加色 (SRC_ALPHA, ONE)；2 反向减色；3 混合 (SRC_ALPHA,
+// 1 − SRC_ALPHA)、不写深度；4 减色；5 混合并写深度；6 (SRC_ALPHA, CONSTANT_ALPHA)。
+// 场景效果记录标记位 4 时，字 24 / 25 为背景层数与逐层混合方式表、字 26 / 27 为前景层数与表（int32：0 原生、1 混合、2 加色，即模式 0 / 3 / 1）。
+// 逐层绘制块（背景 0x1e147c、前景 0x1e1518）由原块设好 drawConv 的参数（r0 = GraphicsOpt，r1–r3 与栈 [sp]–[sp+16]）后，该层不为 0 时：
+// 先调用 setRenderMode(模式, 255)，返回地址为延续块 1；延续块 1 恢复参数调用 drawConv，返回地址为延续块 2；延续块 2 调用 setRenderMode(0, 255)
+// 并返回原循环。setRenderMode 调用宿主 GL 导入，须在客体流程中执行（钩子内的嵌套调用不能调用宿主导入，第 203 节）。延续块地址为 drawBack 中
+// 两条 BL 指令的后半字（0x101e145b、0x101e14b3，verification/scene_blend_20261103/check_bl.py），原生代码不会跳到这些地址，登记前确认其上
+// 没有原生块。保存区为静态变量（只在一层的绘制内使用）。只改绘制，不影响对战模拟与回滚。
+static constexpr uint32_t SB_SET_MODE=0x10137711u,SB_V1=0x101e145bu,SB_V2=0x101e14b3u;
+static struct{uint32_t r[4],sp,lr,pc;} sb_paint;
+static uint32_t stage_blend_hooks=0u;
+static uint32_t stage_blend_mode(Context& c,uint32_t st,bool front){
+ uint32_t r=scene_fx(c,st);
+ if(!r||!(rd<uint32_t>(c,r)&16u))return 0u;
+ uint32_t base=rd<uint32_t>(c,rd<uint32_t>(c,st+4u)+(front?4u:0u)),w=front?104u:96u;
+ if(c.r[6]<base)return 0u;
+ uint32_t idx=(c.r[6]-base)>>2;
+ if(idx>=rd<uint32_t>(c,r+w))return 0u;
+ switch(rd<int32_t>(c,rd<uint32_t>(c,r+w+4u)+4u*idx)){case 1:return 3u;case 2:return 1u;default:return 0u;}
+}
+static void stage_blend_begin(Context& c,bool front){
+ uint32_t m=stage_blend_hooks==2u?stage_blend_mode(c,c.r[4],front):0u;if(!m)return;
+ for(int i=0;i<4;++i)sb_paint.r[i]=c.r[i];
+ sb_paint.sp=c.r[13];sb_paint.lr=c.r[14];sb_paint.pc=c.pc;
+ c.r[1]=m;c.r[2]=255u;c.r[14]=SB_V1;c.pc=SB_SET_MODE;
+}
+static void stage_blend_v1(Context& c){c.r[13]=sb_paint.sp;for(int i=0;i<4;++i)c.r[i]=sb_paint.r[i];c.r[14]=SB_V2;c.pc=sb_paint.pc;}
+static void stage_blend_v2(Context& c){c.r[13]=sb_paint.sp;c.r[0]=sb_paint.r[0];c.r[1]=0u;c.r[2]=255u;c.r[14]=sb_paint.lr;c.pc=SB_SET_MODE;}
 static void stage_back_draw(Context& c){
  if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);
  int32_t f=stage_parallax(c,c.r[4]);uint32_t r9=c.r[9];
@@ -934,6 +965,7 @@ static void stage_back_draw(Context& c){
   c.r[9]=uint32_t(int32_t((v>=0?(v+500)/1000:(v-500)/1000)-base));
  }
  old_stage_back_draw(c);c.r[9]=r9;
+ stage_blend_begin(c,false);
 }
 // 背景图层换帧间隔（2026-10-29，MS7 任务 3 第 3、4 关；核心 r108）：drawBack 的逐层块 0x1e1466 读入场景计数器（场景 +0x1c，每次 update
 // 加 1）并右移 1 位，随后调用取余函数，余数 + 1 为层表中的图块下标（0x1e147c）；各层因此每 2 次更新换 1 帧（30 FPS 时每秒 15 帧）。第 3、4 关
@@ -952,7 +984,7 @@ static void stage_back_frame(Context& c){
  int32_t n=rd<int32_t>(c,rd<uint32_t>(c,r+92u)+4u*idx);
  if(n>=1&&n<=8&&n!=2)c.r[0]=rd<uint32_t>(c,st+0x1cu)/uint32_t(n);
 }
-static void stage_front_draw(Context& c){if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);old_stage_front_draw(c);}
+static void stage_front_draw(Context& c){if(stage_hires(c,c.r[4]))setfs(c,16,fs(c,16)*0.5f);old_stage_front_draw(c);stage_blend_begin(c,true);}
 extern "C" __declspec(dllexport) uint32_t msd_community_stage_scale_version(){return stage_scale_hooks==2u?1u:0u;}
 // 自制战场的地形跟随（2026-10-20，里世界 4 实机反馈：坡道上被击退的单位只横向位移、偏离地形线，向上坡被推开后可能卡住）。
 // 原生 BattleObject::update（0x1dd874）先把待定位置（+0x94 / +0x98）提交为当前位置（+0x8c / +0x90），再按动画脚本的移动参数（op7）
@@ -3961,6 +3993,7 @@ static Block old_fx_bullet;static void fx_bullet(Context& c){fx_bullet_begin(c);
 extern "C" __declspec(dllexport) uint32_t msd_community_scene_fx_version(){return scene_fx_hooks==4u?1u:0u;}
 extern "C" __declspec(dllexport) uint32_t msd_community_stage_parallax_version(){return stage_scale_hooks==2u&&scene_fx_hooks==4u?1u:0u;}
 extern "C" __declspec(dllexport) uint32_t msd_community_stage_frame_rate_version(){return stage_frame_hooks==1u&&scene_fx_hooks==4u?1u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_stage_blend_version(){return stage_scale_hooks==2u&&stage_blend_hooks==2u&&scene_fx_hooks==4u?1u:0u;}
 // ---------- 鼹鼠弹（2026-10-26，行为库 v22：mole_missile v1，标记 4194304；基准 133 BattleAction_Bike_P；核心 r97，R1 r98）----------
 // MS7 / MSXX 任务 2 首领 Crablops 绝招放出的鼹鼠弹做成单位（MSA / MSD 原生只有 CRABLOPS 的弹体 BulletAction_CrabMecha_Mogura，
 // 无生命与受击框；核查与方案 docs/ms7/MS7_MOLE_MISSILE_CHECK_2026-10-26.md）。本单位的 Bike_P::update（0x18258c）由下列流程执行，

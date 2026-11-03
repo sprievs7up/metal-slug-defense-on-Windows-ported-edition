@@ -1890,6 +1890,7 @@ if((old_hunter_death_slot=find_block(0x101de017u))){register_block(0x101de017u,h
 if((old_hunter_ground=find_block(0x1016d8e9u))){register_block(0x1016d8e9u,hunter_ground);++hunter_hooks;}
 if((old_stage_back_draw=find_block(0x101e147du))){register_block(0x101e147du,stage_back_draw);++stage_scale_hooks;}
 if((old_stage_front_draw=find_block(0x101e1519u))){register_block(0x101e1519u,stage_front_draw);++stage_scale_hooks;}
+if(old_stage_back_draw&&old_stage_front_draw&&!find_block(0x101e145bu)&&!find_block(0x101e14b3u)){register_block(0x101e145bu,stage_blend_v1);register_block(0x101e14b3u,stage_blend_v2);stage_blend_hooks=2u;}
 if((old_stage_back_frame=find_block(0x101e1467u))){register_block(0x101e1467u,stage_back_frame);++stage_frame_hooks;}
 if((old_ground_follow_update=find_block(0x101dd875u))){register_block(0x101dd875u,ground_follow_update);++ground_follow_hooks;}
 if((old_spawn_ground_height=find_block(0x101df40du))){register_block(0x101df40du,spawn_ground_height);++ground_follow_hooks;}
