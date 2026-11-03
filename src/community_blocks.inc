@@ -1943,6 +1943,7 @@ if((old_sh_damage=find_block(0x1016f4f5u))){register_block(0x1016f4f5u,summon_hi
 if((old_sh_update=find_block(0x101aed79u))){register_block(0x101aed79u,summon_hit_update);++summon_hit_hooks;}
 if((old_union_aim_learn=find_block(0x1017d685u))){register_block(0x1017d685u,union_aim_learn);++union_aim_hooks;}
 if((old_union_aim_target=find_block(0x1017d6d5u))){register_block(0x1017d6d5u,union_aim_target);++union_aim_hooks;}
+if((old_union_aim_muzzle=find_block(0x1017d9dfu))){register_block(0x1017d9dfu,union_aim_muzzle);++union_aim_hooks;}
 if((old_union_aim_none=find_block(0x1017d737u))){register_block(0x1017d737u,union_aim_none);++union_aim_hooks;}
 if((old_active_unit_count=find_block(0x101df641u))){register_block(0x101df641u,active_unit_count);++unit_count_hooks;}
 if((old_unit_cap_manager=find_block(0x10178a95u))){register_block(0x10178a95u,unit_cap_manager);++unit_cap_hooks;}

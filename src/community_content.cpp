@@ -3084,7 +3084,13 @@ static bool un_bullet_hitting(Context& c,uint32_t b){return rd<uint32_t>(c,b+0x2
 //  3) 会瞄准的单位（2）所记的种类，或行动类以瞄准版 addBullet 射击、其中没有改写运动的弹体动作（UN_AIM_VT，libAppMain.so 1.46.0 静态分析的 169 个类）
 //     且远距弹体的目的距离（字 26）与弹速（浮点字 25）均为正者）在 getNearEnemyDistance 中，对方 2 号机比最前单位更靠前（或没有最前单位）时按 2 号机计算距离，
 //     距离不足近距射程时取近距射程 + 1（近距攻击不发射瞄准弹时，以远距攻击打 2 号机）。
-static uint8_t un_aim[5120];
+//  R16（核心 r138，能量弹 R16）：原生 createBullet 把目的地写为出生点 ± 目的距离（朝向方向），BattleBullet::update 中向后移动的弹体在第一次更新即判为到达而移除；
+//     setMoveParamsNearEnemyTarget 在 |dx| > |dy| 时水平速度按朝向取号。目标在射击起点（枪口）之后或正上方时，弹体不出现或向前飞离目标，射手在原地空放攻击动作。
+//     因此 (1)–(3) 只取前缘在射击起点之前的空中目标：(1) 的起点为弹体出生点；(3) 的起点为本单位 x 加上该 UnitID 远距弹体的出生点偏移
+//     （addBulletImpl 中 createBullet 返回处记录，攻击组 0x28，取最大值，un_muzzle，联机回滚状态；尚未射出过远距弹体时取本单位宽度）。
+//     前方没有这样的空中目标时照原生取地面目标（射手继续前进），2 号机与 Energy Pod 的球相同。
+static uint8_t un_aim[5120];   // 位 1：会瞄准（R12）；位 2：已记录远距弹体出生点偏移（R16）
+static int16_t un_muzzle[5120];
 static constexpr uint32_t UN_AIM_VT[]={
  0x109298c0u,0x10929920u,0x109299b0u,0x10929a10u,0x10929aa0u,0x10929ad0u,0x10929b00u,0x10929b30u,0x10929b60u,0x10929b90u,0x10929bc0u,0x10929bf0u,
  0x10929c20u,0x10929c50u,0x10929c80u,0x10929cb0u,0x10929d70u,0x10929da0u,0x10929dd0u,0x10929e00u,0x10929e30u,0x10929e60u,0x10929e90u,0x10929ec0u,
@@ -3102,18 +3108,19 @@ static constexpr uint32_t UN_AIM_VT[]={
  0x1092d7d0u,0x1092d800u,0x1092d860u,0x1092d920u,0x1092d950u,0x1092da40u,0x1092da70u,0x1092daa0u,0x1092dad0u,0x1092db00u,0x1092db30u,0x1092dbf0u,
  0x1092dc20u};
 static uint32_t union_aim_hooks=0u;
-void msd_union_netplay_state(StateIO& io){io.field(un_aim);}   // 联机回滚：会瞄准的单位种类属于战斗状态（netplay.h）
-static void un_aim_reset(){std::memset(un_aim,0,sizeof un_aim);}
+void msd_union_netplay_state(StateIO& io){io.field(un_aim);io.field(un_muzzle);}   // 联机回滚：会瞄准的单位种类与远距弹体出生点偏移属于战斗状态（netplay.h）
+static void un_aim_reset(){std::memset(un_aim,0,sizeof un_aim);std::memset(un_muzzle,0,sizeof un_muzzle);}
 static constexpr uint32_t UN_MOTION_VT[]={0x10925098u,0x10925368u,0x10925b18u,0x10925d58u,0x109265c8u,0x109265f8u,0x10926da8u,0x10927168u,0x10928188u};
-// 对方队伍 foe 中最靠前的 UNION 2 号机（不可选为目标、存活、未损毁）或 Energy Pod 的球（核心 r131，ep_air）；front 返回其前缘（队伍 0 为 x + 宽，队伍 1 为 x − 宽）
-static uint32_t un_air_target(Context& c,uint32_t foe,float& front){
+// 对方队伍 foe 中最靠前的 UNION 2 号机（不可选为目标、存活、未损毁）或 Energy Pod 的球（核心 r131，ep_air）；front 返回其前缘（队伍 0 为 x + 宽，队伍 1 为 x − 宽）。
+// R16：只取前缘在射击起点 lim 之前（对方为队伍 1 时大于 lim，队伍 0 时小于 lim）者。
+static uint32_t un_air_target(Context& c,uint32_t foe,float& front,float lim){
  uint32_t head=is_call(c,IS_TEAM_UNITS,IS_MANAGER,foe,0u),u=head,best=0u;
  for(uint32_t k=0;u&&k<1024u;++k){
   uint32_t s=un_unit(c,u);
   if((s&&un_w(c,s,UN_ROLE)==2&&un_w(c,s,UN_UNTARGET)&&rd<uint8_t>(c,u+0x64u)&&rd<int32_t>(c,u+0x308u)>0&&rd<uint32_t>(c,u+0x7cu)<100u
      &&(rd<uint32_t>(c,u+0x6cu)&0x40u))||ep_air(c,u)){
    float w=float(z_width(c,u)),x=rd<float>(c,u+0x8cu),k2=foe?x-w:x+w;
-   if(!best||(foe?k2<front:k2>front)){best=u;front=k2;}
+   if((foe?k2>lim:k2<lim)&&(!best||(foe?k2<front:k2>front))){best=u;front=k2;}
   }
   uint32_t n=rd<uint32_t>(c,u+0x124u);u=n?n-0x11cu:0u;if(u==head)break;
  }
@@ -3128,15 +3135,25 @@ static bool un_air_ahead(Context& c,uint32_t h,uint32_t foe,float tf){
 static void un_aim_learn(Context& c){
  uint32_t b=c.r[1];if(!active(c)||!b)return;
  uint32_t uid=rd<uint32_t>(c,b+0x128u),act=rd<uint32_t>(c,b+0x58u),vt=act?rd<uint32_t>(c,act):0u;
- if(uid<5120u&&!std::binary_search(UN_MOTION_VT,UN_MOTION_VT+sizeof UN_MOTION_VT/sizeof UN_MOTION_VT[0],vt))un_aim[uid]=1u;
+ if(uid<5120u&&!std::binary_search(UN_MOTION_VT,UN_MOTION_VT+sizeof UN_MOTION_VT/sizeof UN_MOTION_VT[0],vt))un_aim[uid]|=1u;
+}
+// R16：addBulletImpl 中 createBullet 返回处（0x1017d9de：r0 弹体、r4 发射的单位、栈 +0xa0 攻击组，0 时取单位 +0x88）记录远距弹体的出生点偏移（朝前为正）
+static void un_aim_muzzle(Context& c){
+ uint32_t b=c.r[0],u=c.r[4];if(!active(c)||!b||!u)return;
+ uint32_t g=rd<uint32_t>(c,c.r[13]+0xa0u);if(!g)g=rd<uint32_t>(c,u+0x88u);
+ uint32_t uid=rd<uint32_t>(c,u+0x128u);if(g!=0x28u||uid>=5120u)return;
+ float d=rd<float>(c,b+0x8cu)-rd<float>(c,u+0x8cu);if(rd<uint32_t>(c,u+0x70u)&1u)d=-d;
+ int32_t m=int32_t(d);if(m>32767)m=32767;if(m<-32768)m=-32768;
+ if(!(un_aim[uid]&2u)||m>un_muzzle[uid]){un_muzzle[uid]=int16_t(m);un_aim[uid]|=2u;}
 }
 static uint32_t un_aim_pick(Context& c,uint32_t b,uint32_t h){
  if(!active(c)||!b)return 0u;
  uint32_t foe=(rd<uint32_t>(c,b+0x70u)&1u)^1u;float tf=0.0f;
- uint32_t t=un_air_target(c,foe,tf);
+ uint32_t t=un_air_target(c,foe,tf,rd<float>(c,b+0x8cu));   // R16：前缘在弹体出生点之前
  return t&&un_air_ahead(c,h,foe,tf)?t:0u;
 }
 HOOK(union_aim_learn,0x1017d685u, un_aim_learn(c);)
+HOOK(union_aim_muzzle,0x1017d9dfu, un_aim_muzzle(c);)
 HOOK(union_aim_target,0x1017d6d5u, if(uint32_t t=un_aim_pick(c,c.r[4],c.r[5]))c.r[5]=t;)
 static Block old_union_aim_none;static void union_aim_none(Context& c){
  if(!c.r[5])if(uint32_t t=un_aim_pick(c,c.r[4],0u)){c.r[5]=t;c.pc=0x1017d6d5u;return;}   // 原生无目标时水平移动；有 2 号机时转入瞄准
@@ -3144,7 +3161,7 @@ static Block old_union_aim_none;static void union_aim_none(Context& c){
 }
 // getNearEnemyDistance（z_distance 调用；r0 管理器、r1 单位、r2 非 0 时扣除双方宽度）
 static bool un_aims(Context& c,uint32_t u,uint32_t uid){
- if(uid<5120u&&un_aim[uid])return true;
+ if(uid<5120u&&(un_aim[uid]&1u))return true;
  uint32_t act=rd<uint32_t>(c,u+0x58u),vt=act?rd<uint32_t>(c,act):0u;
  if(!std::binary_search(UN_AIM_VT,UN_AIM_VT+sizeof UN_AIM_VT/sizeof UN_AIM_VT[0],vt))return false;
  uint32_t row=un_row(c,u);return rd<int32_t>(c,row+26u*4u)>0&&rd<float>(c,row+25u*4u)>0.0f;
@@ -3153,9 +3170,10 @@ static bool un_air_distance(Context& c){
  uint32_t m=c.r[0],u=c.r[1],uid=rd<uint32_t>(c,u+0x128u);
  if(!active(c)||!un_aims(c,u,uid))return false;
  uint32_t team=rd<uint32_t>(c,u+0x70u)&1u,foe=team^1u;float tf=0.0f;
- uint32_t t=un_air_target(c,foe,tf);
+ float ux=rd<float>(c,u+0x8cu),mz=uid<5120u&&(un_aim[uid]&2u)?float(un_muzzle[uid]):float(z_width(c,u));   // R16：射击起点
+ uint32_t t=un_air_target(c,foe,tf,team?ux-mz:ux+mz);
  if(!t||!un_air_ahead(c,rd<uint32_t>(c,m+(team?0x38u:0x3cu)),foe,tf))return false;
- float ux=rd<float>(c,u+0x8cu),ex=rd<float>(c,t+0x8cu),d;
+ float ex=rd<float>(c,t+0x8cu),d;
  if(c.r[2]){float wu=float(z_width(c,u)),we=float(z_width(c,t));d=team?((ux-wu)-we)-ex:((ex-we)-wu)-ux;}
  else d=team?ux-ex:ex-ux;
  uint32_t row=un_row(c,u);
@@ -3164,7 +3182,7 @@ static bool un_air_distance(Context& c){
  if(!near_aims&&int32_t(d)<=near)d=float(near+1);
  ret(c,uint32_t(int32_t(d)));return true;
 }
-extern "C" __declspec(dllexport) uint32_t msd_community_union_version(){return elder_centipede_hooks==10u&&union_aim_hooks==3u?8u:0u;}
+extern "C" __declspec(dllexport) uint32_t msd_community_union_version(){return elder_centipede_hooks==10u&&union_aim_hooks==4u?9u:0u;}   // 9（r138）：对空瞄准只取射击起点之前的目标（能量弹 R16）
 // ---------- Energy Pod（能量弹，2026-11-02，行为库 v40：energy_pod v1，标记 536870912；基准 192 BattleAction_Alien；核心 r131；R12 核心 r132；R13 起行为库 v41：energy_pod v2，核心 r133）----------
 // MS7 任务 5 新单位（docs/MS7_ENERGY_POD_2026-11-02.md）。按用户确认的 R7 示意动画与第 5.3 节被击毁后的调整逐 tick 实现
 // （verification/ms7_epod_20261102/epod_anim.py 的 Sim.step；示意素材像素 × 2 = 世界单位）。参数存 ZSpec 字 53–85（与 elder_centipede /
@@ -3675,7 +3693,7 @@ static void ep_damage(Context& c,uint32_t o){
 static bool ep_air(Context& c,uint32_t u){
  uint32_t s=ep_unit(c,u);return s&&ep_w(c,s,EP_ROLE)==1&&ep_alive(c,u);
 }
-extern "C" __declspec(dllexport) uint32_t msd_community_energy_pod_version(){return elder_centipede_hooks==10u&&union_aim_hooks==3u&&fc_hooks==2u?3u:0u;}   // 2（r132）：弹回终点与集合中心限制范围（R12）；3（r133）：出发时的索敌范围与取消出击（R13）
+extern "C" __declspec(dllexport) uint32_t msd_community_energy_pod_version(){return elder_centipede_hooks==10u&&union_aim_hooks==4u&&fc_hooks==2u?4u:0u;}   // 2（r132）：弹回终点与集合中心限制范围（R12）；3（r133）：出发时的索敌范围与取消出击（R13）；4（r138）：对空瞄准只取射击起点之前的球（R16）
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
 // 2026-10-27（r99）：5 连发马克斯奈尔（BattleAction_McsnlFive::update 0x184ebc）的领队固定以 UnitID 187 生成 4 架僚机；
 // 基准为 187 的社区领队改为生成落地映射表登记的僚机单位（formation_unit_key），映射为 0 时保持原生。
