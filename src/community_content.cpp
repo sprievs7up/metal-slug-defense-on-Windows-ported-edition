@@ -3210,6 +3210,7 @@ extern "C" __declspec(dllexport) uint32_t msd_community_union_version(){return e
 // +0x24 组单位实例号、+0x26 过渡 tick、+0x28 角度差或移向圆心的 dx、+0x2c 移向圆心的 dy、+0x30 目标 x、+0x34 触地时的球心 y（到达后为到达偏移 x、y）、+0x38 / +0x3c 出发点、+0x40 弹回终点 x（飞行中）或集合圆上的角；+0x21 到达后为偏移过渡的计数。
 // 伪随机、静态状态均不使用；回滚快照随客体内存保存。浮点只用加减乘除与 sqrt，三角函数用原生整数表（IS_COS / IS_SIN / IS_ATAN）。
 static constexpr uint32_t EP_FLAG=536870912u,EP_W=53u;
+static constexpr float EP_RANGE_EPS=0.01f;   // R17：中立进入攻击的距离容差（大于战场宽 8192 以内的单精度舍入误差 0.0005）
 enum:uint32_t{EP_ROLE,EP_BALL,EP_DECK,EP_HIDDEN,EP_IDLE,EP_ABOUT,EP_CHARGED,EP_DIVE,EP_RECOVER,EP_WRECK,EP_TRAIL,EP_BUMP,EP_RING,EP_FIRE,
  EP_SE_CHARGE,EP_SE_LAUNCH,EP_SE_FLAME,EP_RADIUS,EP_HEIGHT,EP_DIVE_SPEED,EP_PERIOD,EP_NPERIOD,EP_SPIN_UP,EP_SPIN_DOWN,EP_ABOUT_T,EP_HOLD,EP_HOLD1,
  EP_GAP,EP_JOIN_WAIT,EP_REGROUP,EP_RECOVER_T,EP_REATTACK,EP_TAKEN,EP_TARGET};
@@ -3543,7 +3544,9 @@ static bool ep_group_update(Context& c,uint32_t act,uint32_t o,uint32_t s,uint32
   if(viewer){start=demo_start;wr<float>(c,o+0x40u,rd<float>(c,o+0x90u)-float(ep_w(c,s,EP_HEIGHT)));}
   else{
    float ex=ep_nearest(c,o,x,found);
-   if(!found||std::fabs(ex-x)>range){
+   // R17（核心 r139）：最后一步前进量为 ahead − range，单精度下 x 落在 ex + range 的舍入值上；向上舍入时距离比 range 大 1 个 ulp，
+   // 下一帧的前进量小于半个 ulp、位置不再变化，目标静止时（例如停下攻击球的坦克）组单位一直停在边界上不发动攻击。进入判定放宽 EP_RANGE_EPS。
+   if(!found||std::fabs(ex-x)>range+EP_RANGE_EPS){
     float step=float(rd<float>(c,un_row(c,o)+5u*4u)),ahead=float(d)*(ex-x);
     if(found&&ahead>0.0f)step=std::min(step,ahead-range);
     if(step>0.0f){x+=float(d)*step;ik_place(c,o,x,ep_ground(c,o,x));wr<float>(c,o+0x40u,ep_ground(c,o,x)-float(ep_w(c,s,EP_HEIGHT)));}
@@ -3693,7 +3696,7 @@ static void ep_damage(Context& c,uint32_t o){
 static bool ep_air(Context& c,uint32_t u){
  uint32_t s=ep_unit(c,u);return s&&ep_w(c,s,EP_ROLE)==1&&ep_alive(c,u);
 }
-extern "C" __declspec(dllexport) uint32_t msd_community_energy_pod_version(){return elder_centipede_hooks==10u&&union_aim_hooks==4u&&fc_hooks==2u?4u:0u;}   // 2（r132）：弹回终点与集合中心限制范围（R12）；3（r133）：出发时的索敌范围与取消出击（R13）；4（r138）：对空瞄准只取射击起点之前的球（R16）
+extern "C" __declspec(dllexport) uint32_t msd_community_energy_pod_version(){return elder_centipede_hooks==10u&&union_aim_hooks==4u&&fc_hooks==2u?5u:0u;}   // 2（r132）：弹回终点与集合中心限制范围（R12）；3（r133）：出发时的索敌范围与取消出击（R13）；4（r138）：对空瞄准只取射击起点之前的球（R16）；5（r139）：中立进入攻击的距离容差（R17）
 // 伞兵落地时，原生动作固定生成 UnitID 45；社区映射保留其正规军身份。投出子单位的生命分档单位同样经此映射（落地映射表登记子单位）。
 // 2026-10-27（r99）：5 连发马克斯奈尔（BattleAction_McsnlFive::update 0x184ebc）的领队固定以 UnitID 187 生成 4 架僚机；
 // 基准为 187 的社区领队改为生成落地映射表登记的僚机单位（formation_unit_key），映射为 0 时保持原生。
