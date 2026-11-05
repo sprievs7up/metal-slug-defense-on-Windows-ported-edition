@@ -224,7 +224,8 @@ def unit_file(animations):
             'image_direction': 270, 'special_effect_size': [90, 125], 'minimap_marker': [16, 16],
             'icon': ICON, 'textures': list(TEXTURES), 'sprite_descriptor': DESCRIPTOR, 'animations': animations,
             'localization': localization(), 'tags': ['ms6', 'msa'],
-            'behaviors': [{'name': 'elder_centipede', 'version': 1, 'params': CENTIPEDE}]}
+            'behaviors': [{'name': 'elder_centipede', 'version': 1, 'params': CENTIPEDE},
+                          {'name': 'no_knockback', 'version': 1, 'params': {}}]}   # 2026-11-04 用户：取消可被击退（AGENTS 第 333 节）
 
 
 def write_icon(cell):

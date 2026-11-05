@@ -551,7 +551,10 @@ def internal_fields(resolved):
     # 2026-10-31 R9 落地延续生命（行为库 v30，核心 r112，基准 160）：ZSpec 标记 67108864，无参数字。
     if 'landing_keeps_hp' in resolved:
         zombie['flags'] |= 67108864
-    if zombie['flags']:
+    # 2026-11-04 攻击轮数（行为库 v42，核心 r140，基准 187）：ZSpec 字 139 为飞离前的攻击轮数（不占标记位）。
+    if 'attack_rounds' in resolved:
+        zombie['attack_rounds'] = resolved['attack_rounds']['rounds']
+    if zombie['flags'] or zombie.get('attack_rounds'):
         fields['zombie_spec'] = zombie
     return fields
 

@@ -111,3 +111,10 @@
 - 用户决定（方案 2）：保留多次命中，绝招组每次命中改为 667（目标为据点一次大前行合计约 6000）。生成脚本 `special_damage_multiplier` [5, 2] → [667, 2400]；Lv1 / 10 / 20 / 30 / 40 为 222 / 333 / 444 / 555 / 667。重新生成后单位文件只有该项改变，描述符、`content.json`、图集与头像图集逐字节不变；动作演示图像范围不变，按新签名 be9b268b5c3e2504 并入两份 `unit_viewer_bounds.json`（`merge_r4.py`）。修改前副本 `verification/elder_centipede_r2_20261022/before_r4/`。
 - 验证（核心 r88，隔离存档，墙钟前移，未计算 SHA-256）：一次大前行对敌方据点 9 次 × 667 = 6003（两次大前行同为 9 次，`runs/r4base_*`）；对 SLUG GIGANT 21 次 × 801（667 × 1.2）+ 大前行后出土 1 次 = 17622（`runs/r4gig_*`；R3 时 7 次即被击毁，命中次数随目标宽度与位置不同，较宽的目标在圆环与地面的交点附近停留更久）。STATUS Lv40 绝招 667，其余不变；`content_tool.py validate`、`check_body_offline.py` 10/10、`check_ura4_offline.py` 19/19、单元测试 21 项通过，`lab_probe.jsonl` 未变。
 - 同步：AGENTS 第 233 节；`deploy_r4.py`，记录 `deployment_r4.json`、`sync_r4/`。两个固定运行目录覆盖单位文件与本文档（覆盖前与上次同步版逐字节相同），根与 `src/` 的 `unit_viewer_bounds.json` 以目标文件为底本只替换本单位一项；同步后单位文件与工作区逐字节相同，保护文件 131、297 个不变，两目录核心 r88。两目录自身程序（`MSD_VERIFY_ROOT`）：STATUS 绝招 667；绝招对据点 1900 帧场景的记录与工作区逐帧相同。 运行中的游戏需重启加载。
+
+## 13. 不击退（2026-11-04，核心 r140，行为库 42；AGENTS 第 333 节）
+
+- 用户要求：取消蜈蚣长老可被击退的要素。
+- 修改：单位文件与生成脚本的 `behaviors` 追加 `no_knockback`（v1；基准 192 自行为库 v34 起可用，UNION 四个单位同用）：宿主写 ZSpec 标记 2，与 `elder_centipede` 的标记 262144 在同一字共存；核心 `zombie_no_knockback`（0x1016f485）在受击时跳过击退计量的检查，生命归零时照常损毁。单位文件只有 `behaviors` 改变。`knockback_threshold_multiplier` [15, 1] 保持，STATUS 抗擊退仍显示 300（同带 `no_knockback` 的 UNION）；脚本中的击退动作 70 保留，不再由受击触发。核心与行为未为此修改（r140 的改动为同批的 `attack_rounds`）。
+- 验证（隔离存档，墙钟前移，未计算 SHA-256；`verification/unit_tweaks_20261104/`）：LAB（`run_battle.sh`，战场 1011，敌方叛军步兵与坦克每 40 帧交替出兵；`--knock 6`：本单位处于攻击状态 30 / 40 时把击退计量写为 1，至多 6 次、间隔 ≥ 60 帧）。dist 运行目录（r139，修改前的单位文件，`MSD_VERIFY_ROOT`，`runs/ec139dist_*`）击退 5 次（状态 80、动作 70）；工作区 r140（`runs/ec140_*`）击退 0 次，计量 ≤ 1 的 416 帧中持续受伤（生命 50000 → 41960），状态只有 10 / 20 / 40。单位菜单（`runs/uiEc_*`）STATUS 生命 50000、AP 850、价格 150，ACTION 三项正常；动作演示图像范围现场测量与原记录相同，签名改为 7532b2e75c7d2d09。
+- 未覆盖：只覆盖受击途径（击退计量）；不经受击、直接预约状态 80 的途径不经此检查（同其他带 `no_knockback` 的单位），未测；关卡中的实战与平衡。修改前副本 `verification/unit_tweaks_20261104/before/`。未同步运行目录（AGENTS 第 2.1 节末条）。

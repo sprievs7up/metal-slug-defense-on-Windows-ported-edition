@@ -251,11 +251,12 @@ def unit_files(rect):
     icon = {'page': 1, 'rect': list(rect), 'anchor': ICON_ANCHOR}
     localization = {lang: {'name': name, 'description': text} for lang, (name, text) in LOCALIZATION.items()}
     pierce = {'name': 'piercing_shots', 'version': 1, 'params': {}}
+    rounds = {'name': 'attack_rounds', 'version': 1, 'params': {'rounds': 4}}   # 2026-11-04 用户：4 轮攻击（原生 2 轮，AGENTS 第 333 节）
     leader = {'key': KEY, **UNIT_VALUES, 'textures': [ATLAS], 'icon': icon, 'animations': {},
-              'behaviors': [{'name': 'formation_wingmen', 'version': 1, 'params': {'unit': WING_KEY}}, pierce],
+              'behaviors': [{'name': 'formation_wingmen', 'version': 1, 'params': {'unit': WING_KEY}}, pierce, rounds],
               'localization': localization}
     wing = {'key': WING_KEY, **UNIT_VALUES, 'textures': [WING_ATLAS], 'icon': icon, 'animations': {},
-            'behaviors': [pierce], 'localization': localization, 'internal_only': True}
+            'behaviors': [pierce, rounds], 'localization': localization, 'internal_only': True}
     return leader, wing
 
 

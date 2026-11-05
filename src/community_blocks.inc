@@ -1961,4 +1961,5 @@ if((old_object_draw=find_block(0x101de69du))){register_block(0x101de69du,object_
 if((old_object_draw_front=find_block(0x101de7a9u))){register_block(0x101de7a9u,object_draw_front);++draw_sort_hooks;}
 if((old_draw_sort=find_block(0x1f010000u))){register_block(0x1f010000u,draw_sort);++draw_sort_hooks;}
 if((old_possible_damage=find_block(0x101e0ef9u))){register_block(0x101e0ef9u,possible_damage);++draw_sort_hooks;}
+if((old_rounds_count=find_block(0x101851e9u))){register_block(0x101851e9u,rounds_count);++rounds_hooks;}
 }

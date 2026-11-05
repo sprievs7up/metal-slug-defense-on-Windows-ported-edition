@@ -89511,6 +89511,11 @@
         "march_dirt_animation": 132,
         "ground_dust_animation": 19
       }
+    },
+    {
+      "name": "no_knockback",
+      "version": 1,
+      "params": {}
     }
   ]
 }

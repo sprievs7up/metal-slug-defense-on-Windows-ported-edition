@@ -1,6 +1,6 @@
 static const char BEHAVIOR_MANIFEST[]=R"MSD({
   "schema": 1,
-  "library_version": 41,
+  "library_version": 42,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位；规格写 native 时也可填原版 UnitID（1–399）",
     "rational": "[分子, 分母] 正整数倍率",
@@ -2386,6 +2386,25 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
           "min": 0,
           "max": 4000
         }
+      }
+    },
+    {
+      "name": "attack_rounds",
+      "version": 1,
+      "base_classes": [
+        187
+      ],
+      "params": {
+        "rounds": {
+          "type": "int",
+          "default": 2,
+          "min": 1,
+          "max": 99
+        }
+      },
+      "doc": {
+        "ZS": "5 连发马克斯奈尔类（原生 BattleAction_McsnlFive）的攻击轮数：原生每次攻击动作播完时把本机的攻击计数加 1，满 2 轮后飞离战场并移除；本行为把轮数改为 rounds（缺省 2，同原生）。每架各自计数，领队与 formation_wingmen 指定的僚机单位须各自带此行为。",
+        "EN": "Attack rounds for the Regimental MH-6s class (native BattleAction_McsnlFive): natively each aircraft adds 1 to its attack counter whenever an attack animation finishes and flies off the battlefield (and is removed) after 2 rounds; this behavior sets the number of rounds to rounds (default 2, same as native). Each aircraft counts its own rounds, so the leader and the wingman unit given by formation_wingmen both need this behavior."
       }
     }
   ]

@@ -537,6 +537,8 @@ class CommunityContent:
         # 2026-10-27 贯穿子弹（piercing_shots，标记 8388608）：BattleBulletDefault::attackAction 的 2 个块（核心 r100）。
         if any(u['zombie_spec']['flags']&8388608 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_piercing_shots_version') or p.uc.lib.msd_community_piercing_shots_version()<1):raise RuntimeError('Native core lacks piercing shots')
         if any(u['zombie_spec']['flags']&16777216 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_summon_on_hit_version') or p.uc.lib.msd_community_summon_on_hit_version()<1):raise RuntimeError('Native core lacks summon on hit')
+        # 2026-11-04 攻击轮数（attack_rounds，ZSpec 字 139）：BattleAction_McsnlFive::update 攻击计数的 1 个块（核心 r140）。
+        if any(u['zombie_spec'].get('attack_rounds') for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_attack_rounds_version') or p.uc.lib.msd_community_attack_rounds_version()<1):raise RuntimeError('Native core lacks attack rounds')
         # 2026-10-31 叛军自爆摩托（bomb_bike，标记 33554432）：与鼹鼠弹共用 Bike_P 类 update / attackAction 的块，另加骑手生成的落地映射（核心 r111）。
         if any(u['zombie_spec']['flags']&33554432 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_bomb_bike_version') or p.uc.lib.msd_community_bomb_bike_version()<2):raise RuntimeError('Native core lacks bomb bike behavior')
         # 2026-10-31 R9 落地延续生命（landing_keeps_hp，标记 67108864）：summonZakoBazooka 生成子单位之后的 1 个块（核心 r112）。
@@ -1120,7 +1122,7 @@ class CommunityContent:
             for i,v in enumerate(spec.get('mole',[])):words[121+i]=v
             # 2026-10-31：121–131 与 134–135 叛军自爆摩托（bomb_bike v1，核心 r111；与 mole_missile 互斥）：蓄力、冲刺、弃车、飞行动作号，
             # 冲刺初速（× 10）、加速度（× 100）、上限（× 10）、投掷距离、弃车速度（× 10）、抛物线顶点、重力（× 100）；134–138 落点偏移、
-            # 冲刺上限 tick、蓄力与弃车 tick、最大水平抛射距离（R10，核心 r113）（140 字，139 保留）
+            # 冲刺上限 tick、蓄力与弃车 tick、最大水平抛射距离（R10，核心 r113）（140 字；139 见下文 attack_rounds）
             for i,v in enumerate(spec.get('bike',[])):words[121+i]=v
             for i,v in enumerate(spec.get('bike_extra',[])):words[134+i]=v
             # 2026-11-01：53–135 UNION（union v8，核心 r129；与 elder_centipede / invader_king / iron_death_worm / fall_climber 互斥）：角色、
@@ -1137,6 +1139,8 @@ class CommunityContent:
             words[132]=spec.get('hit_summon_cooldown',0)
             # 2026-10-29：133 钢铁死亡蠕虫的钻离 / 钻击中开始扣击退计量的脚本 tick（iron_death_worm v5，核心 r109）
             words[133]=spec.get('worm_knock_tick',0)
+            # 2026-11-04：139 5 连发马克斯奈尔类飞离前的攻击轮数（attack_rounds，核心 r140；0 为原生 2 轮）
+            words[139]=spec.get('attack_rounds',0)
             pointers.append(self.alloc(struct.pack('<140I',*words)))
         return self.alloc(struct.pack('<'+'I'*len(pointers),*pointers))
 

@@ -69,6 +69,13 @@
       "name": "piercing_shots",
       "version": 1,
       "params": {}
+    },
+    {
+      "name": "attack_rounds",
+      "version": 1,
+      "params": {
+        "rounds": 4
+      }
     }
   ],
   "localization": {

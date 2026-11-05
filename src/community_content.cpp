@@ -4300,6 +4300,20 @@ static bool ps_hit(Context& c){
 static Block old_pierce_attack;static void pierce_attack(Context& c){if(ps_attack(c))return;old_pierce_attack(c);}
 static Block old_pierce_hit;static void pierce_hit(Context& c){if(ps_hit(c))return;old_pierce_hit(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_piercing_shots_version(){return pierce_hooks==2u?1u:0u;}
+// ---------- 攻击轮数（2026-11-04，行为库 v42：attack_rounds v1，ZSpec 字 139；基准 187；核心 r140）----------
+// 原生 BattleAction_McsnlFive::update 的攻击状态 30 / 40 / 50 在动作播完（+0xc9 为 0，0x101851e2）时把攻击计数（对象 +0x34）加 1
+// （0x101851e8）：计数 ≤ 1 时进入攻击等待（0x10185202，startAttackWaitAction），否则即第 2 轮后经 0x101851f2（单位菜单演示中计数清零）
+// 预约状态 139（飞离，动作 17 / 32），状态 140 移除（演示中重新出击）。带字 139 的单位：计数 < 字 139 时进入攻击等待，否则飞离；
+// 领队与僚机各自计数。寄存器与原生相同（r2 为新计数，r3 仍为 +0xc9 的 0），后继两块不读取条件标志。状态只在客体对象中（回滚安全）。
+static constexpr uint32_t AR_WORD=139u,AR_WAIT=0x10185203u,AR_LEAVE=0x101851f3u;
+static uint32_t rounds_hooks=0u;
+static bool ar_count(Context& c){
+ uint32_t o=c.r[4],s=zspec(c,o);if(!s)return false;uint32_t n=zw(c,s,AR_WORD);if(!n)return false;
+ uint32_t k=rd<uint32_t>(c,o+0x34u)+1u;wr<uint32_t>(c,o+0x34u,k);c.r[2]=k;
+ c.pc=int32_t(k)<int32_t(n)?AR_WAIT:AR_LEAVE;return true;
+}
+static Block old_rounds_count;static void rounds_count(Context& c){if(ar_count(c))return;old_rounds_count(c);}
+extern "C" __declspec(dllexport) uint32_t msd_community_attack_rounds_version(){return rounds_hooks==1u?1u:0u;}
 // ---------- 受击召唤（2026-10-29，行为库 v26：summon_on_hit v1，标记 16777216、字 132 冷却 tick；基准 64 MummyGate；核心 r105 / r106）----------
 // 原生 MummyGate::damageAction（0x1016f4f4，r0 动作、r1 对象）只预约受击状态 60 后转交基类；summonUnit（0x101aed26，r0 动作、r1 对象）
 // 按数据行子单位字 41 生成一个单位（虫穴为改写出场脚本的二輪戰車，每次 1 个发射者 + 5 只小虫）；update（0x101aed78）在待机状态

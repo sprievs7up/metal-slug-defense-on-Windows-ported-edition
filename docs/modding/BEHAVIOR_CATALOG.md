@@ -1,4 +1,4 @@
-# 单位行为目录 / Unit behavior catalog（行为库版本 41）
+# 单位行为目录 / Unit behavior catalog（行为库版本 42）
 
 本文件由 `content_tool.py list-behaviors --markdown` 从 `behavior_library.json` 生成，请勿手工修改。
 Generated from `behavior_library.json` by `content_tool.py list-behaviors --markdown`; do not edit by hand.
@@ -771,4 +771,16 @@ MS7 Mission 5 unit Energy Pod (2026-11-02, core r131; design and preview animati
 | `reattack_wait` | int | default: 54; min: 0; max: 3000 |
 | `attack_damage_taken` | int | default: 100; min: 0; max: 100 |
 | `target_range` | int | default: 650; min: 0; max: 4000 |
+
+## attack_rounds（v1）
+
+- 适用的原版基准单位 / base_id: 187
+
+5 连发马克斯奈尔类（原生 BattleAction_McsnlFive）的攻击轮数：原生每次攻击动作播完时把本机的攻击计数加 1，满 2 轮后飞离战场并移除；本行为把轮数改为 rounds（缺省 2，同原生）。每架各自计数，领队与 formation_wingmen 指定的僚机单位须各自带此行为。
+
+Attack rounds for the Regimental MH-6s class (native BattleAction_McsnlFive): natively each aircraft adds 1 to its attack counter whenever an attack animation finishes and flies off the battlefield (and is removed) after 2 rounds; this behavior sets the number of rounds to rounds (default 2, same as native). Each aircraft counts its own rounds, so the leader and the wingman unit given by formation_wingmen both need this behavior.
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `rounds` | int | default: 2; min: 1; max: 99 |
 
