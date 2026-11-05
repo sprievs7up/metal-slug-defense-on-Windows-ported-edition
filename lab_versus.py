@@ -7,8 +7,9 @@ draw_conv 钩子插入原生出兵格绘制：原生画完本侧光标所在格�
 光标图块在开战后由宿主建立一次（整个进程复用）：
 - 光标框：用户绘制的 50×50 灰度框 custom_content/versus_cursor_P{1,2}.png（与格子底板同尺寸）。
 - 光标费用牌：createGrahics 在开战时把每个槽位的费用牌连同价格数字画成独立图块（operator+200 项 78–97 绿/红，
-  77 OK!、98 MAX、107）。自其贴图（operator+188）以 GL 帧缓冲读回空费用牌项 87 的原生像素，转灰度，中央数字窗口
-  （自中心连通的近黑像素）置透明；钩子在原生费用牌之后画该图块，原生价格数字从窗口透出。
+  77 OK!、98 MAX、107）。自其贴图（operator+188）以 GL 帧缓冲读回费用牌项 87（第 10 格的绿色费用牌，编队满 10 格时
+  带有价格数字）的原生像素，转灰度，中央数字窗口（不接触边缘的最大近黑区域的外接矩形，含其中的数字）置透明；
+  钩子在原生费用牌之后画该图块，原生价格数字从窗口透出。
 - 配色：灰度按亮度映射到绝招光环 aura.obm 16 色调色板的亮度阶（黑 → 青 → 浅白），P1 为原色（我方光环），
   P2 为 LAB 敌方光环的同一换色（R←max，G、B←min），最亮三阶改为饱和亮红（RED_HIGHLIGHTS）。近黑轮廓保持黑色。
 头部 +0xa00 的布局见 src/lab_hooks.cpp（功能位 512）。
@@ -63,28 +64,49 @@ def tint(image, ramp, label=None):
 
 
 def hollow_gray(image):
-    """费用牌：转灰度，自中心连通的近黑数字窗口置透明。返回（图像、窗口像素数）。"""
+    """费用牌：转灰度，数字窗口置透明。返回（图像、窗口像素数）。
+    窗口为不接触图像边缘的最大近黑连通区域的外接矩形，矩形内的价格数字一并置透明：读回的项 87 是第 10 格的绿色费用牌，
+    编队满 10 格时其中画有该格价格（2026-11-05 用户报告双方光标费用牌固定显示 P1 第 10 格的 270）。
+    空费用牌的窗口为整块近黑矩形，结果与原先“自中心连通”的做法逐像素相同（verification/versus_esc_20261105）。"""
     w, h = image.size
     px = image.load()
-    seen, stack = {(w // 2, h // 2)}, [(w // 2, h // 2)]
-    while stack:
-        cx, cy = stack.pop()
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            q = (cx + dx, cy + dy)
-            if 0 <= q[0] < w and 0 <= q[1] < h and q not in seen and px[q][3] > 0 and max(px[q][:3]) < DARK:
-                seen.add(q)
-                stack.append(q)
+
+    def dark(q):
+        return px[q][3] > 0 and max(px[q][:3]) < DARK
+
+    seen, best = set(), None
+    for y0 in range(h):
+        for x0 in range(w):
+            if (x0, y0) in seen or not dark((x0, y0)):
+                continue
+            seen.add((x0, y0))
+            stack, region, edge = [(x0, y0)], [], False
+            while stack:
+                cx, cy = stack.pop()
+                region.append((cx, cy))
+                edge = edge or cx in (0, w - 1) or cy in (0, h - 1)
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    q = (cx + dx, cy + dy)
+                    if 0 <= q[0] < w and 0 <= q[1] < h and q not in seen and dark(q):
+                        seen.add(q)
+                        stack.append(q)
+            if not edge and (best is None or len(region) > len(best)):
+                best = region
+    if not best:
+        raise ValueError('费用牌中未找到数字窗口')
+    left, top = min(q[0] for q in best), min(q[1] for q in best)
+    right, bottom = max(q[0] for q in best), max(q[1] for q in best)
     out = image.copy()
     o = out.load()
     for y in range(h):
         for x in range(w):
             r, g, b, a = px[x, y]
-            if (x, y) in seen:
+            if left <= x <= right and top <= y <= bottom:
                 o[x, y] = (0, 0, 0, 0)
             else:
                 v = round(0.299 * r + 0.587 * g + 0.114 * b)
                 o[x, y] = (v, v, v, a)
-    return out, len(seen)
+    return out, (right - left + 1) * (bottom - top + 1)
 
 
 def create_native_image(p, image):

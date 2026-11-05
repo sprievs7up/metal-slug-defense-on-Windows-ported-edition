@@ -5,6 +5,10 @@
 - 输入层 InputLayer：双方键盘 / 手柄的离散指令（左右选格、出兵、AP、绝招、弹头车）在下一帧开始时以输入字节应用（N6 联机的本机输入复用）；
   选格属于本地界面，不进入输入；同一方同一帧的多个出兵顺延到后续各帧。鼠标只移动镜头（宿主直接移动，不送入原生触点）。
 - 暂停菜单打开期间以“只渲染帧”保持画面（渲染后恢复状态），战斗时间与状态不前进，回放中也不出现暂停；
+  只渲染帧会把原生混音与音频队列一并恢复，期间继续送出音频会每帧重复同一段（2026-11-05 用户报告的卡顿爆鸣），
+  因此菜单打开期间音频输出保持暂停（audio_bridge.hold），关闭菜单、重新开始或退出时从暂停处继续；
+  菜单的音乐 / 音效开关改写的存档字（lab.AUDIO_WORDS）属于玩家设定，同样会被恢复撤销，每个只渲染帧之后写回菜单设定的值，
+  关闭菜单后由 audio_options 重新应用音量（这两个字不在会话校验值的范围内）；
 - 回放录制（2026-10-11 用户决定停用）：默认不保存。环境变量 MSD_VERSUS_RECORD=1 时（开发与验证）在结束（战斗结束后 30 帧，
   或菜单的重新开始 / 退出且已进行 MIN_SAVE_FRAMES 帧以上）时按准备界面的完整设定保存回放（netplay_replay，保留最近 100 场）。
 环境变量 MSD_VERSUS_SESSION=0 时不使用本会话（回到原来的本地对战流程）。
@@ -97,6 +101,7 @@ class LocalVersusDriver:
         self.saved = None
         self.error = None
         self.config = None
+        self.audio_changed = False
         self.session.mode.enter(reseed=False)
         lab.start_hook = self.session.mode.reseed          # Lab.start 开头、原生战斗初始化之前设定各随机源
 
@@ -120,7 +125,13 @@ class LocalVersusDriver:
             if lab.finishing is not None or not lab.active:
                 return self.close(lab.finishing[0] if lab.finishing else 'left')
             if lab.menu.open:
-                return session.render_paused()
+                self.hold_audio(True)
+                words = self.audio_words()
+                rendered = session.render_paused()
+                self.keep_audio_words(words)
+                return rendered
+            self.hold_audio(False)
+            self.reapply_audio()
             session.tick()
             if session.finished_frame is not None and session.frame >= session.finished_frame + 30:
                 self.close('finished')
@@ -133,6 +144,35 @@ class LocalVersusDriver:
             self.error = f'{type(error).__name__}: {error}'
             self.p.log('VERSUS_SESSION_ERROR', traceback.format_exc())
             return self.abort('error')
+
+    def hold_audio(self, held):
+        """暂停菜单期间暂停音频输出（只渲染帧之后客体混音状态被恢复，不能继续送出音频）。"""
+        bridge = getattr(self.p, 'audio_bridge', None)
+        if bridge is not None:
+            bridge.hold(held)
+
+    def audio_words(self):
+        from lab import AUDIO_WORDS
+        app = self.p.app_instance()
+        return [self.p.word(app + offset) for offset in AUDIO_WORDS]
+
+    def keep_audio_words(self, words):
+        """只渲染帧恢复状态后写回菜单设定的音乐 / 音效开关；音量在该帧已应用后又被恢复，关闭菜单后重新应用。"""
+        from lab import AUDIO_WORDS
+        if self.audio_words() == words:
+            return
+        app = self.p.app_instance()
+        for offset, value in zip(AUDIO_WORDS, words):
+            self.p.put(app + offset, value)
+        self.audio_changed = True
+
+    def reapply_audio(self):
+        """关闭菜单后的第一个显示帧：audio_options 以当前开关重新应用音量（不再写存档，切换时已写入）。"""
+        if self.audio_changed:
+            options = getattr(self.p, 'audio_options', None)
+            if options is not None:
+                options.last_values = None
+            self.audio_changed = False
 
     def begin(self):
         lab, session = self.lab, self.session
@@ -231,6 +271,8 @@ class LocalVersusDriver:
             self.p.log('VERSUS_REPLAY_ERROR', self.error)
 
     def end(self):
+        self.hold_audio(False)
+        self.reapply_audio()
         if self.phase in ('playing', 'starting'):
             self.session.end()
         self.phase = 'ended'
@@ -240,6 +282,8 @@ class LocalVersusDriver:
 
     def abort(self, reason):
         self.p.log('VERSUS_SESSION_ABORT', reason, self.error)
+        self.hold_audio(False)
+        self.reapply_audio()
         if self.lab.start_hook == self.session.mode.reseed:
             self.lab.start_hook = None
         self.session.mode.exit()

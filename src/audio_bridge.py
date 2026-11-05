@@ -60,6 +60,7 @@ class OpenSLAudio:
                                'output_errors': 0}
         self.muted = False
         self.mute_changes = 0
+        self.held = False
         self.closed = False
         self.error = None
         self.lead_seconds = 0.080
@@ -200,7 +201,7 @@ class OpenSLAudio:
                 self._tick(stream)
                 stream.state = args[1]
                 if stream.sink:
-                    self._backend(stream, 'pause', stream.state != 3)
+                    self._backend(stream, 'pause', stream.state != 3 or self.held)
                 return 0
             if method == 1:
                 self.p.put(args[1], stream.state)
@@ -284,9 +285,29 @@ class OpenSLAudio:
                 self._backend(stream, 'clear')
             self._update_volume(stream)
 
+    def hold(self, held):
+        """Pause output without discarding it (local versus pause menu, versus_session).
+
+        Render-only paused frames restore the guest mixer and these streams afterwards, so pumping
+        during them would submit the same blocks every frame. While held, pump() does nothing and
+        each WaveOut device is paused with its queued audio kept; release resumes from that point."""
+        held = bool(held)
+        if held == self.held:
+            return
+        self.held = held
+        for stream in self.streams.values():
+            if stream.destroyed:
+                continue
+            if not held:
+                stream.last_frame = self.p.frame        # held frames do not count as capture time
+            if stream.sink:
+                self._backend(stream, 'pause', held or stream.state != 3)
+
     def pump(self):
         if threading.get_ident() != self.owner_thread:
             raise RuntimeError('Game audio callbacks must run on the game thread')
+        if self.held:
+            return
         for stream in list(self.streams.values()):
             self._tick(stream)
             if stream.destroyed or stream.state != 3 or stream.mode in ('silent', 'unavailable'):
@@ -363,7 +384,8 @@ class OpenSLAudio:
             self.p.free(pointer)
 
     def stats(self):
-        return {'requested_mode': self.mode, 'muted': self.muted, 'mute_changes': self.mute_changes, 'error': self.error,
+        return {'requested_mode': self.mode, 'muted': self.muted, 'mute_changes': self.mute_changes, 'held': self.held,
+                'error': self.error,
                 'streams': [self._stream_stats(s) for s in self.streams.values()],
                 'created_streams': self.created_streams,
                 'retired_streams': list(self.retired_streams),
