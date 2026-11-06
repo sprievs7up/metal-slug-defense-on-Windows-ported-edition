@@ -7,7 +7,8 @@
   文件为 MSDF（Ogg Vorbis 数据，以 OggS 开头），与原版音效文件相同；采样率与声道数不限（载入时转换为 16 kHz 立体声，核心 r52+）。
 - volume 为原生音量（记录第 12 字节的高字节，原版最大 127）；低字节为循环次数（CMediaSound::CreatePlayerFromFile 存入 +0xc4，
   CAudioPresenter::loopCheck 以负值为无限循环）：原版 BGM 均为 0xFF，bgm 条目同样写入 0xFF，按 loop 区间无限循环，
-  se 与 vo 为 0（2026-10-15 修正：此前 bgm 写 0，播放到循环终点即停止）。
+  se 与 vo 为 0（2026-10-15 修正：此前 bgm 写 0，播放到循环终点即停止）。bgm 条目写 "loop": false 时低字节为 0，只播一次
+  （同原版 MISSION COMPLETE / FAILED 乐句 104 / 105，2026-11-06 起，用于场景的 mission_sounds.complete_music）。
   gain 在载入时乘到采样上，超过满幅 60% 的部分以 tanh 压缩而不削波
   （核心 msd_pcm_gain，r53+），用于素材本身比原版音效轻的情形。
 - 引用：单位动作脚本 op23（播放音效）的参数可写音效键字符串，安装时换为分配的 SoundID。
@@ -49,9 +50,10 @@ def check_entry(entry, prefix, resolve):
         raise ValueError(f'{key}: gain must be a number 0.1–8')
     loop = entry.get('loop')
     if loop is not None:
-        if kind != 'bgm' or not (isinstance(loop, list) and len(loop) == 2 and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in loop)
+        if kind != 'bgm' or not (loop is False or isinstance(loop, list) and len(loop) == 2
+                                 and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in loop)
                                  and 0 <= loop[0] < loop[1] <= 3600):
-            raise ValueError(f'{key}: loop is [start, end] seconds for bgm entries')
+            raise ValueError(f'{key}: loop is [start, end] seconds or false (play once) for bgm entries')
     name = entry.get('file')
     if not isinstance(name, str) or Path(name).name != name or not name.endswith('.msdf'):
         raise ValueError(f'{key}: file must be a .msdf file name')
@@ -134,8 +136,9 @@ def install(content, entries, ids):
         if not source:
             raise RuntimeError('missing original sound template')
         raw = bytearray(p.read(source, RECORD_SIZE))
+        once = entry.get('loop') is False
         loop = entry.get('loop') or (0, 0)
         struct.pack_into('<Iff', raw, 0, p.cstr(entry['file']), float(loop[0]), float(loop[1]))
-        struct.pack_into('<III', raw, 12, entry.get('volume', 100) * 256 + (0xff if kind == 0 else 0), sid, kind)
+        struct.pack_into('<III', raw, 12, entry.get('volume', 100) * 256 + (0xff if kind == 0 and not once else 0), sid, kind)
         table[sid] = content.alloc(raw)
     return content.alloc(struct.pack(f'<{NATIVE_SOUND_SLOTS}I', *table)), len(entries)

@@ -316,3 +316,10 @@
 - 原因：原生 `drawUI` 在底栏与 AP 框之后以原坐标绘制等待条（0x1d8dbc 框体、0x1d8e22 填充，框体 y = 单位 y + 3，下沿约 y + 25）。分栏时第 0 遍裁剪 y < 498，越过底栏上沿的下半部被裁掉；各片段遍又以片段的缩放与位移重画整个 `drawUI`，下半部随之画进各片段。原生单方底栏（VS CPU、常规联机）不经分栏，等待条位置正确。
 - 修复：块 0x101d8dbc 钩子 `gauge_draw` 在分栏的其他各遍跳到 0x101d8e48（不画等待条）；底栏片段与下方填色之后、金币之前新增等待条遍（原坐标、整屏裁剪，`DrawHook` / `fill_hook` 只放行 0x1d8dbc…0x1d8e48 之间的绘制），与原生顺序相同，等待条压在 AP 框与底栏上沿之上。敌方等待条（功能位 1）在该遍中照常补画。
 - 验证（`verification/gauge_split_20261027/`，隔离存档，墙钟前移，未计算 SHA-256；`driver_gauge.py` 与 `compare.py`）：13013 关同种子 2400 帧，r100 与 r101 的单位位置、等待条比例相同；r101 截图与 r100 的差异只在 y 536–584 带（等待条完整显示、片段中的碎片消失），敌方等待条 3 帧与其余帧逐像素相同；去掉功能位 4 的原生单方底栏中两核心 11 帧逐像素相同，r101 分栏的等待条像素与之相同（不一致处只在与底栏上沿重叠的行，属两种布局的底栏差异）。
+
+## 2.28 结束演出不显示 GOOD JOB、乐句与语音播完再合拢闸门、开场 / 完成音效替换口（2026-11-06，核心 r147，钩子版本 27）
+
+- 用户要求：LAB、本地对战、VS CPU 结束后右上角的 GOOD JOB 按钮已无作用，去除；MISSION COMPLETE / FAILED 的动画与音效播放完毕后再合拢闸门；为以后部分地图换用原作的 MISSION START / COMPLETE 音效留出替换口。脚本与记录 `verification/lab_result_sound_20261106/`（`summary.md`）。
+- 原生：按钮为 `BattleIineButton`，由演出场景 `BattleStartAndCompleteEffectScene` / `BattleFailedEffectScene` 的 `initialize` 在游戏类型 2、7、8 时置可见（+5），画在 (800, 146)，按下时 `SendData` 消息 12 与 `SetWiFiLikedFlag`。完成演出第 1 次更新 `playBGM(104)`（`bgm05`，7.6 秒，循环次数 0）、第 40 次更新 `playSE(4, 4)`（ANNOUNCE 端口 `m_comp`）；开场演出第 40 次更新 `playSE(4, 5)`（`m_start`）；失败演出第 1 次更新 `playBGM(105)`（`bgm07`，7.8 秒）。演出计数器超过 119 / 139 时结束，LAB 随即合拢闸门、`leave` 停止 BGM；基线实测乐句在合拢时只播到约 3.9 秒。
+- 修改：核心 `lab_hooks.cpp` 第 27 版在 LAB 共享头启用时把按钮可见字节写 0（块 0x1ccfd2，失败场景另有顺序执行的块 0x1cd2ae，两块都处理）；`lab.py` `hold_result_effect`：只播一次的 BGM 或 ANNOUNCE 语音仍在播放时把演出计数器保持在退场动画之后（COMPLETE 110、FAILED 130），播完后照原流程结束演出并合拢；音频不推进时不保持，停止计时满 450 帧（15 秒）照兜底合拢，每场写一条 `result_hold` 记录。替换口：场景字段 `mission_sounds`（`docs/CONTENT_AUTHORING.md`），核心 `community_content.cpp` 在三个播放块之后按场景效果记录（标记位 5，字 28–30）换 SoundID，未载入时保持原生；`bgm` 音效条目可写 `"loop": false`（只播一次）。
+- 适用范围：按钮与音效替换为核心处理（按钮：LAB 共享头启用的全部战斗，含联机会话；替换：使用该场景的全部战斗）；等待乐句在 `Lab.update` 的结束路径中，联机与本地对战会话结束、交还 LAB 后生效。

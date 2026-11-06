@@ -537,6 +537,11 @@ class CommunityContent:
         # 2026-10-27 贯穿子弹（piercing_shots，标记 8388608）：BattleBulletDefault::attackAction 的 2 个块（核心 r100）。
         if any(u['zombie_spec']['flags']&8388608 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_piercing_shots_version') or p.uc.lib.msd_community_piercing_shots_version()<1):raise RuntimeError('Native core lacks piercing shots')
         if any(u['zombie_spec']['flags']&16777216 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_summon_on_hit_version') or p.uc.lib.msd_community_summon_on_hit_version()<1):raise RuntimeError('Native core lacks summon on hit')
+        # 2026-11-06 大门（big_gate，标记 1073741824）：MordenBus / BulletAction_MordenBus 的 update、受击、开战预载的 4 个块（核心 r141；R2 字 56 / 62 / 80–81 的含义改变，需版本 2，核心 r142）；
+        # R3 光环瞄准（BulletAction_MordenXX_Attack_SP 第 1 帧的远近判定块）与字 62–78 重排，需版本 3，核心 r143；R5 空中到达飞行上限时移除（同函数的超限块），需版本 4，核心 r144；R11 first_summon_wait（字 79），需版本 5，核心 r145。
+        if any(u['zombie_spec']['flags']&1073741824 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_big_gate_version') or p.uc.lib.msd_community_big_gate_version()<5):raise RuntimeError('Native core lacks big gate')
+        # 2026-11-06 带炮管的雷贝尔沃克（launcher_walker，ZSpec 标记 2147483648）：LevelWalker::update、弹体更新与攻击、对空距离（核心 r146）；R7 起要求版本 2（追踪视野字 82、普通攻击中可发动特殊攻击）。
+        if any(u['zombie_spec']['flags']&2147483648 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_launcher_walker_version') or p.uc.lib.msd_community_launcher_walker_version()<2):raise RuntimeError('Native core lacks launcher walker')
         # 2026-11-04 攻击轮数（attack_rounds，ZSpec 字 139）：BattleAction_McsnlFive::update 攻击计数的 1 个块（核心 r140）。
         if any(u['zombie_spec'].get('attack_rounds') for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_attack_rounds_version') or p.uc.lib.msd_community_attack_rounds_version()<1):raise RuntimeError('Native core lacks attack rounds')
         # 2026-10-31 叛军自爆摩托（bomb_bike，标记 33554432）：与鼹鼠弹共用 Bike_P 类 update / attackAction 的块，另加骑手生成的落地映射（核心 r111）。
@@ -574,6 +579,7 @@ class CommunityContent:
             entries.append(dict(entry,source=str(source)))
         entries+=self.mod_sounds
         self.sound_ids=content_sounds.allocate(entries)
+        self.mission_sound_ids=set();self.mission_sounds_loaded=False   # 场景 mission_sounds 的替换音效（install_scene_fx、load_mission_sounds）
         self.sounds=entries;self.sound_files={}
         # 条目 gain：宿主解码时按文件内容查表乘到采样上（native_audio.AudioCache，核心 msd_pcm_gain）。
         self.p.sound_gains={Path(e['source']).read_bytes():float(e['gain']) for e in entries if e.get('gain',1)!=1}
@@ -997,9 +1003,11 @@ class CommunityContent:
         18 子弹墙多边形数；19 多边形数据（每个多边形：点数 n，再 n 对 x、y，int32）；20 视差表的背景层数；21 视差表（逐背景层的卷动比例，
         int32 千分比，1000 为与镜头同速；2026-10-28 起，核心 stage_parallax）；22 换帧间隔表的背景层数；23 换帧间隔表（逐背景层每帧保持的
         更新次数，int32，原生为 2；2026-10-29 起，核心 stage_back_frame，此前记录为 22 个字）。有图层混合方式时记录为 28 个字（标记位 4）：
-        24 背景层数、25 逐背景层混合方式表、26 前景层数、27 逐前景层混合方式表（int32：0 原生、1 混合、2 加色；2026-11-03 起，核心 stage_blend）。"""
+        24 背景层数、25 逐背景层混合方式表、26 前景层数、27 逐前景层混合方式表（int32：0 原生、1 混合、2 加色；2026-11-03 起，核心 stage_blend）。
+        有任务开场 / 完成音效时记录为 31 个字（标记位 5）：28 开场语音、29 完成语音、30 完成乐句的 SoundID（0 为原生；2026-11-06 起，核心
+        mission_sound，场景字段 mission_sounds）。替换音效在首次进入主菜单时载入并常驻（load_mission_sounds）。"""
         p=self.p
-        if not any(k in s for s in stage_rows for k in ('water','bullet_walls','parallax','frame_updates','blend','front_blend')):return 0
+        if not any(k in s for s in stage_rows for k in ('water','bullet_walls','parallax','frame_updates','blend','front_blend','mission_sounds')):return 0
         if not hasattr(p.uc.lib,'msd_community_scene_fx_version') or p.uc.lib.msd_community_scene_fx_version()!=1:
             raise RuntimeError('Native core lacks scene water / bullet wall hooks (scene_fx)')
         if any('parallax' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_parallax_version')
@@ -1011,13 +1019,16 @@ class CommunityContent:
         if any('blend' in s or 'front_blend' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_stage_blend_version')
                                                                            or p.uc.lib.msd_community_stage_blend_version()!=1):
             raise RuntimeError('Native core lacks scene layer blending (stage_blend)')
+        if any('mission_sounds' in s for s in stage_rows) and (not hasattr(p.uc.lib,'msd_community_mission_sound_version')
+                                                              or p.uc.lib.msd_community_mission_sound_version()!=1):
+            raise RuntimeError('Native core lacks mission start / complete sound replacement (mission_sound)')
         f32=lambda v:struct.unpack('<I',struct.pack('<f',v))[0]
         pointers=[]
         for s in stage_rows:
             water,walls,parallax,frames=s.get('water'),s.get('bullet_walls'),s.get('parallax'),s.get('frame_updates')
-            blend,front_blend=s.get('blend'),s.get('front_blend')
-            if not water and not walls and not parallax and not frames and not blend and not front_blend:pointers.append(0);continue
-            words=[0]*(28 if blend or front_blend else 24)
+            blend,front_blend,sounds=s.get('blend'),s.get('front_blend'),s.get('mission_sounds')
+            if not water and not walls and not parallax and not frames and not blend and not front_blend and not sounds:pointers.append(0);continue
+            words=[0]*(31 if sounds else 28 if blend or front_blend else 24)
             if water:
                 words[0]|=1;words[1:5]=[*water['range'],water['min_y'],water['draw_y']]
                 words[5:9]=[f32(v/255) for v in (*water['color'],water.get('strength',230))]
@@ -1034,6 +1045,15 @@ class CommunityContent:
                 if modes:
                     words[0]|=16;words[k]=len(modes)
                     words[k+1]=self.alloc(struct.pack('<%di'%len(modes),*modes))
+            if sounds:
+                from campaign_catalog import MISSION_SOUNDS
+                words[0]|=32
+                for k,name in enumerate(MISSION_SOUNDS):
+                    value=sounds.get(name)
+                    if value is None:continue
+                    sid=value if type(value) is int else self.sound_ids.get(value)
+                    if not sid:raise ValueError('mission_sounds 引用未登记音效：'+str(value))
+                    words[28+k]=sid;self.mission_sound_ids.add(sid)
             pointers.append(self.alloc(struct.pack('<%dI'%len(words),*(w&0xffffffff for w in words))))
         return self.alloc(struct.pack('<%dI'%len(pointers),*pointers))
 
@@ -1135,6 +1155,13 @@ class CommunityContent:
             for i,v in enumerate(spec.get('epod',[])):words[53+i]=v&0xffffffff
             if spec.get('epod_unit'):words[54]=next(e['id'] for e in units if e and e['key']==spec['epod_unit'])
             for i,k in enumerate(spec.get('epod_sounds',[])):words[67+i]=self.sound_ids[k]
+            # 2026-11-06：53–78 大门（big_gate v1，核心 r143；基准 245，与其他用字 53 起的行为不会同时出现）：动作号、召唤等待、放大帧数、
+            # 光环冷却、光环偏移、召唤单位数；71–78 召唤单位的 UnitID（gate_units 为稳定键或原版 UnitID）；79 第一次召唤前的待机帧数（R11，v2，核心 r145）
+            for i,v in enumerate(spec.get('gate',[])):words[53+i]=v&0xffffffff
+            for i,k in enumerate(spec.get('gate_units',[])):words[71+i]=k if isinstance(k,int) else next(e['id'] for e in units if e and e['key']==k)
+            # 2026-11-06：53–81 带炮管的雷贝尔沃克（launcher_walker v1，核心 r146；基准 228，与其他用字 53 起的行为不会同时出现）：动作号、发射 tick、
+            # 导弹首个方向动作、前烟 / 后焰 / 烟团动作、出膛角、出生点与效果位置、初速、加速度、上限、追踪起始与转向上限、存在帧数、烟团间隔、命中效果、对空
+            for i,v in enumerate(spec.get('lwalker',[])):words[53+i]=v&0xffffffff
             # 2026-10-29：132 受击召唤的冷却 tick（summon_on_hit，核心 r105）
             words[132]=spec.get('hit_summon_cooldown',0)
             # 2026-10-29：133 钢铁死亡蠕虫的钻离 / 钻击中开始扣击退计量的脚本 tick（iron_death_worm v5，核心 r109）
@@ -1182,6 +1209,15 @@ class CommunityContent:
                 p.log('COMMUNITY_ICON_PAGE_LOADED',self.icon_pages[i][1],hex(image))
             if flags:p.put(entry+12,0)
 
+    def load_mission_sounds(self):
+        """场景 mission_sounds 的替换音效（install_scene_fx 收集的 SoundID）以 AppMain::Sound_Load 载入并常驻（原生音效系统在主菜单前已建立；
+        原生只按 ID 逐个释放自身场景列表中的音效，这些 ID 的载入计数保持）。核心只在该 ID 已载入时替换（mission_sound），未载入时播放原生音效。"""
+        p=self.p;app=self.app;self.mission_sounds_loaded=True;loaded=[]
+        for sid in sorted(self.mission_sound_ids):
+            if not p.read(app+0xab54+sid,1)[0]:p.call('_ZN7AppMain10Sound_LoadE7SoundID',app,sid)
+            loaded.append((sid,p.read(app+0xab54+sid,1)[0]))
+        p.log('MISSION_SOUNDS_LOADED',loaded)
+
     def flush(self):
         p=self.p
         # 关闭窗口时停止事件已设置，原生调用会被 Probe.call 取消；此时只写社区进度（只读内存），
@@ -1197,6 +1233,8 @@ class CommunityContent:
             if self.ready and not self.map_initial_choices_applied and p.word(self.app+0x22bc)==28:
                 import community_maps
                 community_maps.enable_initial_choices(self);self.map_initial_choices_applied=True
+            if self.ready and self.mission_sound_ids and not self.mission_sounds_loaded and p.word(self.app+0x22bc)==28:
+                self.load_mission_sounds()
         if not self.ready or not p.word(HEADER+24):return
         for u in self.units:
             i=u['id']-UNIT_ID_BASE

@@ -14,6 +14,8 @@ from event_content import TRIGGER_WHEN,TRIGGER_ACTIONS,MAX_TRIGGERS
 
 # 原生区域名称表 strAreaNameTbl 的语言顺序（11 项，下标 = 游戏语言；DE、ZS 的原版名称为空字符串）
 AREA_NAME_LANGUAGES=('EN','JP','KR','ES','PT','FR','DE','IT','ZS','ZT','RU')
+# 场景 mission_sounds 的项，顺序即场景效果记录的字 28、29、30（src/community_content.cpp mission_sound）
+MISSION_SOUNDS=('start','complete','complete_music')
 
 def stable_key(value):
     if not isinstance(value,str) or not re.fullmatch(r'[a-zA-Z0-9_.-]{1,120}',value):
@@ -163,6 +165,18 @@ class Catalog:
                     if 'graphics' not in scene or not isinstance(modes,list) or len(modes)!=len(scene['graphics'].get(group,[])):
                         raise ValueError(field+' 须与 graphics.'+group+' 逐层对应')
                     for v in modes:integer(v,0,2)
+            # mission_sounds：任务开场 / 完成音效（2026-11-06 起，需核心 mission_sound），用于在该战场换用原作的 MISSION START / COMPLETE 音效。
+            # start 开场语音、complete 完成语音（se 或 vo 类音效；原生为 ANNOUNCE 端口的 m_start / m_comp），complete_music 完成乐句（bgm 类音效；
+            # 原生为 104 bgm05，只播一次，替换的条目宜写 "loop": false）。值为已登记的音效键或原版 SoundID（1–1030）；未写的项保持原生。
+            sounds=scene.get('mission_sounds')
+            if sounds is not None:
+                if not isinstance(sounds,dict) or not sounds or set(sounds)-set(MISSION_SOUNDS):raise ValueError('mission_sounds 只含 start、complete、complete_music')
+                for name,value in sounds.items():
+                    if type(value) is int:integer(value,1,1030);continue
+                    if value not in self.sounds:raise ValueError('mission_sounds 引用未登记音效：'+str(value))
+                    if (self.sounds[value]=='bgm')!=(name=='complete_music'):raise ValueError(f'mission_sounds.{name} 的音效类型不符（complete_music 为 bgm，其余为 se 或 vo）：{value}')
+                    prefix=value.split('.',1)[0]
+                    if prefix!='s1xlv' and prefix not in self.fragment['visible']:raise ValueError(f'{self.fragment["owner"]} 不能引用音效 {value}')
         for music in self.music.values():
             if music.get('file') not in self.assets or not music['file'].endswith('.msdf') or not self.assets[music['file']].startswith(b'OggS'):
                 raise ValueError('音乐要求包含 Vorbis 数据的 .msdf 文件')

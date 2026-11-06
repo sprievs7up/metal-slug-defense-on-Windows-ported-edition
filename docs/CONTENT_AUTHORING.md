@@ -130,6 +130,7 @@ PNG 导入要求单帧、通道位深不超过 8 位的 RGB/RGBA、灰度或调�
 - 场景可写 `parallax`（背景图层视差，2026-10-28 起）：与 `graphics.back` 逐层对应的整数列表，千分比 0–1000（1000 为与镜头同速）。比例 f 的层随镜头移动 f 倍的距离，镜头在最左端时各层按图块锚点对齐；图层宽度须覆盖 1136 + f ×（关宽 − 1136）。一张宽图层被打包工具切成多块时每块各占一项（同一比例）。前景（`front`）层不受影响。只改绘制，不影响对战模拟与回滚。需要核心导出 `msd_community_stage_parallax_version()==1`（核心 r102 起）。例：MS7 任务 2 第 5 关（`s1xlv.ms7_m2_boss`）暗色底 250、暗色石柱 500、浅色石柱与地面 750、轨道 1000。
 - 场景可写 `frame_updates`（背景图层换帧间隔，2026-10-29 起）：与 `graphics.back` 逐层对应的整数列表，每帧保持的更新次数 1–8。原生各层为 2（30 FPS 时每秒 15 帧）；写 1 的层每次更新换帧（每秒 30 帧），用于横向循环等移动较快的动画层，避免每帧位移过大而显得卡顿。帧号 = 场景计数器 ÷ 该值，再对该层帧数取余。切块后每块各占一项。前景（`front`）层不受影响。只改绘制，不影响对战模拟与回滚。需要核心导出 `msd_community_stage_frame_rate_version()==1`（核心 r108 起）。例：MS7 任务 3 第 3、4 关（`s1xlv.ms7_m3_lift`、`s1xlv.ms7_m3_lift_green`）的塔层为 1（逐帧左移 1、2 逻辑单位交替，每秒 45），其余各层为 2。
 - 场景可写 `blend` 与 `front_blend`（图层混合方式，2026-11-03 起）：分别与 `graphics.back`、`graphics.front` 逐层对应的整数列表，0 原生（不混合：半透明像素近似按原色不透明显示）、1 混合（按 alpha 与下层混合，用于雾、雾霭等半透明图层；前景层混合时也覆盖单位）、2 加色（按 alpha 叠加亮度）。混合层的半透明像素须保留正确的颜色（不要用 Lanczos 等会产生暗色振铃的方式放大）。切块后每块各占一项；同一图层切成的相邻两块不要重叠，否则重叠列会叠加两次。只改绘制，不影响对战模拟与回滚。需要核心导出 `msd_community_stage_blend_version()==1`（核心 r137 起），较旧的核心载入含这两个字段的场景时报错。
+- 场景可写 `mission_sounds`（任务开场 / 完成音效，2026-11-06 起），用于在该战场换用原作的 MISSION START / MISSION COMPLETE 音效：`{"start": 音效, "complete": 音效, "complete_music": 音效}`，三项均可选，未写的项保持原版。`start` 为开场语音（原版 `m_start`，MISSION START 文字入场后第 40 帧播放）、`complete` 为完成语音（原版 `m_comp`，第 40 帧）、`complete_music` 为完成乐句（原版 SoundID 104 `bgm05`，7.6 秒，演出第 1 帧开始）。值为已登记的音效键（`start` / `complete` 为 `se` 或 `vo` 类，`complete_music` 为 `bgm` 类，宜写 `"loop": false` 只播一次）或原版 SoundID（1–1030）；可见范围同单位与关卡音乐。替换的音效在首次进入主菜单时载入并常驻，载入失败时播放原版音效。MISSION FAILED 的乐句（105 `bgm07`）不在此列。LAB、对战与 VS CPU 在结束演出的乐句与语音播放完毕后才合拢闸门（只播一次的乐句；循环乐句不等待），停止后 15 秒仍未播完时照常合拢，因此替换的完成乐句宜在 14 秒以内。需要核心导出 `msd_community_mission_sound_version()==1`（核心 r147 起），较旧的核心载入含此字段的场景时报错。
 - 自制地形在安装时补上原版同样的终止点 `[9999, 末点 y]`。
 
 **地形与单位位置（2026-10-20 起，核心 r70 起；以后的地图编辑器与关卡制作同样遵守）：**
@@ -188,7 +189,7 @@ PNG 导入要求单帧、通道位深不超过 8 位的 RGB/RGBA、灰度或调�
 ```
 
 - 文件为 `.msdf`（Ogg Vorbis 数据），可用 `content_tool.py import-music <输入.ogg> <输出.msdf>` 生成并做解码检查；不得与原版资源同名。
-- `type` 为 `se`（缺省）、`vo`、`bgm`；`volume` 1–127（缺省 100）；`loop` 仅用于 `bgm`；`gain` 0.1–8（缺省 1，核心 r53 起）在解码后放大或减小采样，超过满幅 60% 的部分柔和压缩，用于素材本身偏小声的情形。
+- `type` 为 `se`（缺省）、`vo`、`bgm`；`volume` 1–127（缺省 100）；`loop` 仅用于 `bgm`（`[开始秒, 结束秒]` 为循环区间；写 `false` 时只播一次，同原版 MISSION COMPLETE / FAILED 乐句，2026-11-06 起，用于场景的 `mission_sounds.complete_music`；缺省为整首循环）；`gain` 0.1–8（缺省 1，核心 r53 起）在解码后放大或减小采样，超过满幅 60% 的部分柔和压缩，用于素材本身偏小声的情形。
 - 本体写在 `community_content/content.json` 的 `sounds` 列表（键 `s1xlv.`，文件放在 `community_content/`）；模组写在 `content.sounds` 目录的 `*.json` 列表中（键 `<模组 id>.`，文件放在模组 `assets/`）。
 - 单位动作脚本播放音效：`{"opcode": 23, "values": ["author_mod.cannon"]}`；关卡音乐：`"music": "author_mod.theme"`（类型须为 `bgm`）。只能引用本体、本模组与所依赖模组的音效。
 - SoundID 由游戏在原生音效表的空闲区段（32–99、165–199、523–799）中按加载顺序分配，本体与模组合计 380 个；使合计超限的模组被跳过。详见 `docs/modding/M6A_CUSTOM_SOUNDS_2026-10-10.md`。

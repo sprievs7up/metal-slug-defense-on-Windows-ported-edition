@@ -79,6 +79,13 @@ def _check_param(behavior, name, spec, value, units):
     elif kind == 'rational_list':
         if not isinstance(value, list) or not _length_ok(spec, value) or not all(_rational_ok(spec, v) for v in value):
             raise ValueError(f'{where}: expected a list of [numerator, denominator] in range')
+    elif kind == 'unit_list':
+        # 2026-11-06 行为库 v43（big_gate.summon_units）：单位稳定键或原版 UnitID 的列表，每项按 unit_key 的 internal / native 规则校验
+        if not isinstance(value, list) or not _length_ok(spec, value):
+            raise ValueError(f'{where}: expected a list of unit keys')
+        item = dict(spec, type='unit_key')
+        for entry in value:
+            _check_param(behavior, name, item, entry, units)
     elif kind == 'sound_key':
         if not isinstance(value, str) or not SOUND_KEY_PATTERN.fullmatch(value):
             raise ValueError(f'{where}: expected a sound key')
@@ -548,6 +555,51 @@ def internal_fields(resolved):
                       )])
         if v['role'] == 0:
             fields['union_child_key'] = v['ball_unit']
+    # 2026-11-06 大门（行为库 v43 / 行为 v1，核心 r143，基准 245 魔登巴士）：ZSpec 标记 1073741824，另置 2（不击退，同 no_knockback）；
+    # 字 53–61 待机 / 召唤动作、召唤等待、落地伸展的首个动作（第 i 个召唤单位为 首个 + i）与帧数、损毁动作、光环弹体动作（其余与第一颗）、光环冷却，62–69 光环四处偏移，
+    # 70 召唤单位数，71–78 召唤单位（gate_units：稳定键或原版 UnitID，加载器换为 UnitID）。R3 去掉 R2 的漩涡闪黄（字 62、80–81）。
+    # R11（行为 v2，库 44，核心 r145）：79 第一次召唤前的待机帧数 first_summon_wait（−1 为同 summon_wait）。
+    if 'big_gate' in resolved:
+        v = resolved['big_gate']
+        zombie.update(flags=zombie['flags'] | 1073741824 | 2, gate_units=list(v['summon_units']), gate=[v[k] for k in (
+            'idle_animation',
+            'summon_animation',
+            'summon_wait',
+            'grow_first_animation',
+            'grow_ticks',
+            'death_animation',
+            'ring_animation',
+            'ring_sound_animation',
+            'ring_cooldown',
+        )] + list(v['ring_offsets']) + [len(v['summon_units'])] + [0] * 8 + [v['first_summon_wait']])
+    # 2026-11-06 带炮管的雷贝尔沃克（行为库 v45 / 行为 v1，核心 r146，基准 228 BattleAction_LevelWalker）：ZSpec 标记 2147483648；
+    # 字 53–55 普通攻击 / 特殊攻击动作与发射 tick，56–58 特殊攻击的三个发射 tick，59 导弹首个方向动作，60–62 前烟、后焰、烟团动作，
+    # 63 出膛角，64–66 特殊攻击的三个出膛角，67–72 导弹出生点与前烟 / 后焰位置（[x, y] × 3），73–75 初速 × 10、加速度 × 100、上限 × 10，
+    # 76 开始追踪的帧，77 每帧转向上限（4096 为一周），78 存在帧数，79 烟团间隔，80 命中效果，81 是否以空中单位为目标，82 追踪的视野范围（R7）（与其他用字 53 起的行为基准不同，不会同时出现）
+    if 'launcher_walker' in resolved:
+        v = resolved['launcher_walker']
+        zombie.update(flags=zombie['flags'] | 2147483648, lwalker=[v[k] for k in (
+            'attack_animation',
+            'special_animation',
+            'fire_tick',
+        )] + list(v['special_fire_ticks']) + [v[k] for k in (
+            'missile_first_animation',
+            'front_effect',
+            'rear_effect',
+            'puff_effect',
+            'launch_angle',
+        )] + list(v['special_angles']) + list(v['muzzle']) + list(v['front_offset']) + list(v['rear_offset']) + [v[k] for k in (
+            'speed',
+            'acceleration',
+            'max_speed',
+            'homing_delay',
+            'homing_turn',
+            'life',
+            'puff_interval',
+            'hit_effect',
+            'air_targets',
+            'target_range',
+        )])
     # 2026-10-31 R9 落地延续生命（行为库 v30，核心 r112，基准 160）：ZSpec 标记 67108864，无参数字。
     if 'landing_keeps_hp' in resolved:
         zombie['flags'] |= 67108864

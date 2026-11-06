@@ -1,0 +1,130 @@
+{
+  "key": "s1xlv.big_gate_builder",
+  "base_id": 77,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "shop_price": 350,
+  "available_from_start": true,
+  "ap": 800,
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 77,
+  "production_interval_multiplier": [
+    32,
+    5
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      692,
+      770,
+      40,
+      40
+    ],
+    "anchor": [
+      -5,
+      -5
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "BIG GATE",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nWeapon linking present with the future.\nRebel soldiers are inside, and coming in order to Rebel soldiers of the present time."
+    },
+    "JP": {
+      "name": "ビッグゲート",
+      "description": "通常攻撃：-  特殊攻撃：-\n未来と現代をつなぐ兵器。\n中からは未来のモーデン軍が現代のモーデン軍を助けるためにやってくる。"
+    },
+    "KR": {
+      "name": "빅 게이트",
+      "description": "일반 공격: -    특수 공격: -\n미래와 현재를 연결하는 병기.\n그 안에서는 미래의 모덴군이 현대의 모덴군을 돕기 위해 나온다."
+    },
+    "ES": {
+      "name": "Portón",
+      "description": "ATQ. ESTÁND. : -    ATQ. ESPEC. : -\nArma que conecta el presente y el futuro.\nHay soldados rebeldes del futuro, venidos para ayudar a los soldados rebeldes actuales."
+    },
+    "PT": {
+      "name": "Portón",
+      "description": "ATQ. ESTÁND. : -    ATQ. ESPEC. : -\nArma que conecta el presente y el futuro.\nHay soldados rebeldes del futuro, venidos para ayudar a los soldados rebeldes actuales."
+    },
+    "FR": {
+      "name": "Grand portail",
+      "description": "ATT. STAND : -   ATT. SPÉ : -\nArme reliant le présent et le futur.\nÀ l’intérieur se trouvent des soldats rebelles du futur, venus aider les soldats rebelles actuels."
+    },
+    "DE": {
+      "name": "BIG GATE",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nWeapon linking present with the future.\nRebel soldiers are inside, and coming in order to Rebel soldiers of the present time."
+    },
+    "IT": {
+      "name": "BIG GATE",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nWeapon linking present with the future.\nRebel soldiers are inside, and coming in order to Rebel soldiers of the present time."
+    },
+    "ZS": {
+      "name": "大门",
+      "description": "普通攻击：- 　特殊攻击：-\n连接着未来和现在的兵器。\n为了援助现在的莫丁军，未来的莫丁军会门里面出来。"
+    },
+    "ZT": {
+      "name": "大門",
+      "description": "普通攻擊：‐     特殊攻擊：‐\n連接現代與未來的武器。\n為了拯救現代的叛軍，未來的叛軍從中蜂湧而出。"
+    },
+    "RU": {
+      "name": "BIG GATE",
+      "description": "STAND. ATK : -     SPEC. ATK : -\nWeapon linking present with the future.\nRebel soldiers are inside, and coming in order to Rebel soldiers of the present time."
+    }
+  },
+  "textures": [
+    "donou.obm"
+  ],
+  "tags": [
+    "ms7",
+    "msa"
+  ],
+  "behaviors": [
+    {
+      "name": "build_structure",
+      "version": 1,
+      "params": {
+        "structure": "s1xlv.big_gate",
+        "construction_time_multiplier": [
+          737,
+          200
+        ]
+      }
+    }
+  ]
+}

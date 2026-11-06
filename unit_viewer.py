@@ -302,7 +302,11 @@ class UnitViewer:
         if unit is None:
             return
         keys = {v for b in unit.get('behaviors') or () for v in (b.get('params') or {}).values() if isinstance(v, str)}
+        # 2026-11-06 大门（big_gate.summon_units）：召唤单位列表中的稳定键与原版 UnitID 一并预载（只取该列表，其他行为的整数参数不是 UnitID）。
+        summons = [v for b in unit.get('behaviors') or () if b.get('name') == 'big_gate' for v in (b.get('params') or {}).get('summon_units', ())]
+        keys |= {v for v in summons if isinstance(v, str)}
         ids = [u['id'] for u in units if u.get('key') in keys and u.get('id') not in (None, uid)]
+        ids += [v for v in summons if isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 399]
         factory = self.p.call('_ZN19BattleSpriteFactory11getInstanceEv')
         self.p.call('_ZN19BattleSpriteFactory13setupResourceE6UnitID', factory, SHARED_EFFECT_ID)
         for child in ids:

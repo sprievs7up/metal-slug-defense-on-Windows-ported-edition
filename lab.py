@@ -116,7 +116,7 @@ AI_TIER_NAMES = tuple(t[0] for t in AI_TIERS)
 SE_EXTRA_PER_PORT = 8            # 原生 3 + 扩展 8 = 每方 11 个通道；CMediaManager 32 个播放槽，原生通道只在播放时占用
 AURA_STRING = 0x103011c3       # BattleEffectRenderer 构造函数引用的 "aura.obm"（.rodata 0x3011c3）
 RESULT_SCENES = (110, 120)
-RESULT_FALLBACK_FRAMES = 450     # 战斗停止后原生仍未离开场景 100 时的兜底（15 秒）；实测 FAILED 演出约 140 帧后离开
+RESULT_FALLBACK_FRAMES = 450     # 战斗停止后原生仍未离开场景 100 时的兜底（15 秒）；演出约 140 帧，等乐句播完约 250 帧（hold_result_effect）
 SAVE_RAM = 0x3d08              # app 偏移：主存档映像（与 event_trial.EventTrial.transaction 相同）
 SAVE_RAM_SIZE = 0x5ab0
 AUDIO_WORDS = (0x3d5c, 0x3d60)   # 音乐、音效开关（audio_options.MUSIC / EFFECTS，位于 SAVE_RAM 内）
@@ -538,6 +538,7 @@ class Lab:
         self.seen_playing = False
         self.network_wait_done = False
         self.idle_frames = 0
+        self.result_hold = None
         self.last_scene = None
         self.started_frame = p.frame
         self.player_units, self.enemy_units = list(player_deck), list(deck)
@@ -697,6 +698,56 @@ class Lab:
             if restart:
                 self.restart_at = p.frame + 45
 
+    def hold_result_effect(self, main):
+        """结束演出的音效播放完毕后再结束演出（2026-11-06 用户要求）。
+
+        MISSION COMPLETE / FAILED 演出场景（BattleMain +8 为链首场景）在计数器超过 119 / 139 时结束，原生随即离开场景 100，
+        本类合拢闸门并在 leave 中停止 BGM。完成乐句（104 bgm05，7.6 秒，演出第 1 次更新开始）与失败乐句（105 bgm07，7.8 秒）
+        此时仍在播放（基线实测：演出于第 120 次更新结束时乐句约播到 3.9 秒）。只播一次的 BGM（音效记录 +12 低字节为 0）或
+        ANNOUNCE 语音（m_comp，CAudioPresenter +0 为结束标记）仍在播放时，每帧把计数器保持在退场动画之后：COMPLETE 为 110
+        （文字于第 100 次更新起 8 帧退场），FAILED 为 130（第 110 次更新起 14 帧退场）。播放结束后计数器继续，约 10 帧后演出结束、
+        原生离开场景 100，之后照原流程合拢闸门。音频不推进（静音模式、输出不可用、本地对战暂停的 hold）时不保持；停止计时满
+        RESULT_FALLBACK_FRAMES 仍未结束时照兜底合拢（调用方只在此之前调用）。"""
+        p = self.p
+        holds = getattr(self, 'result_hold_table', None)
+        if holds is None:
+            holds = self.result_hold_table = {
+                p.symbols['_ZTV33BattleStartAndCompleteEffectScene'] + 8: (0x24, 110),
+                p.symbols['_ZTV23BattleFailedEffectScene'] + 8: (0x20, 130)}
+        effect = p.word(main + 8)
+        if not self.valid(effect):
+            return False
+        hold = holds.get(p.word(effect))
+        if hold is None or (hold[0] == 0x24 and not p.word(effect + 0x1c)):   # 效果类型 0 为 MISSION START
+            return False
+        offset, value = hold
+        if p.word(effect + offset) <= value or not self.result_sound_playing():
+            if self.result_hold is not None and not self.result_hold.get('released'):
+                self.result_hold['released'] = p.frame
+                self.record('result_hold', **self.result_hold)
+            return False
+        p.put(effect + offset, value)
+        if self.result_hold is None:
+            self.result_hold = {'since': p.frame, 'idle': self.idle_frames, 'bgm': p.word(self.app() + 0x97d4)}
+        return True
+
+    def result_sound_playing(self):
+        """只播一次的 BGM 或 ANNOUNCE 语音是否仍在播放（AppMain +0x97d4 当前 BGM，+0x9af8 / +0x9afc 两个 BGM 播放器，+0xaf6c ANNOUNCE 播放器）。"""
+        p = self.p
+        bridge = getattr(p, 'audio_bridge', None)
+        if bridge is None or getattr(bridge, 'held', False) or not any(
+                not s.destroyed and s.state == 3 and s.mode not in ('silent', 'unavailable') for s in bridge.streams.values()):
+            return False
+        app = self.app()
+        announce = p.word(app + 0xaf6c)
+        if self.valid(announce) and not p.read(announce, 1)[0]:
+            return True
+        bgm = p.word(app + 0x97d4)
+        if not bgm or p.call('_ZN7AppMain19Sound_Is_PlayendBGMEv', app):
+            return False
+        record = p.call('_ZN7AppMain12GetSoundDataE7SoundID', app, bgm)
+        return bool(record) and (p.word(record + 12) & 0xff) == 0
+
     def poll_finish(self):
         reason, reopen_prep, restart, since = self.finishing
         p = self.p
@@ -785,7 +836,13 @@ class Lab:
             if not self.valid(main):
                 self.leave(f'battle_finished_scene_{scene}')
                 return
+            if scene == SCENE_BATTLE and self.idle_frames < RESULT_FALLBACK_FRAMES:
+                self.hold_result_effect(main)
             if not paused and (scene != SCENE_BATTLE or self.idle_frames >= RESULT_FALLBACK_FRAMES):
+                if self.result_hold is not None and not self.result_hold.get('released'):
+                    self.result_hold['released'] = p.frame
+                    self.result_hold['fallback'] = True        # 音效仍在播放时停止计时已满兜底
+                    self.record('result_hold', **self.result_hold)
                 # 原生 MISSION COMPLETE / FAILED 演出播放完毕后原生离开战斗场景（100→101），此时合拢闸门再回到准备界面；
                 # 停止计时仅作原生未离开场景时的兜底（此前 75 帧会在演出中途合拢）。
                 self.finish(f'battle_finished_scene_{scene}')

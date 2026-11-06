@@ -1465,6 +1465,24 @@ void change_scene(Context& c){
     }
     old_change_scene(c);
 }
+// ---------- 第 27 版：LAB 系战斗的结束演出不显示 GOOD JOB 按钮（2026-11-06，核心 r147） ----------
+// BattleStartAndCompleteEffectScene::initialize（0x1ccb60）与 BattleFailedEffectScene::initialize（0x1ccfe4）的末块
+// （0x1ccfd2：strb r4,[r5,#5]；0x1cd2b4：strb r7,[r4,#5]）在 MISSION COMPLETE / FAILED 且游戏类型（BattleGameMaster +0x4828）为
+// 2、7、8 时把 BattleIineButton（场景 +0x38 / +0x30）的可见字节 +5 置 1。按钮画在右上 (800, 146)，按下时 onTouchScreen 经
+// AppMain::SendData 发送消息 12 并 SetWiFiLikedFlag(1)，属原生 Wi-Fi 对战的“GOOD JOB”。LAB、VS CPU、本地对战与联机均为游戏类型 2，
+// 不经原生 Wi-Fi，按钮没有作用（用户要求去除）。LAB 共享头启用时写入 0：BattleIineButton::draw 与 onTouchScreen 都先检查此字节。
+// COMPLETE 的两条路径都跳到 0x1ccfd2（写入后即弹栈返回，改写的 r4 随之恢复）；FAILED 在游戏类型 2 时由块 0x1cd2ae 顺序执行写入并返回，
+// 不进入 0x1cd2b4，因此两块都在执行前记下按钮指针（r4）、执行后写 0。初始化在场景建立的同一帧内、首次绘制之前执行，宿主无法在此之前改写。
+Block old_iine_complete,old_iine_failed,old_iine_failed_fall;
+void iine_complete(Context& c){
+    if(rd<uint32_t>(c,H)==MAGIC)c.r[4]=0u;
+    old_iine_complete(c);
+}
+template<Block* OLD> void iine_failed_tail(Context& c){
+    uint32_t button=c.r[4];
+    (*OLD)(c);
+    if(rd<uint32_t>(c,H)==MAGIC)wr<uint8_t>(c,button+5u,0u);
+}
 // ---------- 第 15 版：双人对战选中格光标（原生绘制顺序，功能位 512） ----------
 // drawUI 的出兵格循环（0x1d8700–0x1d8a80）以 GraphicsOpt::drawConv（0x10136985：r0 graphics、r1 Image、r2/r3 x/y、
 // 栈 [转换项, 3 个浮点, 整数]）绘制格子：底板为 operator+200 转换表项 53/54/55（50×50），其后为单位头像（项 56–74），
@@ -1688,6 +1706,9 @@ void install_ui_hooks(){
     old_auto_deploy=find_block(0x101cc071u);register_block(0x101cc071u,auto_deploy);
     old_unit_created=find_block(0x101df441u);register_block(0x101df441u,unit_created);
     old_change_scene=find_block(0x101d0b57u);register_block(0x101d0b57u,change_scene);
+    old_iine_complete=find_block(0x101ccfd3u);register_block(0x101ccfd3u,iine_complete);
+    old_iine_failed=find_block(0x101cd2b5u);register_block(0x101cd2b5u,iine_failed_tail<&old_iine_failed>);
+    old_iine_failed_fall=find_block(0x101cd2afu);register_block(0x101cd2afu,iine_failed_tail<&old_iine_failed_fall>);
     old_draw_conv=find_block(0x10136985u);register_block(0x10136985u,draw_conv);
     old_genre_draw=find_block(GENRE_DRAW);register_block(GENRE_DRAW,genre_draw);
     old_operator_update=find_block(0x101d6ae5u);register_block(0x101d6ae5u,operator_update);
@@ -1905,7 +1926,7 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     if(dropped){*dropped=net_action_dropped;net_action_dropped=0;}
     return n;
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 26u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 27u;}
 // 2026-11-02（核心 r136，docs/UNIT_CAP_2026-11-02.md 第 13 节）：LAB 每帧的单位修正（lab.py Lab.fix_units、vs_cpu.py VsCpu.fix_units）的核心实现，
 // 逐单位读写与宿主原代码相同，只省去每个单位数次跨 FFI 的读取。单位按 Lab.team_list 遍历：getTeamUnitList（管理器 + (队伍 + 6) × 4）起沿 +0x120，
 // 回到起点、地址无效（不在 0x10000000–0x1fffefff）或满 4096 个为止。mode 0 为 Lab.fix_units（team = 敌方队伍，red_team 为 0xffffffff 表示无），

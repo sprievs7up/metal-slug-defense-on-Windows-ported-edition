@@ -1,0 +1,119 @@
+{
+  "key": "s1xlv.kraken_no_special",
+  "base_id": 380,
+  "faction": 1,
+  "identity": "Rebel Army",
+  "available_from_start": true,
+  "special_damage_multiplier": [
+    1,
+    1
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "hp_multiplier": [
+    1,
+    1
+  ],
+  "knockback_threshold_multiplier": [
+    1,
+    1
+  ],
+  "shop_price": 50,
+  "ap": 999,
+  "production_reference_id": 380,
+  "menu_reference_id": 380,
+  "internal_only": true,
+  "status_word_values": {
+    "35": 30000,
+    "36": 30000
+  },
+  "textures": [
+    "BSKRAKEN_base_out.obm"
+  ],
+  "icon": {
+    "page": 1,
+    "rect": [
+      138,
+      619,
+      20,
+      14
+    ],
+    "anchor": [
+      -15,
+      -18
+    ]
+  },
+  "animations": {},
+  "localization": {
+    "EN": {
+      "name": "KRAKEN",
+      "description": "STAND. ATK : Satellite ammo     SPEC. ATK : Lava ammo\nThis ultimate weapon was brought \nby Morden’s Armies from the future."
+    },
+    "JP": {
+      "name": "クラーケン",
+      "description": "通常攻撃：サテライト弾   特殊攻撃：溶岩弾\n未来からやってきたモーデン軍の究極兵器。\n溶岩も弾く強固な装甲に包まれている。"
+    },
+    "KR": {
+      "name": "크라켄",
+      "description": "일반 공격: 새틀라이트탄      특수 공격: 용암탄\n미래에서 온 모덴군의 궁극 병기.\n용암에도 견디는 강고한 장갑을 두르고 있다."
+    },
+    "ES": {
+      "name": "KRAKEN",
+      "description": "ATQ. ESTÁND.: Munición satélite  ATQ. ESPEC.: Munición lava\nLa armada de Morden trajo\nesta arma mortífera del futuro."
+    },
+    "PT": {
+      "name": "KRAKEN",
+      "description": "ATQ. ESPEC.: Munição Satélite     ATQ. ESPEC.: Munição Lava\nEsta sofisticada arma foi trazida \n do futuro pelo Exército de Morden."
+    },
+    "FR": {
+      "name": "Kraken",
+      "description": "ATT. STAND : Balles sattellites     ATT. SPÉ : Balles de lave\nCette arme ultime des Armées de Morden vient du futur.\nSon armure est si puissante qu’elle résiste à la lave."
+    },
+    "DE": {
+      "name": "KRAKEN",
+      "description": "STAND. ATK : Satellite ammo     SPEC. ATK : Lava ammo\nThis ultimate weapon was brought \nby Morden’s Armies from the future."
+    },
+    "IT": {
+      "name": "KRAKEN",
+      "description": "ATC STAND.: Colpo satellitare ATC SPEC.: Colpo di lava\nL'arma finale che l'Armata di Morden \nha portato dal futuro."
+    },
+    "ZS": {
+      "name": "巨型章鱼",
+      "description": "普通攻击：卫星导弹     特殊攻击：熔岩弹\n从未来而来的魔登军究极兵器。\n拥有熔岩都无法穿破的强固装甲。"
+    },
+    "ZT": {
+      "name": "巨型章魚",
+      "description": "普通攻擊：衛星導彈     特殊攻擊：熔岩彈\n從未來而來的魔登軍究極兵器。\n擁有熔岩都無法穿破的強固裝甲。"
+    },
+    "RU": {
+      "name": "КРАКЕН",
+      "description": "СТАНД. АТАК: Спутниковые снаряды СПЕЦ. АТАК: Cнаряды из лавы\nЭто совершенное оружие было доставлено \nАрмиями Мордена из будущего."
+    }
+  }
+}

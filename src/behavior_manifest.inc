@@ -1,6 +1,6 @@
 static const char BEHAVIOR_MANIFEST[]=R"MSD({
   "schema": 1,
-  "library_version": 42,
+  "library_version": 45,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位；规格写 native 时也可填原版 UnitID（1–399）",
     "rational": "[分子, 分母] 正整数倍率",
@@ -8,7 +8,8 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
     "int_list": "整数列表；length 为固定长度，或以 min_length/max_length 给出长度范围；min/max 作用于每个元素",
     "rational_list": "[分子, 分母] 列表；min_length/max_length 为长度范围，min/max 作用于每个元素",
     "sound_key": "音效稳定键（content.json 或模组 content.sounds 中登记，可见范围与单位动作脚本 op23 相同）",
-    "sound_list": "音效稳定键列表；min_length/max_length 为长度范围"
+    "sound_list": "音效稳定键列表；min_length/max_length 为长度范围",
+    "unit_list": "单位稳定键或原版 UnitID 的列表；min_length/max_length 为长度范围，每项按 unit_key 的 internal / native 规则校验"
   },
   "behaviors": [
     {
@@ -2405,6 +2406,276 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "doc": {
         "ZS": "5 连发马克斯奈尔类（原生 BattleAction_McsnlFive）的攻击轮数：原生每次攻击动作播完时把本机的攻击计数加 1，满 2 轮后飞离战场并移除；本行为把轮数改为 rounds（缺省 2，同原生）。每架各自计数，领队与 formation_wingmen 指定的僚机单位须各自带此行为。",
         "EN": "Attack rounds for the Regimental MH-6s class (native BattleAction_McsnlFive): natively each aircraft adds 1 to its attack counter whenever an attack animation finishes and flies off the battlefield (and is removed) after 2 rounds; this behavior sets the number of rounds to rounds (default 2, same as native). Each aircraft counts its own rounds, so the leader and the wingman unit given by formation_wingmen both need this behavior."
+      }
+    },
+    {
+      "name": "big_gate",
+      "version": 2,
+      "base_classes": [
+        245
+      ],
+      "params": {
+        "summon_units": {
+          "type": "unit_list",
+          "required": true,
+          "min_length": 1,
+          "max_length": 8,
+          "internal": "any",
+          "native": true
+        },
+        "idle_animation": {
+          "type": "int",
+          "default": 6,
+          "min": 0,
+          "max": 1023
+        },
+        "summon_animation": {
+          "type": "int",
+          "default": 7,
+          "min": 0,
+          "max": 1023
+        },
+        "summon_wait": {
+          "type": "int",
+          "default": 256,
+          "min": 1,
+          "max": 32767
+        },
+        "first_summon_wait": {
+          "type": "int",
+          "default": -1,
+          "min": -1,
+          "max": 32767
+        },
+        "grow_first_animation": {
+          "type": "int",
+          "default": 33,
+          "min": 0,
+          "max": 1023
+        },
+        "grow_ticks": {
+          "type": "int",
+          "default": 10,
+          "min": 1,
+          "max": 600
+        },
+        "death_animation": {
+          "type": "int",
+          "default": 11,
+          "min": 0,
+          "max": 1023
+        },
+        "ring_animation": {
+          "type": "int",
+          "default": 29,
+          "min": 0,
+          "max": 1023
+        },
+        "ring_sound_animation": {
+          "type": "int",
+          "default": 32,
+          "min": 0,
+          "max": 1023
+        },
+        "ring_offsets": {
+          "type": "int_list",
+          "default": [
+            176,
+            -262,
+            192,
+            -236,
+            200,
+            -208,
+            198,
+            -180
+          ],
+          "length": 8,
+          "min": -1000,
+          "max": 1000
+        },
+        "ring_cooldown": {
+          "type": "int",
+          "default": 72,
+          "min": 0,
+          "max": 3600
+        }
+      },
+      "doc": {
+        "ZS": "MS7 任务 7 大门（BIG GATE，2026-11-06，核心 r148）：外观与召唤动作取自 MSA 7.13.0 大门（564，BattleAction_BigGate），逻辑按用户设计。基准 245（BattleAction_MordenBus，魔登巴士修筑出的巴士），由工兵（build_structure）修筑。本单位不进行近距、远距攻击与绝招，不被击退。待机播放 idle_animation（修筑中同样播放，由引擎施加修筑白闪），计满 summon_wait 帧后播放 summon_animation；该脚本的 op12 经原生 MordenBus::createObject 放出光球弹体，光球按脚本 op7 飞行，触地后停住，取本次召唤所定的第 i 个单位（summon_units 中）并播放 grow_first_animation + i（该单位图像的落地伸展），grow_ticks 帧后在落点生成该单位（同场单位超限时不生成）；summon_animation 播完回到待机重新计数。first_summon_wait 不为 −1 时，第一次召唤改在大门开始活动（修筑完成；不经修筑直接出现时为出现）后待机 first_summon_wait 帧时开始，0 为修筑完成当帧即播放 summon_animation（v2；−1 为原有做法，同样计满 summon_wait 帧）。单位按“袋”选取（核心 r148）：每个大门持有一袋，含 summon_units 各一次、随机排列，每次召唤动作开始时按序取出一个，取完后重新洗牌，故每一袋召唤中各单位恰出现一次（随机数为大门自身的生成器，回滚与联机一致；此前以 syncRand 按落点选取，大门静止时只取到 2–3 种）。受到攻击时（生命仍大于 0）若冷却已结束，下一帧从 ring_offsets 的四处（[x, y] × 4，朝向坐标，逻辑单位；缺省为环体右上缘外侧，敌方一侧为左上缘）各射出一颗光环弹体（原生 BulletAction_MordenXX_Attack_SP，同基．寇卡版莫丁元帥的绝招：按绝招攻击组结算，贯穿，不追踪），第一颗用 ring_sound_animation、其余用 ring_animation，之后 ring_cooldown 帧内不再释放。每颗光环在第一帧以出现处为起点取最近的敌方单位：水平距离不超过飞行上限（状态字 33）时飞向其身高一半处，超过时飞向前方飞行上限处的地面（两者同原生）；之后沿直线飞行，碰到的敌方单位各结算一次，下缘触地时播放槽 31 的爆炸（光环的身高取 253 的受击框高 77，爆炸位置同 253），水平飞行超过上限时仍在空中则直接移除、不播放爆炸（原生 253 在空中播放爆炸）。原生以“弹体 x 与飞行上限之差”和“弹体 x 与敌方 x 之差”相比较来判定远近，本单位改为以水平距离判定。损毁（100 / 110 / 120）播放 death_animation，期间按 MSA BigGate 的 RandumBurst 在机体范围内放出 0xff03 爆炸，播完后在五处放出 0xff04 并移除。开战时随本单位（或修筑本单位的工兵）预载 summon_units 的图像与音效。",
+        "EN": "MS7 Mission 7 BIG GATE (2026-11-06, core r148): appearance and summon animation from the MSA 7.13.0 Big Gate (564, BattleAction_BigGate), logic by the user's design. Base 245 (BattleAction_MordenBus, the bus built by the MORDEN BUS engineer), built by an engineer (build_structure). The unit has no near, far or special attack and is never knocked back. It plays idle_animation (also while under construction, where the engine adds the construction flash) and, after summon_wait frames, summon_animation; op12 in that script releases light-ball bullets through the native MordenBus::createObject. Each ball follows its script op7 motion, stops when it touches the ground; the ball plays grow_first_animation + i for the i-th of summon_units drawn for this summon (that unit's image growing out of the ground) and after grow_ticks frames the unit is created there (not when the unit cap is reached); when summon_animation ends the idle count starts again. When first_summon_wait is not -1, the first summon starts after first_summon_wait idle frames from when the gate becomes active (construction complete, or when it appears without construction); 0 plays summon_animation on the frame construction completes (v2; -1 keeps the previous behaviour of a full summon_wait). Units are drawn from a bag (core r148): each gate holds a bag with every unit of summon_units once in random order, takes the next one when a summon animation starts and reshuffles when the bag is empty, so each unit appears exactly once per bag of summons (the gate has its own random generator, consistent under rollback and online play; previously syncRand picked by landing position and a stationary gate got only 2-3 kinds). When hit while HP is above 0 and the cooldown is over, on the next frame it fires one ring bullet from each of the four ring_offsets ([x, y] x 4, facing coordinates in logical units; by default just outside the upper right of the ring, upper left on the enemy side) (native BulletAction_MordenXX_Attack_SP, as the special of GEN.MORDEN VER.DI-COKKA: settled with the special attack group, piercing, not homing); the first ring uses ring_sound_animation and the others ring_animation, and no rings are released for ring_cooldown frames afterwards. On its first frame each ring takes the nearest enemy unit from where it appears: when the horizontal distance is within the flight limit (status word 33) it flies towards half that unit's height, otherwise towards the ground at the flight limit ahead (both as the native); it then flies in a straight line, hits each enemy unit it touches once, and plays the slot 31 explosion when its lower edge touches the ground (the ring's height is 253's hit box height 77, so the explosion sits where 253's does); a ring still in the air when it has flown the limit horizontally is removed without the explosion (the native 253 plays the explosion in the air). The native decides near or far by comparing the bullet x minus the flight limit with the bullet x minus the enemy x; this unit uses the horizontal distance. On destruction (100 / 110 / 120) it plays death_animation with 0xff03 explosions over the body as in the MSA Big Gate RandumBurst, then places five 0xff04 explosions and is removed. The images and sounds of summon_units are preloaded at battle start with this unit (or the engineer that builds it)."
+      }
+    },
+    {
+      "name": "launcher_walker",
+      "version": 1,
+      "base_classes": [
+        228
+      ],
+      "params": {
+        "attack_animation": {
+          "type": "int",
+          "default": 76,
+          "min": 0,
+          "max": 1023
+        },
+        "special_animation": {
+          "type": "int",
+          "default": 77,
+          "min": 0,
+          "max": 1023
+        },
+        "fire_tick": {
+          "type": "int",
+          "default": 20,
+          "min": 0,
+          "max": 600
+        },
+        "special_fire_ticks": {
+          "type": "int_list",
+          "default": [
+            24,
+            34,
+            44
+          ],
+          "length": 3,
+          "min": 0,
+          "max": 600
+        },
+        "missile_first_animation": {
+          "type": "int",
+          "default": 78,
+          "min": 0,
+          "max": 1008
+        },
+        "front_effect": {
+          "type": "int",
+          "default": 94,
+          "min": 0,
+          "max": 1023
+        },
+        "rear_effect": {
+          "type": "int",
+          "default": 95,
+          "min": 0,
+          "max": 1023
+        },
+        "puff_effect": {
+          "type": "int",
+          "default": 96,
+          "min": 0,
+          "max": 1023
+        },
+        "launch_angle": {
+          "type": "int",
+          "default": -12,
+          "min": -90,
+          "max": 90
+        },
+        "special_angles": {
+          "type": "int_list",
+          "default": [
+            -10,
+            -30,
+            -50
+          ],
+          "length": 3,
+          "min": -90,
+          "max": 90
+        },
+        "muzzle": {
+          "type": "int_list",
+          "default": [
+            31,
+            -44
+          ],
+          "length": 2,
+          "min": -400,
+          "max": 400
+        },
+        "front_offset": {
+          "type": "int_list",
+          "default": [
+            23,
+            -44
+          ],
+          "length": 2,
+          "min": -400,
+          "max": 400
+        },
+        "rear_offset": {
+          "type": "int_list",
+          "default": [
+            -23,
+            -44
+          ],
+          "length": 2,
+          "min": -400,
+          "max": 400
+        },
+        "speed": {
+          "type": "int",
+          "default": 60,
+          "min": 1,
+          "max": 400
+        },
+        "acceleration": {
+          "type": "int",
+          "default": 33,
+          "min": 0,
+          "max": 1000
+        },
+        "max_speed": {
+          "type": "int",
+          "default": 175,
+          "min": 1,
+          "max": 400
+        },
+        "homing_delay": {
+          "type": "int",
+          "default": 9,
+          "min": 0,
+          "max": 600
+        },
+        "homing_turn": {
+          "type": "int",
+          "default": 68,
+          "min": 0,
+          "max": 2048
+        },
+        "life": {
+          "type": "int",
+          "default": 640,
+          "min": 1,
+          "max": 1800
+        },
+        "puff_interval": {
+          "type": "int",
+          "default": 2,
+          "min": 0,
+          "max": 60
+        },
+        "hit_effect": {
+          "type": "int",
+          "default": 65283,
+          "min": 0,
+          "max": 65534
+        },
+        "air_targets": {
+          "type": "int",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "target_range": {
+          "type": "int",
+          "default": 750,
+          "min": 1,
+          "max": 9999
+        }
+      },
+      "doc": {
+        "ZS": "MS7 任务 7 带炮管的雷贝尔沃克（肩部火箭发射器版 Rebel Walker，2026-11-06，核心 r146）：基准 228（BattleAction_LevelWalker），行走、击退与损毁等照原生，只把攻击换为导弹。状态 30 / 40（近距 / 远距，本单位近距射程为 0，贴身时也以远距攻击）播放 attack_animation，第 fire_tick 帧发射 1 枚导弹；状态 50（特殊攻击）播放 special_animation，在 special_fire_ticks 的三帧各发射 1 枚。普通攻击中置击退守护（同原生远距），不置 DontSpAttack（原生远距会置），特殊攻击冷却结束后在普通攻击中也可点按发动特殊攻击（进入特殊攻击时清除击退守护）；动作播完后照原生进入攻击等待（远距组 40 / 特殊组 50）。发射时在发射器前端 front_offset 放 front_effect、后端 rear_offset 放 rear_effect（朝向坐标，逻辑单位），导弹在 muzzle 建立（普通攻击按远距组 40 结算，特殊攻击按特殊组 50 结算，每枚新建攻击 ID），出膛角为 launch_angle / special_angles（度，前方为 0、向上为负）。导弹以 speed / 10 起速、每帧加 acceleration / 100、上限 max_speed / 10（逻辑单位 / 帧）；第 homing_delay 帧后每帧向距导弹 target_range 以内最近的敌方单位（受击高度一半处）转向至多 homing_turn（4096 为一周），范围内没有敌方单位时保持航向；air_targets 为 1 时空中单位（NoTarget、DontToche）也作为追踪目标，本单位开始攻击的距离也计入前方的空中单位。单位菜单的动作演示中（没有敌人）导弹转向发射时前方远距射程处的地面。导弹精灵按航向取 missile_first_animation 起的 16 个动作（前方向下每 22.5° 一个），每 puff_interval 帧在尾部放 puff_effect；命中目标或触地时放 hit_effect（共用效果 0xff03 = 65283）并移除，存在 life 帧或飞出战场后移除。",
+        "EN": "MS7 Mission 7 Rebel Walker with shoulder rocket launchers (2026-11-06, core r146): base 228 (BattleAction_LevelWalker); walking, knockback and destruction stay native and only the attacks are replaced by missiles. States 30 / 40 (near / far; this unit has near range 0, so it also uses the far attack at point-blank range) play attack_animation and fire one missile on frame fire_tick; state 50 (special) plays special_animation and fires one missile on each of the three special_fire_ticks. During the normal attack the knockback guard is set as in the native far attack but DontSpAttack is not (the native far attack sets it), so once the special cooldown is over the special can be triggered by tapping during a normal attack (entering the special clears the knockback guard); when the animation ends the native attack wait follows (far group 40 / special group 50). On each launch front_effect is placed at front_offset (launcher front) and rear_effect at rear_offset (launcher rear) (facing coordinates, logical units) and the missile is created at muzzle (settled with the far group 40 for the normal attack and the special group 50 for the special attack, each with a new attack ID), launched at launch_angle / special_angles (degrees, 0 = forward, negative = up). Missiles start at speed / 10, gain acceleration / 100 per frame up to max_speed / 10 (logical units per frame); after homing_delay frames they turn towards the nearest enemy unit within target_range of the missile (half its hit height) by at most homing_turn per frame (4096 = full turn) and keep their heading when no enemy unit is in range; when air_targets is 1, air units (NoTarget, DontToche) are homing targets as well and also count for the distance at which this unit starts attacking. In the unit menu action demo (no enemies) missiles turn towards the ground at the far attack range in front of the launch point. The missile sprite uses the 16 animations from missile_first_animation by heading (forward-down, every 22.5 degrees), puff_effect is placed behind it every puff_interval frames; on hitting a target or the ground it places hit_effect (shared effect 0xff03 = 65283) and is removed, and it is removed after life frames or when it leaves the battlefield."
       }
     }
   ]

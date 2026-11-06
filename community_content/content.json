@@ -86,7 +86,11 @@
     "s1xlv.union_02": 1095,
     "s1xlv.union_03": 1096,
     "s1xlv.energy_pod": 1097,
-    "s1xlv.energy_pod_ball": 1098
+    "s1xlv.energy_pod_ball": 1098,
+    "s1xlv.big_gate_builder": 1099,
+    "s1xlv.big_gate": 1100,
+    "s1xlv.launcher_walker": 1101,
+    "s1xlv.kraken_no_special": 1102
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -173,7 +177,12 @@
     "union_0.obm": "b458466eb9a724a81d260c4f28a343d717bb378cef27c1f79b9edb6a830fd5df",
     "union_1.obm": "301edd744ef4969ef1bda032cd045b6ec740a2b63f985bf66248881af13515fd",
     "union_2.obm": "7c2428688fd7a2f5bff412b1d5c690428abf557866c9433d3639451ed621c86f",
-    "energy_pod.obm": "a6dd62ae4b1a7eba09813e7677eafe0e2b90f2f85844e5acf224fde4353ea9a1"
+    "energy_pod.obm": "a6dd62ae4b1a7eba09813e7677eafe0e2b90f2f85844e5acf224fde4353ea9a1",
+    "big_gate_1.obm": "3caebdfda6b163101903b08d328dee14148cf736e92b9d52708e0ab8a0e60307",
+    "big_gate_2.obm": "e909ff8f98c2a215382e2167d5237b4870ea0dea7e824f71618b4d05c3dc908e",
+    "big_gate_3.obm": "89ac5d29f75f4ba25113e9e3325f1901284c681abad92ecd22f103c4ffd648ea",
+    "big_gate_4.obm": "ee925149a05b35a17d883b605b0e831f640395882d02ec350db93fef757564d4",
+    "launcher_walker.obm": "f5a22eccd008960ff539b678db8894361b69826f5070345f0108e3b998df685f"
   },
   "stock_sprites": {
     "381": "tyra_elson_sprite.json",
@@ -800,6 +809,30 @@
       "loop": [
         125.976009,
         238.920771
+      ]
+    },
+    {
+      "key": "s1xlv.lwalker_launch",
+      "file": "lwalker_launch.msdf",
+      "type": "se",
+      "volume": 100
+    },
+    {
+      "key": "s1xlv.bgm_ms7_m7",
+      "file": "bgm_ms7_m7.msdf",
+      "type": "bgm",
+      "loop": [
+        5.833832,
+        98.924739
+      ]
+    },
+    {
+      "key": "s1xlv.bgm_ms7_m7_boss",
+      "file": "bgm_ms7_m7_boss.msdf",
+      "type": "bgm",
+      "loop": [
+        48.423741,
+        137.039796
       ]
     }
   ]
