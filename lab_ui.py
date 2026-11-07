@@ -22,6 +22,20 @@ BLUE, RED = (150, 210, 255, 255), (255, 150, 140, 255)
 HEADER = ('menuparts.obm', (0, 68, 568, 51))
 HEADER_SCALE = 2.25
 HEADER_H = round(51 * HEADER_SCALE)                            # 115
+# 顶栏标题（LAB、本地对战、VS CPU 的准备界面与子页面；单位强化 / 商店界面）：16 行原生标题字体，与原生标题同为 2.25 倍最近邻放大
+# （2026-11-08 用户要求，原为 2 倍）。LAB 系标题图由 artwork/title_font_20261008/make_ui_titles.py 生成（第 2 行为上轮廓、第 3 列起为填充）。
+# 位置照原生：填充最左列对齐顶栏图中“METAL SLUG DEFENSE”的 M 左缘（主菜单 CUSTOMIZE 实测同为 x 45，2026-11-08 用户要求），
+# 填充上缘 y 41（原生 CUSTOMIZE 填充 y 41–76）；本画布顶栏置于 x 1，M 左缘为 x 46。
+TITLE_DIR = 'artwork/title_font_20261008/titles'
+TITLE_SCALE = 2.25
+TITLE_LEFT, TITLE_TOP = 46, 41
+
+
+def title_layer(image, fill_col, fill_row, left=TITLE_LEFT):
+    """原生标题图按 TITLE_SCALE 最近邻放大，返回 (图像, 左上角)：第 fill_col 列、第 fill_row 行（填充左缘与上缘）落在 (left, TITLE_TOP)。"""
+    from PIL import Image
+    scaled = image.resize((round(image.width * TITLE_SCALE), round(image.height * TITLE_SCALE)), Image.NEAREST)
+    return scaled, (round(left - fill_col * TITLE_SCALE), round(TITLE_TOP - fill_row * TITLE_SCALE))
 PANEL = ('popup.obm', (0, 0, 300, 150))                        # 弹窗底板
 BOARD = ('pause_window.obm', (15, 58, 290, 212))               # 暂停窗口米色面板（不含烙印标题）
 BRICK = ('pause_menu.obm', (0, 0, 512, 320))                   # 暂停背景砖墙
@@ -50,7 +64,6 @@ ICON_PAGES = {0: 'unit_icon_01.obm', 1: 'unit_icon_02.obm'}
 
 LANGS = {1: 'JP', 9: 'ZT', 10: 'ZS'}
 TEXT = {
-    'prep_title': ('LAB · 準備', 'LAB · 准备', 'LAB · 準備', 'LAB · SETUP'),
     'start': ('開始戰鬥 →', '开始战斗 →', 'バトル開始 →', 'START →'),
     'player_deck': ('我方牌組', '我方牌组', '自軍デッキ', 'YOUR DECK'),
     'enemy_deck': ('敵方牌組', '敌方牌组', '敵軍デッキ', 'ENEMY DECK'),
@@ -84,9 +97,21 @@ TEXT = {
     'player_auto_special': ('我方自動施放絕招', '我方自动释放绝招', '自軍 必殺技自動', 'YOUR AUTO SPECIAL'),
     'enemy_ai': ('敵方 AI 自動出兵', '敌方 AI 自动出兵', '敵軍 AI 自動出撃', 'ENEMY AI DEPLOY'),
     'enemy_auto_special': ('敵方自動施放絕招', '敌方自动释放绝招', '敵軍 必殺技自動', 'ENEMY AUTO SPECIAL'),
-    'ai_slug': ('AI 彈頭車', 'AI 弹头车', 'AI メタルスラッグ', 'AI METAL SLUG'),
+    'ai_slug': ('AI 輔助技能', 'AI 辅助技能', 'AI 支援スキル', 'AI SUPPORT'),
     'player_ai_slug': ('我方 AI 使用彈頭車', '我方 AI 使用弹头车', '自軍 AI メタルスラッグ使用', 'YOUR AI USES METAL SLUG'),
     'enemy_ai_slug': ('敵方 AI 使用彈頭車', '敌方 AI 使用弹头车', '敵軍 AI メタルスラッグ使用', 'ENEMY AI USES METAL SLUG'),
+    # 战斗中菜单（2026-11-07 重新设计，lab_menu.py）与准备界面的按方开关
+    'menu_ai_group': ('AI 設定', 'AI 设定', 'AI 設定', 'AI'),
+    'menu_rule_group': ('戰鬥設定', '战斗设定', 'バトル設定', 'RULES'),
+    'menu_ai_deploy': ('AI 自動出兵', 'AI 自动出兵', 'AI 自動出撃', 'AI AUTO DEPLOY'),
+    'menu_ai_special': ('AI 自動施放絕招', 'AI 自动释放绝招', 'AI 必殺技自動発動', 'AI AUTO SPECIAL'),
+    'menu_ai_support': ('AI 使用輔助技能', 'AI 使用辅助技能', 'AI 支援スキル使用', 'AI USES SUPPORT'),
+    'unlimited_ap': ('無限AP', '无限AP', 'AP無限', 'UNLIMITED AP'),
+    'no_cooldown': ('出兵無冷卻', '出兵无冷却', '出撃待ち時間なし', 'NO DEPLOY COOLDOWN'),
+    'unlimited_support': ('輔助技能無限使用', '辅助技能无限使用', '支援スキル無制限', 'UNLIMITED SUPPORT'),
+    'unlimited_support_short': ('輔助技能無限', '辅助技能无限', '支援無制限', '∞ SUPPORT'),
+    'stop_activity': ('停止活動', '停止活动', '行動停止', 'HOLD ALL ACTIONS'),
+    'auto_special_short': ('自動施放絕招', '自动释放绝招', '必殺技自動', 'AUTO SPECIAL'),
     'on': ('開', '开', 'ON', 'ON'), 'off': ('關', '关', 'OFF', 'OFF'),
     'advantage': ('優勢設定', '优势设定', '優位設定', 'ADVANTAGE'),
     'adv_hp': ('生命', '生命', 'HP', 'HP'), 'adv_atk': ('攻擊', '攻击', '攻撃', 'ATK'),
@@ -102,7 +127,8 @@ TEXT = {
              '点击格子选择单位 · ± 调整等级（Lv1–40，只用于本场，不写存档）· Esc 关闭',
              'マスをクリックでユニット選択・± でレベル調整（Lv1–40、この戦闘のみ・セーブには書き込みません）・Esc で閉じる',
              'Click a slot to pick a unit · ± level (Lv1–40, this battle only, not saved) · Esc to close'),
-    'picker_title': ('選擇單位・{}第 {} 格', '选择单位 · {}第 {} 格', 'ユニット選択・{} {} 番', 'SELECT UNIT · {} SLOT {}'),
+    # 选择单位页：顶栏为原生字体的 SELECT UNIT，所选一方与格子写在底部页码之前。
+    'picker_slot': ('{}第 {} 格', '{}第 {} 格', '{} {} 番', '{} SLOT {}'),
     'set_empty': ('設為空槽', '设为空槽', '空きにする', 'SET EMPTY'),
     'tab_all': ('全部', '全部', 'すべて', 'ALL'), 'tab_community': ('社群', '社区', 'コミュニティ', 'COMMUNITY'),
     'f0': ('正規軍', '正规军', '正規軍', 'REGULAR'), 'f1': ('叛軍', '叛军', '反乱軍', 'REBEL'),
@@ -111,7 +137,6 @@ TEXT = {
     'community_mark': ('社群', '社区', 'COM', 'COM'),
     'prev': ('上一頁', '上一页', '前へ', 'PREV'), 'next': ('下一頁', '下一页', '次へ', 'NEXT'),
     'page': ('{} / {}（共 {} 個）', '{} / {}（共 {} 个）', '{} / {}（全 {} 体）', '{} / {} ({} units)'),
-    'history_title': ('戰鬥履歷（最近 12 場）', '战斗履历（最近 12 场）', '戦闘履歴（直近 12 戦）', 'HISTORY (LAST 12)'),
     'no_history': ('尚無紀錄', '暂无记录', '記録なし', 'No records'),
     'win_player': ('我方勝', '我方胜', '自軍勝利', 'YOU WIN'), 'win_enemy': ('敵方勝', '敌方胜', '敵軍勝利', 'ENEMY WINS'),
     'aborted': ('中止', '中止', '中断', 'ABORTED'),
@@ -129,7 +154,8 @@ TEXT = {
     'fb_back_menu': ('已返回選單', '已返回菜单', 'メニューに戻りました', 'Back to menu'),
     'fb_failed': ('{} 失敗：{}', '{} 失败：{}', '{} 失敗：{}', '{} failed: {}'),
     'fb_support': ('支援發動', '支援发动', '支援発動', 'Support activated'),
-    'fb_full': ('完全控制 {}', '完全控制 {}', 'フルコントロール {}', 'Full control {}'),
+    'fb_full': ('雙方無限AP・出兵無冷卻 {}', '双方无限AP · 出兵无冷却 {}', '両軍 AP無限・出撃待ち時間なし {}',
+                'Unlimited AP & no deploy cooldown (both) {}'),
     'fb_ai': ('敵方 AI {}・我方 AI {}', '敌方 AI {} · 我方 AI {}', '敵軍 AI {}・自軍 AI {}', 'Enemy AI {} · your AI {}'),
     'fb_no_enemy': ('找不到敵方控制器', '未找到敌方控制器', '敵軍コントローラーが見つかりません', 'Enemy controller not found'),
     'fb_enemy_ap': ('敵方 AP 升級', '敌方 AP 升级', '敵軍 AP レベルアップ', 'Enemy AP level up'),
@@ -157,14 +183,13 @@ TEXT = {
     'vs_soon': ('區域網對戰與遠端對戰準備中', '局域网对战与远程对战准备中', 'LAN 対戦・オンライン対戦は準備中です', 'LAN and online versus coming soon'),
     'vs_keys': ('{}：{}{} 選擇 · {} AP · {} 出兵 · {} 絕招 · {} 彈頭車', '{}：{}{} 选择 · {} AP · {} 出兵 · {} 绝招 · {} 弹头车',
                 '{}：{}{} 選択・{} AP・{} 出撃・{} 必殺技・{} スラッグ', '{}: {}{} select · {} AP · {} deploy · {} special · {} slug'),
-    'vs_rules': ('完全控制、AI 與自動絕招關閉 · 滑鼠只能拖動鏡頭', '完全控制、AI 与自动绝招关闭 · 鼠标只能拖动镜头',
-                 'フルコントロール・AI・自動必殺技はオフ・マウスはカメラのみ', 'Full control, AI, auto special off · mouse: camera only'),
+    'vs_rules': ('無限AP、出兵無冷卻、AI 與自動絕招關閉 · 滑鼠只能拖動鏡頭', '无限AP、出兵无冷却、AI 与自动绝招关闭 · 鼠标只能拖动镜头',
+                 'AP無限・待ち時間なし・AI・自動必殺技はオフ・マウスはカメラのみ',
+                 'Unlimited AP, no cooldown, AI, auto special off · mouse: camera only'),
     'vs_menu_title': ('對戰選單', '对战菜单', '対戦メニュー', 'VERSUS MENU'),
     'menu_music': ('音樂設定', '音乐设置', '音楽設定', 'MUSIC'),
     'menu_effects': ('音效設定', '音效设置', '効果音設定', 'SOUND EFFECTS'),
-    'vs_prep_title': ('VERSUS · 準備', 'VERSUS · 准备', 'VERSUS · 準備', 'VERSUS · SETUP'),
-    # VS CPU（vs_cpu.py；标题各语言相同，用户 2026-10-11 确认）
-    'cpu_prep_title': ('VS CPU', 'VS CPU', 'VS CPU', 'VS CPU'),
+    # VS CPU（vs_cpu.py）
     'cpu_you_deck': ('玩家牌組（{}）', '玩家牌组（{}）', 'プレイヤー（{}）', 'YOU ({})'),
     'cpu_cpu_deck': ('CPU 牌組（{}）', 'CPU 牌组（{}）', 'CPU（{}）', 'CPU ({})'),
     'cpu_copy': ('複製對方', '复制对方', '相手をコピー', 'COPY OTHER'),
@@ -397,11 +422,21 @@ class Canvas:
         if title:
             self.text((x + 14, y + 20), title, 18, GOLD, 'lm', 2, w - 28)
 
-    def header(self, title):
-        """原生顶栏等比放大（不拉伸、不九宫格），水平居中；标题写在“METAL SLUG DEFENSE”小字下方。"""
+    def header(self, title=None, image=None):
+        """原生顶栏等比放大（不拉伸、不九宫格），水平居中；标题在“METAL SLUG DEFENSE”小字下方：
+        image 为原生标题字体的标题图名（TITLE_DIR），title 为以界面字体书写的文字。"""
         w = round(HEADER[1][2] * HEADER_SCALE)
         self.paste(self.skin.scaled(HEADER, w, HEADER_H), ((W - w) // 2, 0))
-        self.text((44, 60), title, 30, GOLD, 'lm', 3, 640)
+        if image:
+            self.paste(*self.skin.title(image))
+        elif title:
+            # 文字填充左缘对齐 M 左缘：以实际渲染量出字形左侧留白（getbbox 对此字体报 0，实测留白 3）。
+            from PIL import Image, ImageDraw
+            font = self.face(title)(30)
+            probe = Image.new('L', (int(font.getlength(title)) + 40, 60))
+            ImageDraw.Draw(probe).text((20, 30), title, font=font, fill=255, anchor='lm')
+            ink = probe.getbbox()
+            self.text((TITLE_LEFT - (ink[0] - 20 if ink else 0), 60), title, 30, GOLD, 'lm', 3, 640)
 
 
 def icon_press_image(skin, background, x, y, part_name):
@@ -489,6 +524,15 @@ class Skin:
         key = ('scaled', part, int(w), int(h))
         if key not in self.cache:
             self.cache[key] = self.crop(part).resize((int(w), int(h)), Image.NEAREST)
+        return self.cache[key]
+
+    def title(self, name):
+        """顶栏标题图（原生标题字体，TITLE_DIR/<名称>_16.png）：返回 title_layer 的 (放大图, 左上角)。"""
+        from PIL import Image
+        key = ('title', name)
+        if key not in self.cache:
+            image = Image.open(Path(self.lab.root) / TITLE_DIR / f'{name}_16.png').convert('RGBA')
+            self.cache[key] = title_layer(image, 3, 3)
         return self.cache[key]
 
     def darken(self, image, cache=True):

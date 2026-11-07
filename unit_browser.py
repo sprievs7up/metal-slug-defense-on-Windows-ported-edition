@@ -23,7 +23,7 @@ import struct
 import time
 from pathlib import Path
 
-from lab_ui import W, H, SE_DECIDE, SE_CLOSE, Skin, Shutter, play_se
+from lab_ui import W, H, SE_DECIDE, SE_CLOSE, TITLE_LEFT, TITLE_SCALE, Skin, Shutter, play_se, title_layer
 from unit_motion import Layers, Lights, Motion, color_map, lighten, relight, panels_in, panels_out, popup_close, popup_open, slide
 
 STATE_NAME = 'unit_browser.json'
@@ -62,7 +62,12 @@ BOTTOM_BAR = ('menuparts.obm', (0, 0, 568, 67))
 ARROW = ('menuparts.obm', (1003, 62, 18, 18))         # 向右；向左为水平镜像
 TITLE_CUSTOMIZE = ('shop.obm', (0, 476, 132, 18))
 TITLE_SHOP = ('shop.obm', (391, 277, 63, 18))
-TITLE_UNIT = ('shop.obm', (434, 179, 47, 14))
+# 标题右侧的 UNIT：16 行原生标题字体，与 CUSTOMIZE / SHOP 同一字号（原为商店卡片标签的 12 行 UNIT，2026-11-07 用户要求一致）。
+# 图由 artwork/title_font_20261008/make_ui_titles.py 以原生字形排出：第 2 行为上轮廓、第 3 列起为填充。
+# 两词间填充间距 7 列（原生 MEDAL SHOP、PAUSE MENU、POW LIST 相同）；TITLE_FILL_RIGHT 为左侧标题图中填充的最右列。
+TITLE_UNIT = 'artwork/title_font_20261008/titles/UNIT_16.png'
+TITLE_FILL_RIGHT = {TITLE_CUSTOMIZE: 130, TITLE_SHOP: 60}
+TITLE_WORD_GAP = 7
 CARD = ('shop.obm', (0, 0, 444, 69))
 CELL = ('unit.obm', (362, 151, 50, 50))
 MAX = ('shop.obm', (85, 495, 40, 12))
@@ -839,10 +844,12 @@ class UnitBrowser:
         art = self.art
         img = art.background().copy()
         img.alpha_composite(scaled(art.part(HEADER), 2.25), (1, 0))
-        t1 = scaled(art.part(TITLE_SHOP if self.mode == 'shop' else TITLE_CUSTOMIZE), 2)
-        t2 = scaled(art.part(TITLE_UNIT), 2)
-        img.alpha_composite(t1, (36, 36))
-        img.alpha_composite(t2, (36 + t1.width + 14, 40))
+        title = TITLE_SHOP if self.mode == 'shop' else TITLE_CUSTOMIZE
+        # 原生标题图第 1 列 / 行为填充左缘与上缘；UNIT 图（第 3 列 / 行起为填充）接在其后，填充间距 TITLE_WORD_GAP 列（lab_ui.title_layer）。
+        img.alpha_composite(*title_layer(art.part(title), 1, 1))
+        from PIL import Image
+        unit_left = TITLE_LEFT + (TITLE_FILL_RIGHT[title] + TITLE_WORD_GAP) * TITLE_SCALE
+        img.alpha_composite(*title_layer(Image.open(self.root / TITLE_UNIT).convert('RGBA'), 3, 3, unit_left))
         img.alpha_composite(scaled(art.part(BOTTOM_BAR), 2.25), (1, H - 151))
         d = ImageDraw.Draw(img)
         self.bar_boxes = []

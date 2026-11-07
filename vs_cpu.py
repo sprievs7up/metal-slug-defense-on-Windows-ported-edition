@@ -24,8 +24,10 @@ CONFIG_NAME = 'lab_cpu_config.json'
 PRESET_DIR = 'lab_presets_cpu'
 SIDES = ('p1', 'p2')
 # VS CPU 战斗期间由模式决定的 LAB 开关（开战时保存、离开战斗时还原，不写入设定文件）。
-OVERRIDES = ('full_control', 'player_ai', 'enemy_ai', 'player_auto_special', 'enemy_auto_special',
-             'player_ai_slug', 'enemy_ai_slug', 'player_support', 'enemy_support')
+OVERRIDES = ('player_unlimited_ap', 'enemy_unlimited_ap', 'player_no_cooldown', 'enemy_no_cooldown',
+             'player_unlimited_support', 'enemy_unlimited_support', 'player_stop', 'enemy_stop', 'player_ai',
+             'enemy_ai', 'player_auto_special', 'enemy_auto_special', 'player_ai_slug', 'enemy_ai_slug',
+             'player_support', 'enemy_support')
 SET_EFFECT = '_ZN10BattleUnit17setEffectRendererEP20BattleEffectRendererNS_18SpAttackEffectTypeE'
 
 

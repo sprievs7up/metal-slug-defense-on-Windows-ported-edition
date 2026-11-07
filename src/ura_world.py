@@ -7,6 +7,8 @@
 - 区域名称：native_name 为原生区域名称表的编号；写 name（11 种语言）的区域由宿主把名称追加到原生表之后（编号 57 起，
   strAreaNameTbl 的各语言指针换为宿主副本，GetAreaName 按表读取）；
 - 进度按关卡与区域稳定键保存于存档目录 campaign_progress.json（与扩展世界共用文件，字段 seen / wins / best_time、areas）；
+- 主菜单背景：写 menu_background 的关卡编号表写入 URA+56 / +60，核心 menu_bg 钩子在 GetMainMenuBGStageID 洗牌前追加其中
+  已通关者（2026-11-08）；
 - 里地图背景：原生背景图案表 0x8fdb58（按页号取图案）第 4 页起写入未被里地图使用的图案（表世界 3、1、2 的 0x85、0x36、0x37；
   0x85 与里地图图案同在已载入的第 3 页图集），在里地图场景中以 drawConv 替换表把这些图案的转换项换为世界目录的 ura_background；
 - 扩展世界的区域画面中，略缩图（转换表 28 的帧 0–5）换为关卡 thumbnail；关卡框标题为图案 0x3a + 序号（GT_StageIconDrawEx），
@@ -70,7 +72,7 @@ class UraWorld:
         info = p.call('_ZN10BattleInfo11getInstanceEv')
         scene_ids = {s['key']: s['id'] for s in p.community.manifest.get('stages', [])}
         sound_ids = getattr(p.community, 'sound_ids', {})
-        world_rows, missions, stages, areas, custom_names = [], [], [], [], []
+        world_rows, missions, stages, areas, custom_names, menu_ids = [], [], [], [], [], []
         for k, page in enumerate(sorted(worlds)):
             world = worlds[page]
             number = FIRST_WORLD + k
@@ -85,11 +87,14 @@ class UraWorld:
                     dx, dy = stage['map_position']
                     rec = struct.pack('<iiIIbxhhh', 3 * dx, 3 * dy - 10, bgm, s, -1, 0, 0, 0)
                     stage_ptrs.append(self.blob(rec))
-                    words = mission_words(p, catalog, scene_ids, info, stage, (number + 1) * 1000 + (a + 1) * 10 + s + 1, self.blob)
+                    stage_number = (number + 1) * 1000 + (a + 1) * 10 + s + 1
+                    words = mission_words(p, catalog, scene_ids, info, stage, stage_number, self.blob)
                     words[2] = bgm                     # 任务记录 +8：关卡 BGM（原生优先读取）
                     words[7] = 0                       # 人质上限
                     missions.append(struct.pack('<30I', *words))
                     stages.append(stage['key'])
+                    if stage.get('menu_background'):
+                        menu_ids.append(stage_number)
                 x, y = area['map_position']
                 if 'name' in area:                     # 自制区域名称：编号接在原生 57 项之后（extend_area_names）
                     name_index = NATIVE_AREA_NAMES + len(custom_names)
@@ -122,9 +127,13 @@ class UraWorld:
         p.write(URA + 4, struct.pack('<9I', len(self.pages), FIRST_WORLD, SLOT_BASE, self.blob(b''.join(world_rows)),
                                      self.blob(b''.join(missions)), len(missions), self.stage_table, self.area_table, 0))
         p.write(URA + 40, struct.pack('<4I', menu_ptr, 9 + len(self.pages), 0, 0))
+        if menu_ids and p.uc.lib.msd_ura_world_version() < 2:
+            raise RuntimeError('主菜单背景关卡（menu_background）需要核心 menu_bg 钩子（msd_ura_world_version 2）')
+        menu_list = self.blob(struct.pack(f'<{len(menu_ids)}I', *menu_ids)) if menu_ids else 0
+        p.write(URA + 56, struct.pack('<2I', menu_list, len(menu_ids)))
         p.put(URA, URA_MAGIC)
         self.counter = 0
-        p.log('URA_WORLD_INSTALLED', [(page, number, w['key']) for page, number, w in self.pages], len(missions))
+        p.log('URA_WORLD_INSTALLED', [(page, number, w['key']) for page, number, w in self.pages], len(missions), menu_ids)
 
     @property
     def progress(self):

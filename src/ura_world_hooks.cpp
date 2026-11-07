@@ -10,7 +10,8 @@
 // H：+0 魔数 'URA4'，+4 扩展页数 N，+8 首个扩展世界号 W0（12），+12 扩展页面任务槽基址，
 //    +16 区域表（每个扩展世界 0x44 字节：区域数 + 16 个区域记录指针），+20 任务记录表（每条 120 字节），+24 记录数，
 //    +28 关卡进度表（每关 8 字节：+0 标志 1 开放 / 2 通关 / 4 新，+4 用时），+32 区域进度表（每区域 4 字节：1 新 / 2 评级奖励已领取），
-//    +36 写入计数（宿主据此保存），+40 菜单表副本，+44 副本项数，+48 箭头暂存标志，+52 暂存的上一区域箭头任务。
+//    +36 写入计数（宿主据此保存），+40 菜单表副本，+44 副本项数，+48 箭头暂存标志，+52 暂存的上一区域箭头任务，
+//    +56 主菜单背景关卡表（关卡编号，int32），+60 表项数（2026-11-08，menu_bg）。
 // 区域记录：原生布局（+0 名称编号，+4/+8 地图坐标，+0xc 略缩图，+0xe 头目 −1，+0x10 人质 −1，+0x12 关卡数，+0x14 起关卡指针，
 //    可多于 5 个），+0x40 关卡进度起始序号，+0x44 区域进度序号。关卡记录为原生 0x18 字节布局。
 #include "aot_runtime.h"
@@ -176,7 +177,19 @@ URA_HOOK(stage_end_arrows,{
         wr<uint32_t>(c,app+ARROW_PREV,rd<uint32_t>(c,H+52u));wr<uint32_t>(c,H+48u,0u);wr<uint32_t>(c,H+52u,0u);
     }
 })
-extern "C" __declspec(dllexport) uint32_t msd_ura_world_version(){return missing_blocks?0u:1u;}
+// ---------- 主菜单背景（2026-11-08） ----------
+// GetMainMenuBGStageID（0x201988）把表世界 1–3 已通关的小关编号收集到栈上数组（r7，256 项，原生至多 195 项）、个数在 r8，
+// 再于 0x201a0c 调用 ShuffleCGStack（r9 为 AppMain）并取第一项（与上次相同时取第二项）。此块之前追加 H+56 表中扩展世界的
+// 已通关关卡（通关标志同 IsStageClearSaveData），数组满 256 项即停止。原生东南亚第 1 关未通关时直接返回 1011，不经此块。
+URA_HOOK(menu_bg,if(active(c)){
+    uint32_t list=rd<uint32_t>(c,H+56u),n=rd<uint32_t>(c,H+60u);
+    for(uint32_t i=0;list&&i<n&&c.r[8]<256u;++i){
+        uint32_t id=rd<uint32_t>(c,list+i*4u),w=id/1000u-1u,a=(id%1000u)/10u-1u,s=id%10u-1u;
+        uint32_t slot=extra(c,w,0u)?stage_slot(c,w,a,s):0u;
+        if(slot&&(rd<uint32_t>(c,slot)&2u)){wr<uint32_t>(c,c.r[7]+c.r[8]*4u,id);++c.r[8];}
+    }
+})
+extern "C" __declspec(dllexport) uint32_t msd_ura_world_version(){return missing_blocks?0u:2u;}
 extern "C" __declspec(dllexport) uint32_t msd_enable_ura_world_hooks(){
     static bool installed=false;if(installed)return missing_blocks;installed=true;
 #define INSTALL(NAME,PC) old_##NAME=find_block(PC);if(!old_##NAME)++missing_blocks;else register_block(PC,NAME)
@@ -194,6 +207,7 @@ extern "C" __declspec(dllexport) uint32_t msd_enable_ura_world_hooks(){
     INSTALL(menu_table,0x101fb41bu);INSTALL(menu_pages,0x101fb42du);
     INSTALL(stage_world_map,0x10215095u);INSTALL(area_world_map,0x10215061u);INSTALL(area_icon,0x101fb7e9u);
     INSTALL(stage_init,0x101fca35u);INSTALL(stage_icon_page,0x101fa225u);INSTALL(info_arrows,0x101fbdedu);INSTALL(stage_end_arrows,0x101fbb99u);
+    INSTALL(menu_bg,0x10201a0du);
 #undef INSTALL
     return missing_blocks;
 }

@@ -534,12 +534,13 @@ class LabPrep:
     def draw_main(self):
         lab, c, p = self.lab, self.c, self.lab.p
         names = self.names()
-        c.header(T(p, 'cpu_prep_title' if lab.cpu else 'vs_prep_title' if lab.versus else 'prep_title'))
+        c.header(image='VS_CPU' if lab.cpu else 'VERSUS_SETUP' if lab.versus else 'LAB_SETUP')
         self.header_buttons()
         if lab.versus:
             # 双人对战：顶栏增加按键设定与操作说明两个入口页（位于标题与“开始战斗”之间，顶栏深色区内）。
+            # 标题改为 2.25 倍后 VERSUS SETUP 右缘约 x 428，两按钮由 x 420 整体右移到 460（尺寸与间距不变，2026-11-08）。
             for index, page in enumerate(('keys', 'help')):
-                c.button((420 + index * 176, ICON_Y + (ICON_H - 40) // 2, 164, 40), T(p, f'vs_{page}_title'),
+                c.button((460 + index * 176, ICON_Y + (ICON_H - 40) // 2, 164, 40), T(p, f'vs_{page}_title'),
                          ('vs_page', page), 16)
         for row, side in enumerate(('player', 'enemy')):
             top = DECK_TOP + row * DECK_PITCH
@@ -550,13 +551,14 @@ class LabPrep:
             c.text((x + 146, top + 13), f'Lv{self.level_all[side]}', 16, WHITE, 'mm')
             c.button((x + 180, top, 28, 26), '+', ('level_all', side, 1))
             c.button((x + 218, top, 80, 26), T(p, 'apply'), ('apply_all', side), 14, 'light')
-            # 据点初始等级（0–10，10 为 MAX；完全控制开启时开战即 MAX）
+            # 据点初始等级（0–10，10 为 MAX；该方无限AP开启时开战即 MAX，双人对战中无限AP关闭）
             bx = DECK_X + 470
             value = int(lab.config.get(side + '_base_level', 0))
-            shown = 'MAX' if lab.full_control or value >= 10 else f'Lv{value}'
+            unlimited = getattr(lab, side + '_unlimited_ap') and not lab.versus
+            shown = 'MAX' if unlimited or value >= 10 else f'Lv{value}'
             c.text((bx, top + 13), T(p, 'base_short'), 14, WHITE, 'lm', 2, 50)
             c.button((bx + 54, top, 28, 26), '<', ('base', side, -1))
-            c.text((bx + 54 + 28 + 38, top + 13), shown, 16, GRAY if lab.full_control else GOLD, 'mm', 2, 70)
+            c.text((bx + 54 + 28 + 38, top + 13), shown, 16, GRAY if unlimited else GOLD, 'mm', 2, 70)
             c.button((bx + 54 + 28 + 76, top, 28, 26), '>', ('base', side, 1))
             right = DECK_X + DECK_W
             c.button((right - 292, top, 100, 26), T(p, 'cpu_copy') if lab.cpu else
@@ -636,8 +638,8 @@ class LabPrep:
         return T(p, 'cpu_you_deck' if side == self.human_side() else 'cpu_cpu_deck', slot)
 
     def draw_control(self, box, top, height):
-        """控制：LAB 为完全控制、双方 AI（开/关 + 段位选择器）、双方自动绝招、双方 AI 使用弹头车；VS CPU 为玩家位置、
-        CPU 段位与 CPU 使用弹头车；双人对战显示双方键位与对战规则（完全控制、AI 与自动绝招在对战中关闭，设定保留）。
+        """控制：LAB 为双方 AI（开/关 + 段位选择器），以及按方的自动绝招、AI 使用辅助技能、无限AP、出兵无冷却、辅助技能无限使用；
+        VS CPU 为玩家位置、CPU 段位与 CPU 使用弹头车；双人对战显示双方键位与对战规则（上述开关在对战中关闭，设定保留）。
         两种模式由入口决定，此处不提供切换。"""
         lab, c, p = self.lab, self.c, self.lab.p
         x, w = box
@@ -666,27 +668,24 @@ class LabPrep:
                                                      k['deploy'], k['special'], k['slug']), 13, color, 'lm', 2, w - 28)
             c.text((x + 14, y + 134), T(p, 'vs_rules'), 12, GRAY, 'lm', 2, w - 28)
             return
-        for index, attr in enumerate(('full_control', 'player_ai', 'player_auto_special', 'enemy_ai',
-                                      'enemy_auto_special', 'ai_slug')):
-            y = top + 38 + index * 34
-            if attr == 'ai_slug':
-                # AI 是否使用弹头车按钮：我方、敌方各一个开关（排列同 VS CPU 的玩家位置）。
-                c.text((x + 14, y + 14), T(p, 'ai_slug'), 15, WHITE, 'lm', 2, 90)
-                for col, side in enumerate(('player', 'enemy')):
-                    on = getattr(lab, side + '_ai_slug')
-                    c.button((x + 110 + col * ((w - 124) // 2 + 4), y, (w - 124) // 2 - 4, 28),
-                             T(p, 'adv_' + side) + ' ' + T(p, 'on' if on else 'off'), ('toggle', side + '_ai_slug'), 14,
-                             'on' if on else 'off')
+        # 双方 AI（开/关 + 段位）各一行；其余为按方开关（我方、敌方各一个按钮，同战斗中菜单的表格）。
+        rows = (('player_ai', None), ('enemy_ai', None), ('auto_special_short', '_auto_special'),
+                ('ai_slug', '_ai_slug'), ('unlimited_ap', '_unlimited_ap'), ('no_cooldown', '_no_cooldown'),
+                ('unlimited_support_short', '_unlimited_support'), ('stop_activity', '_stop'))
+        for index, (name, suffix) in enumerate(rows):
+            y = top + 34 + index * 26
+            if suffix is None:
+                side, on = name[:-3], getattr(lab, name)
+                c.text((x + 14, y + 12), T(p, side + '_ai_short'), 15, WHITE, 'lm', 2, 64)
+                c.button((x + 82, y, 52, 24), T(p, 'on' if on else 'off'), ('toggle', name), 16, 'on' if on else 'off')
+                self.tier_selector((x + 142, y, w - 156, 24), side, on)
                 continue
-            on = getattr(lab, attr)
-            if attr in ('player_ai', 'enemy_ai'):
-                side = attr[:-3]
-                c.text((x + 14, y + 15), T(p, side + '_ai_short'), 15, WHITE, 'lm', 2, 64)
-                c.button((x + 82, y, 52, 28), T(p, 'on' if on else 'off'), ('toggle', attr), 16, 'on' if on else 'off')
-                self.tier_selector((x + 142, y, w - 156, 28), side, on)
-                continue
-            c.text((x + 14, y + 14), T(p, attr), 15, WHITE, 'lm', 2, w - 110)
-            c.button((x + w - 86, y, 72, 28), T(p, 'on' if on else 'off'), ('toggle', attr), 16, 'on' if on else 'off')
+            c.text((x + 14, y + 12), T(p, name), 15, WHITE, 'lm', 2, 92)
+            for col, side in enumerate(('player', 'enemy')):
+                on = getattr(lab, side + suffix)
+                c.button((x + 110 + col * ((w - 124) // 2 + 4), y, (w - 124) // 2 - 4, 24),
+                         T(p, 'adv_' + side) + ' ' + T(p, 'on' if on else 'off'), ('toggle', side + suffix), 14,
+                         'on' if on else 'off')
 
     def tier_color(self, name, plate):
         if name not in self.tier_colors:
@@ -755,7 +754,7 @@ class LabPrep:
     def draw_picker(self):
         c, p = self.c, self.lab.p
         side, slot = self.picker
-        c.header(T(p, 'picker_title', self.t('side_' + side), slot + 1))
+        c.header(image='SELECT_UNIT')
         self.header_buttons(start=False)
         c.button((W - 10 - ICON_W - 14 - 140, ICON_Y + (ICON_H - 32) // 2, 140, 32), T(p, 'set_empty'),
                  ('pick', None), 16, 'light')
@@ -788,7 +787,8 @@ class LabPrep:
             c.text((x + PICK_CELL / 2, y + PICK_CELL + 13), name, 13, WHITE, 'mm', 2, PICK_PITCH - 6)
             c.hitboxes.append(((x, y, PICK_CELL, PICK_CELL + 26), ('pick', uid)))
         c.button((24, H - 54, 140, 38), T(p, 'prev'), ('picker_page', -1), 16)
-        c.text((W / 2, H - 35), T(p, 'page', self.picker_page + 1, pages, len(units)), 16, WHITE, 'mm', 2, 600)
+        c.text((W / 2, H - 35), T(p, 'picker_slot', self.t('side_' + side), slot + 1) + ' · '
+               + T(p, 'page', self.picker_page + 1, pages, len(units)), 16, WHITE, 'mm', 2, 600)
         c.button((W - 164, H - 54, 140, 38), T(p, 'next'), ('picker_page', 1), 16)
 
     def pad_lines(self):
@@ -800,7 +800,7 @@ class LabPrep:
         """按键设定：每名玩家 6 项键盘键与 4 项手柄功能键（点击后按下新键；同一玩家内重复时互换）。"""
         lab, c, p = self.lab, self.c, self.lab.p
         from lab_versus_input import ACTIONS
-        c.header(T(p, 'vs_keys_title'))
+        c.header(image='CONTROLS')
         self.header_buttons(start=False)
         keys, pads = lab.versus_keys(), lab.versus_pad()
         top, height = HEADER_H + 10, 400
@@ -838,7 +838,7 @@ class LabPrep:
     def draw_help(self):
         """操作说明：双方当前键位与手柄按键（随自定义实时显示）与对战规则。"""
         lab, c, p = self.lab, self.c, self.lab.p
-        c.header(T(p, 'vs_help_title'))
+        c.header(image='HOW_TO_PLAY')
         self.header_buttons(start=False)
         keys, pads = lab.versus_keys(), lab.versus_pad()
         top, height = HEADER_H + 10, 262
@@ -869,7 +869,7 @@ class LabPrep:
 
     def draw_history(self):
         c, p = self.c, self.lab.p
-        c.header(T(p, 'history_title'))
+        c.header(image='HISTORY')
         self.header_buttons(start=False)
         entries = self.lab.read_history()[-12:][::-1]
         if not entries:

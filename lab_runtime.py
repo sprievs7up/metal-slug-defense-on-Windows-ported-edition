@@ -19,7 +19,7 @@ except BaseException:
 
 PROFILE = 'lab_test_save'
 # 含 LAB 钩子的核心由正式版配置统一加载；独立入口和验证保留显式指定核心接口。
-LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r148_20261106.dll'
+LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r151_20261108.dll'
 KEYS = {glfw.KEY_F7: ('prep',), glfw.KEY_F5: ('exit',), glfw.KEY_F8: ('toggle_full',),
         glfw.KEY_F4: ('toggle_enemy_ai',), glfw.KEY_F3: ('toggle_player_ai',),
         glfw.KEY_LEFT_BRACKET: ('enemy_ap',), glfw.KEY_RIGHT_BRACKET: ('enemy_slug',),
@@ -439,7 +439,7 @@ def install():
                             lab.commands.append(command)
                 return
             if lab is not None and self.ready and action == glfw.PRESS and not mods & BLOCKED_MODS:
-                # 战斗中菜单（T6）：Esc 打开/关闭；打开期间 ↑/↓/Enter 操作菜单，其余游戏按键不送入战斗。
+                # 战斗中菜单（T6）：Esc 打开/关闭；打开期间 ↑/↓/←/→/Enter 操作菜单，其余游戏按键不送入战斗。
                 if key == glfw.KEY_ESCAPE and lab.active:
                     lab.commands.append(('menu',))
                     return
@@ -454,6 +454,7 @@ def install():
                         return
                 if lab.menu.open:
                     menu_keys = {glfw.KEY_UP: ('menu_move', -1), glfw.KEY_DOWN: ('menu_move', 1),
+                                 glfw.KEY_LEFT: ('menu_move_h', -1), glfw.KEY_RIGHT: ('menu_move_h', 1),
                                  glfw.KEY_ENTER: ('menu_select',), glfw.KEY_KP_ENTER: ('menu_select',)}
                     if key in menu_keys:
                         lab.commands.append(menu_keys[key])

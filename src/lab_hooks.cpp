@@ -135,6 +135,16 @@ void touch_activate(Context& c){
     }
     old_touch_activate(c);
 }
+// ---------- 第 28 版：本方 AUTO 开启时照常受理点击单位（2026-11-07，核心 r149） ----------
+// onGameScreenTouchEnded 在 0x1d761c 以本方控制器 vtable+0xf8（BattleControllerPlayerBase::getAutoPlay）查询 AUTO，
+// 结果非 0 时于 0x1d7626 直接退出（原生 AUTO 由 AI 施放绝招，不受理点击单位）。LAB 的自动出兵与自动绝招分开控制，
+// getAutoPlay 在本方自动出兵开启时返回 1（auto_query），点击本方与敌方单位因此都不受理：敌方关闭自动绝招时，玩家无法让敌方施放绝招。
+// 点击敌方单位功能位（LAB 与本地对战）开启时把查询结果视为 0，照常先遍历本方、再遍历敌方单位；VS CPU 与常规联机不设该位，保持原生。
+Block old_touch_auto;
+void touch_auto(Context& c){                        // 0x1d7626：r0 = getAutoPlay 的结果
+    if(c.r[0] && enabled(c,FLAG_ENEMY_TOUCH))c.r[0]=0u;
+    old_touch_auto(c);
+}
 // ---------- 嵌套调用：在钩子内同步执行一段客体函数（与 msd_run 相同的分派，返回哨兵 0x1fff0000） ----------
 constexpr uint32_t RETURN_SENTINEL=0x1fff0000u;
 bool guest_call(Context& c,uint32_t fn,uint32_t a0,uint32_t a1=0,uint32_t a2=0,uint32_t a3=0,
@@ -320,7 +330,12 @@ constexpr Segment SEGMENTS[]={
     {155,177,true,1,false},{184,532,true,0,false},{776,800,true,1,false},{812,948,true,0,true},{18,140,true,0,false},  // 敌方：中间分隔、3 格、右警示条、弹头车（翻转）、AP 升级
     {-88.89f,-70,true,1,true}};
 constexpr int SEGMENT_COUNT=int(sizeof SEGMENTS/sizeof SEGMENTS[0]);
-constexpr float ARROW_SHIFT=-246.0f;                           // 滚动箭头（源 x 742）移到 3 格窗口右端
+// 滚动箭头：drawUI 在出兵格循环之后（0x1d8a10…0x1d8ab4）以转换项 113 + max(0,(operator+0x40 − 30)/3) 绘制，计数 0…47 循环，
+// 共 6 帧（u 686…786、v 234，宽 18，高 18/16/14/7/14/16，锚点居中；计数 0…33 停在第 113 帧，34…47 每 3 帧换一帧）。
+// 滚动值 > 0 时画左侧翻转箭头（drawConv 返回 0x1d8a6c），滚动值 < 最大滚动时画右侧箭头（返回 0x1d8ab8）。
+// 分栏的出兵格遍只把右侧箭头（源 x 742）移到 3 格窗口右端；左侧箭头与窗口左端相对位置同原生，保持原位（draw_conv 按调用处识别）。
+constexpr float ARROW_SHIFT=-246.0f;
+constexpr uint32_t ARROW_RIGHT_RET=0x101d8ab8u;
 struct Pass{bool active=false;float s=1,offx=0,offy=0;int clip[4]={0,0,0,0};int filter=0;bool cells=false;bool tinted=false;bool rotate=false;bool ap_button=false;bool apbar=false;bool no_apbar=false;bool mirror=false;bool mirror_sprite=false;bool coin_overlay=false;bool banner_overlay=false;bool gauge_overlay=false;float mirror_center=0;uint32_t atlas=0;};
 Pass pass;
 bool enemy_pass=false,drawing_banner=false;
@@ -339,10 +354,6 @@ uint32_t& scratch_matrix_slot(){static uint32_t slot=H+0x800u;return slot;}
 bool pass_filter(Context& c,uint32_t u_bits){
     if(pass.filter==1)return u_bits==0u && rd<uint32_t>(c,c.r[13])==fbits(32.0f);   // 底栏背景图块 (0,32,568,71)
     return true;
-}
-bool is_arrow(Context& c){
-    float u=bitsf(c.r[3]),v=bitsf(rd<uint32_t>(c,c.r[13]));
-    return v==234.0f && (u==686.0f||u==706.0f);
 }
 // 裁剪改为软件实现：glScissor/glEnable 由 Python 宿主处理，嵌套调用中无法执行。
 // 各遍中原生 setClip/clearClip 只更新 cur_clip（D 坐标），绘制钩子按 cur_clip 裁切每个图块的源矩形与位移。
@@ -423,12 +434,11 @@ template<uint32_t ENTRY> void DrawHook<ENTRY>::run(Context& c){
         if(pass.banner_overlay && !drawing_banner){c.pc=c.r[14];return;}
         if(pass.gauge_overlay && !drawing_gauge){c.pc=c.r[14];return;}
         if(!pass_filter(c,c.r[3])){c.pc=c.r[14];return;}
-        float extra=(pass.cells && is_arrow(c))?ARROW_SHIFT*pass.s:0.0f;
         uint32_t m=c.r[2],dst=H+0x800u;
         float a=bitsf(rd<uint32_t>(c,m)),b=bitsf(rd<uint32_t>(c,m+4u)),tx=bitsf(rd<uint32_t>(c,m+8u));
         float cc=bitsf(rd<uint32_t>(c,m+12u)),d=bitsf(rd<uint32_t>(c,m+16u)),ty=bitsf(rd<uint32_t>(c,m+20u));
         float s=pass.s;
-        wr<uint32_t>(c,dst,fbits(a*s));wr<uint32_t>(c,dst+4u,fbits(b*s));wr<uint32_t>(c,dst+8u,fbits(tx*s+pass.offx+extra));
+        wr<uint32_t>(c,dst,fbits(a*s));wr<uint32_t>(c,dst+4u,fbits(b*s));wr<uint32_t>(c,dst+8u,fbits(tx*s+pass.offx));
         wr<uint32_t>(c,dst+12u,fbits(cc*s));wr<uint32_t>(c,dst+16u,fbits(d*s));wr<uint32_t>(c,dst+20u,fbits(ty*s+pass.offy));
         if(pass.apbar && c.r[3]==0u && rd<uint32_t>(c,c.r[13])==fbits(174.0f)){
             draw_enemy_ap_frame(c,a,d,tx,ty);c.pc=c.r[14];return;
@@ -1539,6 +1549,8 @@ void draw_conv(Context& c){
             wr<uint32_t>(c,DRAW_LOG+4u,n+1u);
         }
     }
+    // 分栏出兵格遍的右侧滚动箭头：6 帧动画各帧同样平移（原按图块 u 只识别前 2 帧，其余 4 帧留在原位被裁掉）。
+    if(pass.active && pass.cells && lr==ARROW_RIGHT_RET)c.r[2]=fbits(bitsf(c.r[2])+ARROW_SHIFT);
     if(!in_vs_cursor && lr>=SLOT_LOOP_BEGIN && lr<SLOT_LOOP_END && pass.active && pass.cells &&
        enabled(c,FLAG_VS_CURSOR) && rd<uint32_t>(c,VS_CUR)){
         uint32_t conv=rd<uint32_t>(c,c.r[13]);
@@ -1926,7 +1938,8 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     if(dropped){*dropped=net_action_dropped;net_action_dropped=0;}
     return n;
 }
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 27u;}
+// 第 29 版（核心 r151）：分栏底栏的右侧滚动箭头按 drawConv 调用处平移，6 帧动画完整显示；左侧箭头保持原位。
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 29u;}
 // 2026-11-02（核心 r136，docs/UNIT_CAP_2026-11-02.md 第 13 节）：LAB 每帧的单位修正（lab.py Lab.fix_units、vs_cpu.py VsCpu.fix_units）的核心实现，
 // 逐单位读写与宿主原代码相同，只省去每个单位数次跨 FFI 的读取。单位按 Lab.team_list 遍历：getTeamUnitList（管理器 + (队伍 + 6) × 4）起沿 +0x120，
 // 回到起点、地址无效（不在 0x10000000–0x1fffefff）或满 4096 个为止。mode 0 为 Lab.fix_units（team = 敌方队伍，red_team 为 0xffffffff 表示无），
@@ -1972,6 +1985,7 @@ extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     old_touch_list=find_block(0x101d764bu);register_block(0x101d764bu,touch_list);
     old_touch_loop_exit=find_block(0x101d76c9u);register_block(0x101d76c9u,touch_loop_exit);
     old_touch_activate=find_block(0x101d76d3u);register_block(0x101d76d3u,touch_activate);
+    old_touch_auto=find_block(0x101d7627u);register_block(0x101d7627u,touch_auto);
     old_cap_deploy=find_block(0x101d738bu);register_block(0x101d738bu,cap_deploy);
     old_cap_slug=find_block(0x101d7357u);register_block(0x101d7357u,cap_slug);
     old_cap_levelup=find_block(0x101d7405u);register_block(0x101d7405u,cap_levelup);

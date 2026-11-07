@@ -278,7 +278,8 @@ class Catalog:
         世界：ura_background（571×320 网格背景图，左右两块，同原生里地图背景）；
         区域：map_position [x, y]（世界地图坐标，0–1440 / 0–709）、native_name（原生区域名称编号 0–56，各语言文字取自原版）
         或 name（自制区域名称，11 种语言 AREA_NAME_LANGUAGES 各一项，宿主追加到原生区域名称表之后，ura_world.py）；
-        关卡（每区域 1–6 关）：map_position [dx, dy]（相对区域坐标，原版范围约 ±125 / −50…30）、可选 thumbnail（128×56 略缩图）。
+        关卡（每区域 1–6 关）：map_position [dx, dy]（相对区域坐标，原版范围约 ±125 / −50…30）、可选 thumbnail（128×56 略缩图）、
+        可选 menu_background（布尔，2026-11-08 起，需核心 menu_bg 钩子：通关后与原版表世界已通关小关一起作为主菜单背景的候选）。
         扩展页的区域按原版里世界整体开放，不处理 requires 与 reward_units（写了即拒绝）。"""
         from PIL import Image
         self.ura_worlds={};self.ura_images={}
@@ -295,7 +296,11 @@ class Catalog:
                 if im.size!=size:raise ValueError(f'{what}尺寸应为 {size[0]}×{size[1]}：{name}')
             self.ura_images[name]=Path(path)
         for world in self.worlds.values():
-            if 'ura_page' not in world:continue
+            menu=[s for a in world.get('areas',[]) for s in a.get('stages',[]) if 'menu_background' in s]
+            if any(type(s['menu_background']) is not bool for s in menu):raise ValueError('menu_background 要求布尔值')
+            if 'ura_page' not in world:
+                if any(s['menu_background'] for s in menu):raise ValueError('menu_background 只适用于里地图扩展页的关卡')
+                continue
             self.enter(world)
             page=integer(world['ura_page'],4,6)
             if page in self.ura_worlds:raise ValueError('里地图扩展页重复：'+str(page))

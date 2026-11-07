@@ -128,8 +128,9 @@ class PadPoller:
             if not battle or side is None:
                 continue
             if lab.menu.open:
-                for name, command in (('UP', ('menu_move', -1)), ('DOWN', ('menu_move', 1)), ('A', ('menu_select',)),
-                                      ('B', ('menu',)), ('START', ('menu',))):
+                for name, command in (('UP', ('menu_move', -1)), ('DOWN', ('menu_move', 1)), ('LEFT', ('menu_move_h', -1)),
+                                      ('RIGHT', ('menu_move_h', 1)), ('A', ('menu_select',)), ('B', ('menu',)),
+                                      ('START', ('menu',))):
                     if name in edges:
                         lab.commands.append(command)
                 continue

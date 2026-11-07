@@ -1,0 +1,342 @@
+{
+ "size": 16,
+ "word_gap": 7,
+ "UNIT_16": {
+  "words": [
+   {
+    "word": "UNIT",
+    "glyphs": [
+     "16/U_menu_485_0_1",
+     "16/N_menu_485_133_2",
+     "16/I_login_bonus_1_0_3",
+     "16/T_login_bonus_228_270_6"
+    ],
+    "gaps_from": [
+     "default",
+     "default",
+     "native_pair"
+    ],
+    "composite_letters": []
+   }
+  ],
+  "word_x": [
+   0
+  ],
+  "fill_columns": [
+   3,
+   54
+  ],
+  "size": [
+   59,
+   22
+  ]
+ },
+ "LAB_SETUP_16": {
+  "words": [
+   {
+    "word": "LAB",
+    "glyphs": [
+     "16/L_menu_485_133_0",
+     "16/A_login_bonus_478_68_4",
+     "16/B_login_bonus_478_68_5"
+    ],
+    "gaps_from": [
+     "native_pair",
+     "native_pair"
+    ],
+    "composite_letters": []
+   },
+   {
+    "word": "SETUP",
+    "glyphs": [
+     "16/S_stageselect_01_212_81_0",
+     "16/E_login_bonus_228_270_4",
+     "16/T_menu_485_0_3",
+     "16/U_menu_485_0_1",
+     "16/P_medal_shop_69_388_3"
+    ],
+    "gaps_from": [
+     "native_pair",
+     "default",
+     "default",
+     "default"
+    ],
+    "composite_letters": []
+   }
+  ],
+  "word_x": [
+   0,
+   50
+  ],
+  "fill_columns": [
+   3,
+   124
+  ],
+  "size": [
+   129,
+   22
+  ]
+ },
+ "VERSUS_SETUP_16": {
+  "words": [
+   {
+    "word": "VERSUS",
+    "source": "profile@197:61",
+    "native_word": true
+   },
+   {
+    "word": "SETUP",
+    "glyphs": [
+     "16/S_stageselect_01_212_81_0",
+     "16/E_login_bonus_228_270_4",
+     "16/T_menu_485_0_3",
+     "16/U_menu_485_0_1",
+     "16/P_medal_shop_69_388_3"
+    ],
+    "gaps_from": [
+     "native_pair",
+     "default",
+     "default",
+     "default"
+    ],
+    "composite_letters": []
+   }
+  ],
+  "word_x": [
+   0,
+   97
+  ],
+  "fill_columns": [
+   3,
+   171
+  ],
+  "size": [
+   176,
+   22
+  ]
+ },
+ "VS_CPU_16": {
+  "words": [
+   {
+    "word": "VS",
+    "glyphs": [
+     "16/V_profile_197_61_0",
+     "16/S_login_bonus_1_74_4"
+    ],
+    "gaps_from": [
+     "default"
+    ],
+    "composite_letters": []
+   },
+   {
+    "word": "CPU",
+    "glyphs": [
+     "16/C_login_bonus_478_68_0",
+     "16/P_menu_485_258_1",
+     "16/U_menu_485_344_3"
+    ],
+    "gaps_from": [
+     "default",
+     "default"
+    ],
+    "composite_letters": []
+   }
+  ],
+  "word_x": [
+   0,
+   37
+  ],
+  "fill_columns": [
+   3,
+   84
+  ],
+  "size": [
+   89,
+   22
+  ]
+ },
+ "SELECT_UNIT_16": {
+  "words": [
+   {
+    "word": "SELECT",
+    "glyphs": [
+     "16/S_stageselect_01_212_81_0",
+     "16/E_stageselect_01_212_81_1",
+     "16/L_stageselect_01_212_81_2",
+     "16/E_stageselect_01_212_81_3",
+     "16/C_stageselect_01_212_81_4",
+     "16/T_stageselect_01_231_68_5"
+    ],
+    "gaps_from": [
+     "native_pair",
+     "native_pair",
+     "native_pair",
+     "native_pair",
+     "native_pair"
+    ],
+    "composite_letters": []
+   },
+   {
+    "word": "UNIT",
+    "glyphs": [
+     "16/U_menu_485_0_1",
+     "16/N_menu_485_133_2",
+     "16/I_login_bonus_1_0_3",
+     "16/T_login_bonus_228_270_6"
+    ],
+    "gaps_from": [
+     "default",
+     "default",
+     "native_pair"
+    ],
+    "composite_letters": []
+   }
+  ],
+  "word_x": [
+   0,
+   89
+  ],
+  "fill_columns": [
+   3,
+   143
+  ],
+  "size": [
+   148,
+   22
+  ]
+ },
+ "CONTROLS_16": {
+  "words": [
+   {
+    "word": "CONTROLS",
+    "glyphs": [
+     "16/C_login_bonus_478_68_0",
+     "16/O_login_bonus_478_68_1",
+     "16/N_login_bonus_1_74_2",
+     "16/T_login_bonus_228_270_6",
+     "16/R_profile_216_0_1",
+     "16/O_login_bonus_478_68_1",
+     "16/L_login_bonus_478_68_2",
+     "16/S_login_bonus_1_74_4"
+    ],
+    "gaps_from": [
+     "native_pair",
+     "native_pair",
+     "native_pair",
+     "default",
+     "native_pair",
+     "native_pair",
+     "default"
+    ],
+    "composite_letters": []
+   }
+  ],
+  "word_x": [
+   0
+  ],
+  "fill_columns": [
+   3,
+   124
+  ],
+  "size": [
+   129,
+   22
+  ]
+ },
+ "HOW_TO_PLAY_16": {
+  "words": [
+   {
+    "word": "HOW",
+    "glyphs": [
+     "16/H_menu_485_412_1",
+     "16/O_menu_485_412_2",
+     "16/W_prisoner_list_202_0_2"
+    ],
+    "gaps_from": [
+     "native_pair",
+     "native_pair"
+    ],
+    "composite_letters": []
+   },
+   {
+    "word": "TO",
+    "glyphs": [
+     "16/T_menu_485_0_3",
+     "16/O_menu_485_0_4"
+    ],
+    "gaps_from": [
+     "native_pair"
+    ],
+    "composite_letters": []
+   },
+   {
+    "word": "PLAY",
+    "glyphs": [
+     "16/P_pause_menu_331_114_0",
+     "16/L_login_bonus_478_68_3",
+     "16/A_login_bonus_478_68_4",
+     "composite/16_Y"
+    ],
+    "gaps_from": [
+     "default",
+     "native_pair",
+     "default"
+    ],
+    "composite_letters": [
+     "Y"
+    ]
+   }
+  ],
+  "word_x": [
+   0,
+   60,
+   97
+  ],
+  "fill_columns": [
+   3,
+   158
+  ],
+  "size": [
+   164,
+   22
+  ]
+ },
+ "HISTORY_16": {
+  "words": [
+   {
+    "word": "HISTORY",
+    "glyphs": [
+     "16/H_menu_485_412_1",
+     "16/I_menu_mission_206_228_1",
+     "16/S_prisoner_list_202_57_2",
+     "16/T_menu_485_0_3",
+     "16/O_menu_485_0_4",
+     "16/R_login_bonus_478_68_7",
+     "composite/16_Y"
+    ],
+    "gaps_from": [
+     "default",
+     "native_pair",
+     "native_pair",
+     "native_pair",
+     "native_pair",
+     "default"
+    ],
+    "composite_letters": [
+     "Y"
+    ]
+   }
+  ],
+  "word_x": [
+   0
+  ],
+  "fill_columns": [
+   3,
+   101
+  ],
+  "size": [
+   107,
+   22
+  ]
+ }
+}

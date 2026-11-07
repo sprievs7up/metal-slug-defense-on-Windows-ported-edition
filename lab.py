@@ -4,10 +4,11 @@
 - F7：在非战斗界面启动 LAB 战斗（NPC 对手信息由原生 MakeNPCInfo 生成，可用 lab_config.json 覆盖敌方牌组；
   敌方单位经 BattleController::entryUnit 以完整 UnitID 写入，原版 0–399 与社区单位均可用）。
 - Q–P：敌方 1–10 号槽位出兵；[ 敌方 AP 升级；] 敌方弹头车；\\ 敌方全体绝招。
-- F8：完全控制模式开/关（宿主层方案 B：据点满级、AP 每帧补满、出兵冷却每帧清零）。
+- F8：双方的无限AP与出兵无冷却一起开/关（宿主层方案 B：据点满级、AP 每帧补满、出兵冷却每帧清零；2026-11-07 起按方为独立开关）。
 - F5：退出 LAB 战斗并返回菜单（联机模式下原生暂停/脱离不可用，正式版并入 LAB 战斗菜单）。
 - F4：敌方 AI 自动出兵 开/关；F3：我方 AI 自动出兵 开/关。自动绝招为独立开关（战斗中菜单，钩子版本 ≥ 4）。
-- Esc：战斗中菜单（lab_menu.py，打开期间暂停战斗）：完全控制、四个 AI 开关与双方 AI 使用弹头车、重新开始、退出、继续。
+- Esc：战斗中菜单（lab_menu.py，打开期间暂停战斗）：按方的 AI 自动出兵、AI 自动绝招、AI 使用辅助技能、无限AP、出兵无冷却、
+  辅助技能无限使用、停止活动，音乐 / 音效，重新开始、返回准备界面、继续。
 - 存档隔离（T9）：LAB 期间原生存档写入改写到内存，离开时还原内存中的主存档映像。
 - 战斗结束或进入结算场景时直接返回主菜单，不进入 Wi-Fi 结算。
 
@@ -26,13 +27,22 @@ DEFAULT_CONFIG = {
     'stage_id': 1011,          # 原生联机地图表首项（0x8fd730+48 起：1011,1021,1022,...）
     'enemy_deck': None,        # None=原生 NPC 牌组；或至多 10 项 [单位, 等级(1-40)]，单位为 UnitID 或社区单位 key，null=空槽
     'player_deck': None,       # None=存档牌组与存档等级（BattleStartSetUnit）；格式同 enemy_deck
-    'player_base_level': 0,    # 开战时的据点等级 0–10（10=MAX）；完全控制开启时为 MAX
+    'player_base_level': 0,    # 开战时的据点等级 0–10（10=MAX）；该方“无限AP”开启时为 MAX
     'enemy_base_level': 0,
     'player_hp_boost': 0,      # 优势设定：原生关卡强化级数（生命/攻击各 ×(1+0.2×级数)），0–10
     'player_atk_boost': 0,
     'enemy_hp_boost': 0,
     'enemy_atk_boost': 0,
-    'full_control': True,
+    # 2026-11-07 原“完全控制”（双方共用）按方拆分：无限AP（据点满级、AP 每帧补满）、出兵无冷却（每帧清零出兵冷却）；
+    # 另加辅助技能无限使用（弹头车充能每帧补满）。旧设定的 full_control 由 migrate_config 换算。
+    'player_unlimited_ap': True,
+    'enemy_unlimited_ap': True,
+    'player_no_cooldown': True,
+    'enemy_no_cooldown': True,
+    'player_unlimited_support': False,
+    'enemy_unlimited_support': False,
+    'player_stop': False,          # 停止活动：该方单位停止一切攻击（原生身体状态 DontShort / DontLong / DontSpAttack）
+    'enemy_stop': False,
     'enemy_ai': False,             # 敌方 AI 自动出兵（含弹头车）
     'player_ai': False,            # 我方 AI 自动出兵（含弹头车）
     'enemy_auto_special': False,   # 敌方自动释放绝招
@@ -57,7 +67,19 @@ VERSUS_ACTIONS = ('left', 'right', 'ap', 'deploy', 'special', 'slug')
 VERSUS_KEYS = {'p1': {'left': 'A', 'right': 'D', 'ap': 'Y', 'deploy': 'R', 'special': 'T', 'slug': 'U'},
                'p2': {'left': 'LEFT', 'right': 'RIGHT', 'ap': 'PERIOD', 'deploy': 'M', 'special': 'COMMA', 'slug': 'SLASH'}}
 # 双人对战期间暂时关闭的 LAB 开关（开战时保存、离开战斗时还原，不写入设定文件）。
-VERSUS_OVERRIDES = ('full_control', 'player_ai', 'enemy_ai', 'player_auto_special', 'enemy_auto_special')
+CHEATS = ('player_unlimited_ap', 'enemy_unlimited_ap', 'player_no_cooldown', 'enemy_no_cooldown',
+          'player_unlimited_support', 'enemy_unlimited_support', 'player_stop', 'enemy_stop')
+VERSUS_OVERRIDES = CHEATS + ('player_ai', 'enemy_ai', 'player_auto_special', 'enemy_auto_special')
+SLUG_CHARGE = 1036             # 控制器偏移：弹头车充能（isUseMetasuraHou 0x1cbdc0 以充能 ≥ SLUG_FULL 判定可用）
+SLUG_FULL = 0x101cbdd0         # isUseMetasuraHou 的字面量池：充满所需的充能值
+BODY_STATE = 0x6c              # BattleObject 身体状态位（changeBodyState 0x1de0fa）
+STOP_BITS = 0x4 | 0x200 | 0x400   # DontSpAttack（0x177f68）、DontLongAttack（0x178588）、DontShortAttack（0x17859a）
+# 停止前进：当前状态（+0x7c，BattleObject::update 0x1dd874 由预约状态 +0x80 写入）为前进（20）的单位以原生
+# BattleObject::startActionWait（0x1ddf68：经 changeState 0x1dda28 预约待机 10、等待计数 +0xc0 ← 帧数）转入待机；
+# 关闭时把等待计数改为 1，单位下一帧照原生回到前进。
+ACTION_STATE, WAIT_COUNT = 0x7c, 0xc0
+WAIT_STATE, MOVE_STATE = 10, 20
+HOLD_FRAMES = 0x3fffffff
 # 支援选项（与 src/lab_hooks.cpp apply_support 编号一致；新增选项在两处同时扩展）。
 SUPPORT_OPTIONS = ('弹头车出击', '除据点外全员 HP 回满', '全员绝招立即可用')
 PLAYER_FAMILY = ('BattleControllerPlayerBase', 'BattleControllerPlayer', 'BattleControllerNetPlayer',
@@ -122,8 +144,17 @@ SAVE_RAM_SIZE = 0x5ab0
 AUDIO_WORDS = (0x3d5c, 0x3d60)   # 音乐、音效开关（audio_options.MUSIC / EFFECTS，位于 SAVE_RAM 内）
 AUDIO_HEADER, AUDIO_MAGIC = 0x1ffea000, 0x41554431   # audio_options 共享头：+4 为修订计数
 PRESET_DIR = 'lab_presets'
-SWITCHES = ('full_control', 'enemy_ai', 'player_ai', 'enemy_auto_special', 'player_auto_special',
-            'enemy_ai_slug', 'player_ai_slug', 'player_support', 'enemy_support')
+SWITCHES = CHEATS + ('enemy_ai', 'player_ai', 'enemy_auto_special', 'player_auto_special',
+                     'enemy_ai_slug', 'player_ai_slug', 'player_support', 'enemy_support')
+
+
+def migrate_config(data):
+    """旧设定与预设的 full_control（双方共用的完全控制）换算为双方的无限AP与出兵无冷却（新键已存在时不覆盖）。"""
+    if 'full_control' in data:
+        for side in ('player', 'enemy'):
+            for name in ('_unlimited_ap', '_no_cooldown'):
+                data.setdefault(side + name, bool(data['full_control']))
+    return data
 # 双人对战与 LAB 互不切换（用户 2026-10-08 要求）：模式只由入口决定（VERSUS 页本地对战为双人对战，LAB 图标与 F7 为 LAB），
 # 不作为开关保存，预设与设定文件不改变模式。
 PB = '_ZN26BattleControllerPlayerBase'
@@ -147,6 +178,9 @@ class Lab:
         self.commands = collections.deque()
         self.config = self.load_config()
         self.active = False
+        self.base_max_pending = set()  # 战斗中开启无限AP的一方（下一战斗帧据点满级）
+        self.stop_added = {}           # 停止活动：每方 {单位: 本开关加上的身体状态位}
+        self.stop_held = {}            # 停止活动：每方由本开关转入待机的单位
         self.saved_flags = None
         self.versus = False           # 当前模式（双人对战 / LAB），由打开准备界面的入口决定
         self.cpu = False              # VS CPU 模式（VERSUS 页第一张卡），设定与预设使用独立文件（vs_cpu.py）
@@ -207,7 +241,7 @@ class Lab:
         if not path.is_file():
             path.write_text(json.dumps(DEFAULT_CONFIG, ensure_ascii=False, indent=2), encoding='utf-8')
             return dict(DEFAULT_CONFIG)
-        data = json.loads(path.read_text(encoding='utf-8'))
+        data = migrate_config(json.loads(path.read_text(encoding='utf-8')))
         config = dict(DEFAULT_CONFIG)
         config.update({k: v for k, v in data.items() if k in DEFAULT_CONFIG})
         for key in ('enemy_deck', 'player_deck'):
@@ -252,7 +286,7 @@ class Lab:
         path = self.preset_path(name)
         if not path.is_file():
             return False
-        data = json.loads(path.read_text(encoding='utf-8'))
+        data = migrate_config(json.loads(path.read_text(encoding='utf-8')))
         self.config.update({k: v for k, v in data.items() if k in DEFAULT_CONFIG})
         self.apply_switches()
         self.save_config()
@@ -543,6 +577,9 @@ class Lab:
         self.started_frame = p.frame
         self.player_units, self.enemy_units = list(player_deck), list(deck)
         self.cooldown_seen = {}
+        self.base_max_pending.clear()
+        self.stop_added, self.stop_held = {}, {}
+        self.menu.prewarm()                      # 战斗中菜单的面板图与按钮图在开战载入时生成（约 0.1 秒）
         self.record('start', from_scene=scene, stage_id=stage, native_npc_deck=native_deck,
                     enemy_deck=[None if e is None else [e[0], e[1] + 1] for e in deck],
                     player_deck=[None if e is None else [e[0], e[1] + 1] for e in player_deck],
@@ -881,21 +918,71 @@ class Lab:
                 for offset in range(0x10, 0x80, 4):
                     p.put(LAB_HEADER + LAB_INVEST_SERIAL + offset, 0)
             self.apply_ai(mine, enemy)
-            if self.full_control:
-                for controller in (mine, enemy):
+            # 无限AP开启的一方开战即据点满级，其余一方按准备界面设定的据点初始等级。
+            for side, controller in (('player', mine), ('enemy', enemy)):
+                if getattr(self, side + '_unlimited_ap'):
                     p.call(PB + '20actionKyotenLevelMaxEv', controller)
-            else:
-                self.apply_base_levels(mine, enemy)
+                else:
+                    self.apply_base_levels(((controller, side + '_base_level'),))
             self.record('applied', mine=self.describe(mine), enemy=self.describe(enemy))
-        if self.full_control:
-            for controller in (mine, enemy):
+            self.base_max_pending.clear()
+        for side, controller in (('player', mine), ('enemy', enemy)):
+            if side in self.base_max_pending and getattr(self, side + '_unlimited_ap'):
+                p.call(PB + '20actionKyotenLevelMaxEv', controller)
+        self.base_max_pending.clear()
+        self.apply_cheats(mine, enemy)
+
+    def apply_cheats(self, mine, enemy):
+        """每帧：无限AP 补满 AP，出兵无冷却清零出兵冷却（刚出兵的槽位保留数帧冷却显示），辅助技能无限使用补满弹头车充能。"""
+        p = self.p
+        full = None
+        for side, controller in (('player', mine), ('enemy', enemy)):
+            if getattr(self, side + '_unlimited_ap'):
                 level = p.call(PB + '14getKyotenLevelEv', controller)
                 maximum = p.call(PB + '8getMaxAPEi', controller, level)
                 ap = p.call(PB + '5getAPEv', controller)
                 if maximum > ap:
                     p.call(PB + '6plusAPEi', controller, maximum - ap)
-                if not self.recent_create(controller):
-                    p.call(PB + '24clearCreateUnitWaitTimerEv', controller)
+            if getattr(self, side + '_no_cooldown') and not self.recent_create(controller):
+                p.call(PB + '24clearCreateUnitWaitTimerEv', controller)
+            if getattr(self, side + '_unlimited_support'):
+                full = p.word(SLUG_FULL) if full is None else full
+                if p.word(controller + SLUG_CHARGE) < full:
+                    p.put(controller + SLUG_CHARGE, full)
+            self.apply_stop(side, controller)
+
+    def apply_stop(self, side, controller):
+        """停止活动：该方除据点外的单位每帧置原生身体状态 DontSpAttack、DontLongAttack、DontShortAttack（STOP_BITS），
+        不发动近距、远距攻击与绝招；处于前进状态的单位转入原生待机（startActionWait），停在原地（击退等其他状态照常）。
+        直接按位写 +0x6c（原生 changeBodyState 的关闭分支为异或，未置位时会反而置位）；关闭时只清除本开关加上的位
+        （单位自身逻辑原本置上的位保留），本开关转入待机的单位等待计数改为 1。"""
+        p = self.p
+        added = self.stop_added.setdefault(side, {})
+        held = self.stop_held.setdefault(side, set())
+        on = getattr(self, side + '_stop')
+        if not on and not added and not held:
+            return
+        from battle_controls import team_units
+        base = p.call('_ZNK16BattleController11getBaseUnitEv', controller)
+        for unit in team_units(p, controller):
+            if unit == base:
+                continue
+            state = p.word(unit + BODY_STATE)
+            if on:
+                if state & STOP_BITS != STOP_BITS:
+                    added[unit] = added.get(unit, 0) | (STOP_BITS & ~state)
+                    p.put(unit + BODY_STATE, state | STOP_BITS)
+                if p.word(unit + ACTION_STATE) == MOVE_STATE:
+                    p.call('_ZN12BattleObject15startActionWaitEi', unit, HOLD_FRAMES)
+                    held.add(unit)
+                continue
+            if unit in added:
+                p.put(unit + BODY_STATE, state & ~added[unit])
+            if unit in held and p.word(unit + ACTION_STATE) == WAIT_STATE:
+                p.put(unit + WAIT_COUNT, 1)              # 等待计数归 1：下一帧照原生回到前进
+        if not on:
+            added.clear()
+            held.clear()
 
     def publish_enemy(self, enemy):
         """头部：+4 功能位，+8 敌方队伍，+16 敌方控制器，+20 敌方成员（controller+924，与 onGameScreenTouchEnded 的 r9 相同）。"""
@@ -1290,11 +1377,11 @@ class Lab:
                 seen.pop(slot, None)
         return recent
 
-    def apply_base_levels(self, mine, enemy):
-        """准备界面设定的据点初始等级：以原生 actionKyotenLevelup 逐级提升（同时更新 AP 上限、回复量与升级成本，
-        并触发原生升级事件），随后还原升级扣除的 AP。"""
+    def apply_base_levels(self, pairs):
+        """准备界面设定的据点初始等级（pairs 为 (控制器, 设定键)）：以原生 actionKyotenLevelup 逐级提升（同时更新 AP 上限、
+        回复量与升级成本，并触发原生升级事件），随后还原升级扣除的 AP。"""
         p = self.p
-        for controller, key in ((mine, 'player_base_level'), (enemy, 'enemy_base_level')):
+        for controller, key in pairs:
             target = max(0, min(10, int(self.config.get(key, 0))))
             ap = p.word(controller + 1028)
             while p.call(PB + '14getKyotenLevelEv', controller) < target:
@@ -1311,9 +1398,10 @@ class Lab:
         p = self.p
         split = self.native_hooks >= 4
         disable = 0
+        # 停止活动开启的一方 AI 不使用辅助技能（弹头车单位 UnitID 1 的攻击不受停止攻击的身体状态位限制）。
         for shift, controller, deploy, special, slug in (
-                (0, mine, self.player_ai, self.player_auto_special, self.player_ai_slug),
-                (2, enemy, self.enemy_ai, self.enemy_auto_special, self.enemy_ai_slug)):
+                (0, mine, self.player_ai, self.player_auto_special, self.player_ai_slug and not self.player_stop),
+                (2, enemy, self.enemy_ai, self.enemy_auto_special, self.enemy_ai_slug and not self.enemy_stop)):
             enabled = (deploy or special) if split else deploy
             p.call(PB + ('13startAutoPlayEv' if enabled else '13resetAutoPlayEv'), controller)
             disable |= ((0 if deploy else 1) | (0 if special else 2)) << shift
@@ -1327,10 +1415,11 @@ class Lab:
         if kind == 'toggle':
             name = command[1]
             setattr(self, name, not getattr(self, name))
-            if name == 'full_control':
-                if self.full_control:
-                    self.applied = False       # 重新执行据点满级
-            else:
+            # 无限AP开启时下一战斗帧把该方据点升到满级；按方开关的其余效果由 apply_cheats 每帧按开关执行；
+            # AI 开关与停止活动（影响 AI 是否使用辅助技能）重新写入 AUTO 设定。
+            if name.endswith('_unlimited_ap') and getattr(self, name):
+                self.base_max_pending.add(name.split('_')[0])
+            elif name not in CHEATS or name.endswith('_stop'):
                 mine, enemy, _ = self.controllers()
                 if self.active and mine and enemy:
                     self.apply_ai(mine, enemy)
@@ -1410,17 +1499,25 @@ class Lab:
             if self.menu.open:
                 self.menu.move(command[1])
             return
+        if kind == 'menu_move_h':
+            if self.menu.open:
+                self.menu.move_h(command[1])
+            return
         if kind == 'menu_select':
             if self.menu.open:
                 self.menu.activate()
             return
         if kind in ('toggle_full', 'toggle_enemy_ai', 'toggle_player_ai') and (self.cpu or self.cpu_battle()):
-            return                                  # VS CPU：完全控制与 AI 由模式决定（F8 / F4 / F3 不生效）
+            return                                  # VS CPU：无限AP、出兵无冷却与 AI 由模式决定（F8 / F4 / F3 不生效）
         if kind == 'toggle_full':
-            self.full_control = not self.full_control
-            if self.full_control and self.active:
-                self.applied = False
-            self.feedback(T(self.p, 'fb_full', T(self.p, 'on' if self.full_control else 'off')))
+            # F8：双方的无限AP与出兵无冷却一起切换（四项全开时全部关闭，否则全部开启）。
+            names = [side + name for side in ('player', 'enemy') for name in ('_unlimited_ap', '_no_cooldown')]
+            value = not all(getattr(self, name) for name in names)
+            for name in names:
+                setattr(self, name, value)
+            if value and self.active:
+                self.base_max_pending.update(('player', 'enemy'))
+            self.feedback(T(self.p, 'fb_full', T(self.p, 'on' if value else 'off')))
             return
         if kind in ('toggle_enemy_ai', 'toggle_player_ai'):
             if kind == 'toggle_enemy_ai':

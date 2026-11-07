@@ -324012,7 +324012,8 @@
                 180,
                 240
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m1.s2",
@@ -324193,7 +324194,8 @@
                   "x": 1950
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m1.s3",
@@ -324376,7 +324378,8 @@
                   "x": 1700
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m1.s4",
@@ -324587,7 +324590,8 @@
                   "x": 1690
                 }
               ],
-              "stamina": 45
+              "stamina": 45,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m1.s5",
@@ -324861,7 +324865,8 @@
                   "x": 950
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m1.s6",
@@ -324984,7 +324989,8 @@
                 240,
                 300
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -325090,7 +325096,8 @@
                 180,
                 240
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m2.s2",
@@ -325221,7 +325228,8 @@
                 180,
                 240
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m2.s3",
@@ -325434,7 +325442,8 @@
                 180,
                 240
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m2.s4",
@@ -325645,7 +325654,8 @@
                   "x": 2500
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m2.s5",
@@ -325814,7 +325824,8 @@
                   "x": 2400
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -325908,7 +325919,8 @@
                 180,
                 240
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m3.s2",
@@ -326005,7 +326017,8 @@
                   "x": 1150
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m3.s3",
@@ -326114,7 +326127,8 @@
                   "x": 1150
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m3.s4",
@@ -326277,7 +326291,8 @@
                   "x": 2400
                 }
               ],
-              "stamina": 45
+              "stamina": 45,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m3.s5",
@@ -326390,7 +326405,8 @@
                   "x": 1000
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m3.s6",
@@ -326595,7 +326611,8 @@
                   "x": 2300
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -326713,7 +326730,8 @@
                 180,
                 240
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m4.s2",
@@ -326810,7 +326828,8 @@
                   "x": 1350
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m4.s3",
@@ -326951,7 +326970,8 @@
                   "x": 2600
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m4.s4",
@@ -327110,7 +327130,8 @@
                   "x": 2600
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m4.s5",
@@ -327214,7 +327235,8 @@
                   "x": 1550
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -327320,7 +327342,8 @@
                 165,
                 190
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m5.s2",
@@ -327421,7 +327444,8 @@
                   "x": 2420
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m5.s3",
@@ -327522,7 +327546,8 @@
                   "x": 1150
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m5.s4",
@@ -327647,7 +327672,8 @@
                   "x": 2370
                 }
               ],
-              "stamina": 45
+              "stamina": 45,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m5.s5",
@@ -327760,7 +327786,8 @@
                   "x": 1300
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m5.s6",
@@ -327835,7 +327862,8 @@
                 225,
                 250
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -328015,7 +328043,8 @@
                   "x": 1860
                 }
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m6.s2",
@@ -328160,7 +328189,8 @@
                   "x": 940
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m6.s3",
@@ -328293,7 +328323,8 @@
                   "x": 900
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m6.s4",
@@ -328446,7 +328477,8 @@
                   "x": 1600
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m6.s5",
@@ -328543,7 +328575,8 @@
                 240,
                 300
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -328669,7 +328702,8 @@
                 135,
                 150
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m7.s2",
@@ -328846,7 +328880,8 @@
                   "x": 1100
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m7.s3",
@@ -328991,7 +329026,8 @@
                   "x": 2500
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m7.s4",
@@ -329236,7 +329272,8 @@
                   "x": 1150
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m7.s5",
@@ -329331,7 +329368,8 @@
                   "x": 2600
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -329475,7 +329513,8 @@
                   "x": 1320
                 }
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m8.s2",
@@ -329732,7 +329771,8 @@
                   "x": 2420
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m8.s3",
@@ -330061,7 +330101,8 @@
                   "x": 1740
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m8.s4",
@@ -330222,7 +330263,8 @@
                   "x": 1878
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m8.s5",
@@ -330295,7 +330337,8 @@
                 270,
                 330
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -330435,7 +330478,8 @@
                   "x": 967
                 }
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m9.s2",
@@ -330588,7 +330632,8 @@
                   "x": 2120
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m9.s3",
@@ -330741,7 +330786,8 @@
                   "x": 2058
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m9.s4",
@@ -330890,7 +330936,8 @@
                   "x": 788
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m9.s5",
@@ -331030,7 +331077,8 @@
                   "x": 1950
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -331158,7 +331206,8 @@
                   "x": 818
                 }
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m10.s2",
@@ -331315,7 +331364,8 @@
                   "x": 2378
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m10.s3",
@@ -331492,7 +331542,8 @@
                   "x": 2028
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m10.s4",
@@ -331669,7 +331720,8 @@
                   "x": 2146
                 }
               ],
-              "stamina": 45
+              "stamina": 45,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m10.s5",
@@ -331830,7 +331882,8 @@
                   "x": 2150
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m10.s6",
@@ -331908,7 +331961,8 @@
                 270,
                 330
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -332091,7 +332145,8 @@
                   "x": 1916
                 }
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m11.s2",
@@ -332427,7 +332482,8 @@
                   "x": 2590
                 }
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m11.s3",
@@ -332529,7 +332585,8 @@
                 180,
                 240
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m11.s4",
@@ -332721,7 +332778,8 @@
                   "x": 1164
                 }
               ],
-              "stamina": 45
+              "stamina": 45,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m11.s5",
@@ -333121,7 +333179,8 @@
                   "x": 6154
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m11.s6",
@@ -333824,7 +333883,8 @@
                   "x": 6094
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         },
@@ -334037,7 +334097,8 @@
                 180,
                 240
               ],
-              "stamina": 30
+              "stamina": 30,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m12.s2",
@@ -334267,7 +334328,8 @@
                 180,
                 240
               ],
-              "stamina": 35
+              "stamina": 35,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m12.s3",
@@ -334571,7 +334633,8 @@
                   "x": 3360
                 }
               ],
-              "stamina": 40
+              "stamina": 40,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m12.s4",
@@ -334645,7 +334708,8 @@
                   "x": 1380
                 }
               ],
-              "stamina": 45
+              "stamina": 45,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m12.s5",
@@ -334817,7 +334881,8 @@
                   "x": 1440
                 }
               ],
-              "stamina": 50
+              "stamina": 50,
+              "menu_background": true
             },
             {
               "key": "s1xlv.ura4.m12.s6",
@@ -334959,7 +335024,8 @@
                   "x": 1504
                 }
               ],
-              "stamina": 60
+              "stamina": 60,
+              "menu_background": true
             }
           ]
         }

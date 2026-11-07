@@ -276,7 +276,10 @@ class NetplayBattle:
         config = {'stage_id': stage, 'player_deck': p1_deck, 'enemy_deck': p2_deck,
                   'player_base_level': 0, 'enemy_base_level': 0, 'player_hp_boost': 0, 'player_atk_boost': 0,
                   'enemy_hp_boost': 0, 'enemy_atk_boost': 0, 'player_support': 0, 'enemy_support': 0,
-                  'full_control': False, 'player_ai': False, 'enemy_ai': False,
+                  'player_unlimited_ap': False, 'enemy_unlimited_ap': False, 'player_no_cooldown': False,
+                  'enemy_no_cooldown': False, 'player_unlimited_support': False, 'enemy_unlimited_support': False,
+                  'player_stop': False, 'enemy_stop': False,
+                  'player_ai': False, 'enemy_ai': False,
                   'player_auto_special': False, 'enemy_auto_special': False}
         if p1_status is not None and p2_status is not None:
             config.update(player_status=[int(v) & 0xffffffff for v in p1_status],

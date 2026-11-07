@@ -153,8 +153,10 @@ class VersusPage:
             from lab_versus import create_native_image
             title = Image.open(self.root / 'artwork/title_font_20261008/titles/VERSUS_16_native.png').convert('RGBA')
             rect = (0, 0, 98, 123, -7, -7, 0, 0)
+            # 锚点 (2, 11)：原生标题图（SHOP，锚点 0,9）第 0 行 / 列为轮廓、第 1 行 / 列起为填充；本图前 2 行 / 列为空白，
+            # 锚点同加 2，使填充左缘对齐顶栏 METAL SLUG DEFENSE 的 M 左缘、填充上缘与原生标题同高（2026-11-08）。
             entries = [(TITLE_CONV, 0, create_native_image(self.p, title), 0,
-                        (0, 0, title.width, title.height, 0, title.height // 2, 0, 0))]
+                        (0, 0, title.width, title.height, 2, 9 + 2, 0, 0))]
             cpu = create_native_image(self.p, self.card_image('cpu', lang))
             for index, conv in enumerate(CARD_CONVS):
                 image = create_native_image(self.p, self.card_image(CARDS[index], lang))
