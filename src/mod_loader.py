@@ -224,6 +224,11 @@ def read_mod(folder, game_version, library_version):
                     if not isinstance(part.get(name, []), list) or not all(isinstance(v, dict) for v in part.get(name, [])):
                         raise ValueError(f'{path.name}: {name} must be a list of objects')
                     mod.campaign[name] += part.get(name, [])
+                # 2026-11-08 用户要求：里地图扩展页（ura_page 4–6）留给本体内容，模组的世界不得占用。
+                for world in part.get('worlds', []):
+                    if 'ura_page' in world:
+                        raise ValueError(f'{path.name}: world {world.get("key")}: "ura_page" is reserved for official content; '
+                                         'mods cannot add pages to the ura map')
         mod.state = 'valid'
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
         mod.state = 'skipped'

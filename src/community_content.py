@@ -119,14 +119,15 @@ class AssetDims(dict):
 def load_stock_sprites(root,value):
     """content.json 的 stock_sprites（原版单位外观替换，2026-10-23）：{"原版 UnitID": "替换文件.json"}。
     替换文件含 textures（原版图集名或本体资源名）、sprite_descriptor（以原版描述符为底本、在后面追加矩形与帧）
-    与 animations（改写的脚本，其余脚本沿用原版）。返回 {UnitID: 替换定义}。"""
+    与 animations（改写的脚本，其余脚本沿用原版）。只换图集（改色，2026-11-08）时可省略 sprite_descriptor：沿用原生矩形、帧、
+    受击框与攻击框，textures 与原生图集逐页对应（数量相同、尺寸与布局不变），animations 须为空。返回 {UnitID: 替换定义}。"""
     if not isinstance(value,dict):raise ValueError('Invalid stock sprite table')
     result={}
     for key,filename in value.items():
         if not isinstance(key,str) or not key.isdigit() or not 1<=int(key)<ORIGINAL_UNITS:raise ValueError('Invalid stock sprite unit: '+str(key))
         if not isinstance(filename,str) or Path(filename).name!=filename or not filename.endswith('.json'):raise ValueError('Invalid stock sprite file: '+str(filename))
         spec=json.loads((root/filename).read_text(encoding='utf-8'))
-        if not isinstance(spec,dict) or set(spec)!={'textures','sprite_descriptor','animations'} or not isinstance(spec['textures'],list) or not isinstance(spec['sprite_descriptor'],str) or not isinstance(spec['animations'],dict):raise ValueError('Invalid stock sprite definition: '+filename)
+        if not isinstance(spec,dict) or set(spec) not in ({'textures','sprite_descriptor','animations'},{'textures','animations'}) or not isinstance(spec['textures'],list) or not isinstance(spec.get('sprite_descriptor',''),str) or not isinstance(spec['animations'],dict):raise ValueError('Invalid stock sprite definition: '+filename)
         result[int(key)]=spec
     return result
 
@@ -438,7 +439,7 @@ class CommunityContent:
             for name in spec['textures']:
                 if name not in self.asset_dimensions and not stock_asset_exists(name):raise ValueError('Unregistered stock sprite texture: '+str(name))
             desc=check_sprite_descriptor(spec,self.asset_dimensions,self.descriptor_path)
-            if not desc:raise ValueError('Stock sprite requires a sprite descriptor')
+            if not desc and spec['animations']:raise ValueError('Stock sprite animations require a sprite descriptor')
             self.stock_sprites[uid]=(spec,desc)
         from campaign_catalog import merge_scenes
         merge_scenes(self)

@@ -1,7 +1,8 @@
 """社区单位的运行时 UnitID 分配。
 
 本体单位的 ID 写在 community_content/content.json 的 unit_ids 中，只追加、不重排。
-模组单位的 ID 由 ModIdMap 在模组区段内分配，并持久化“稳定键 → ID”映射：同一模组跨启动保持相同 ID，
+模组单位的 ID 由 ModIdMap 在模组区段内自最高号向下分配（2026-11-08 用户要求：本体区段自 1024 向上增长，模组自 5119 向下，
+本体区段日后上移时不与已分配的模组 ID 重叠），并持久化“稳定键 → ID”映射：同一模组跨启动保持相同 ID，
 停用后映射保留，重新启用时恢复原 ID（模组规格第 2.1 节）。映射文件位于用户目录，不在存档目录内。
 MSD_MOD_ID_MAP 可改变映射文件路径。
 """
@@ -63,7 +64,7 @@ class ModIdMap:
 
     def assign(self, keys, preferred=None):
         """为已启用模组的单位键返回 ID。已有映射保持；新键优先采用 preferred（例如存档进度记录的 ID）中
-        仍空闲的值，否则取区段内最小的空闲 ID。"""
+        仍空闲的值，否则取区段内最大的空闲 ID（自最高号向下）。"""
         preferred = preferred or {}
         result = {}
         for key in keys:
@@ -76,7 +77,7 @@ class ModIdMap:
                 if isinstance(wish, int) and self.range[0] <= wish < self.range[1] and wish not in used:
                     uid = wish
                 else:
-                    uid = next((v for v in range(*self.range) if v not in used), None)
+                    uid = next((v for v in range(self.range[1] - 1, self.range[0] - 1, -1) if v not in used), None)
                     if uid is None:
                         raise ValueError('Mod unit ID range exhausted')
                 self.ids[key] = uid

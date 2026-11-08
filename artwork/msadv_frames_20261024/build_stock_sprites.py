@@ -1,4 +1,4 @@
-"""Walter（385）与 Tyra（381）补帧接入游戏：把已完成的补帧图写成原版单位外观替换（content.json 的 stock_sprites）。
+"""Walter（385）、Tyra（381）与鸟原住民（221）补帧接入游戏：把已完成的补帧图写成原版单位外观替换（content.json 的 stock_sprites）。
 来源（核查文档 docs/msadv/MS_ADVANCE_UNITS_CHECK_2026-10-23.md 第 13–22 节；补帧图在 verification/ 下，只读）：
 - Walter 前进（脚本 7 与 1）：Ralf 前进 12 帧换头（第 15 节，walter_walk.npz），Ralf 节奏每帧 2 tick；
 - Walter 死亡（脚本 13–20）：MS5“向后炸飞”10 帧，用户修改定稿（第 17 节，walter_death_final.npz；第 9 帧同第 8 帧）；
@@ -6,13 +6,16 @@
 - Walter 射击（脚本 9、10）：原帧 + 补帧 a1、a3、b2、b4、b5、c1，用户修改定稿（第 19 节，walter_shoot_final.npz）；
 - Tyra 前进（脚本 7）：Nadia 前进 11 帧换头（第 13 节，headswap.npz），Nadia 节奏 13 tick；
 - Tyra 死亡（脚本 13–20）：Nadia 脚本 13 / 14 的 18 帧（第 14 节，death.npz）；
-- Tyra 普通攻击（脚本 9）：原帧 + 补帧 a1、a3、c1；近战（脚本 8）：原帧 + 补帧 k1、k3（第 22 节，tyra_shoot.npz / tyra_melee.npz）。
+- Tyra 普通攻击（脚本 9）：原帧 + 补帧 a1、a3、c1；近战（脚本 8）：原帧 + 补帧 k1、k3（第 22 节，tyra_shoot.npz / tyra_melee.npz）；
+- 鸟原住民（221）：原帧 + Native Bird (Expanded) 素材表中 GBA 版减掉的帧（第 26 节，verification/native_bird_20261108/out/bird_frames.npz，GBA 色板）。
 写出（community_content/）：
 - <name>_frames.obm：补帧图逐张裁到不透明外接框后按行排入 512 宽画布（高取 2 的幂），OBM kind 1（8 位索引、RGBA 调色板，索引 0 透明）；
 - <name>_descriptor.json：原生矩形与帧原样在前（偏移不变，未改写的原生脚本照常引用），补帧的矩形与帧追加在后；受击框与攻击框取原生；
 - <name>_sprite.json：textures = 原生图集 + 补帧图集；animations = 改写的脚本（其余沿用原生）。
 改写脚本时，原脚本中帧与等待以外的指令（op3 受击框、op4 攻击框、op7 弹起、op11 子层、op22 发射、op23 音效）放在与原脚本相同的 tick，
 结尾的 op5 / op15 / op16 / op21 原样在后；新节奏中没有该 tick 的帧边界时报错。最后在 content.json 登记图集摘要与 stock_sprites。
+改色（2026-11-08，核查文档第 25 节）：artwork/msadv_recolor_20261108/palette_maps.json 有该单位的换色表时，补帧图集按表换色，
+textures 中的原生图集换成改色副本（副本由 build_recolor.py 写出；build_recolor.py 会调用本脚本，单独重跑本脚本时同样换色）。
 用法：E:\\anaconda3\\python.exe -I build_stock_sprites.py"""
 import re, sys, json, struct
 from pathlib import Path
@@ -24,6 +27,9 @@ sys.path.insert(0, str(REPO))
 from frames import Unit  # noqa: E402
 from elfmem import read  # noqa: E402
 import content_digest  # noqa: E402
+sys.path.insert(0, str(REPO / 'artwork' / 'msadv_recolor_20261108'))
+import recolor  # noqa: E402
+RECOLOR = recolor.load_maps()
 
 OUT = REPO / 'community_content'
 W_OUT = VER / 'msadv_walter_20261023' / 'out'
@@ -96,6 +102,34 @@ def scripts_tyra():
 
 
 UNITS = {385: ('walter_rian', images_walter, scripts_walter), 381: ('tyra_elson', images_tyra, scripts_tyra)}
+
+
+NB_OUT = VER / 'native_bird_20261108' / 'out'
+NB_BOX = (-64, -88, 128, 104)
+
+
+def images_native_bird():
+    d = np.load(NB_OUT / 'bird_frames.npz')
+    return {k: (d[k], NB_BOX) for k in d.files}
+
+
+def scripts_native_bird():
+    idle = [(0, 5), ('idle1', 3), (2, 5), (4, 3)]
+    walk = [(6, 1), ('move1', 1), (8, 1), ('move3', 1), (10, 1), ('move5', 1), (12, 1), ('move7', 1), (14, 1), ('move9', 1), (16, 1), ('move11', 1)]
+    throw = [(78, 4), (80, 1), ('throw2', 1), (82, 2), (84, 2), ('throw5', 2), (82, 2), (80, 2)]
+    cheer = [(92, 1), ('laugh1', 1), (94, 1), (96, 2), (94, 1)]
+    cheer_slow = [(92, 2), ('laugh1', 1), (94, 3), (96, 3), (94, 3)]
+    die = [('die4', 2), (22, 2), ('die6', 2), (24, 2), ('die8', 2), (26, 2), ('die10', 2), (28, 2), ('die12', 2), ('die13', 2)]
+    return {0: idle, 6: idle, 1: walk, 7: walk, 2: cheer * 2, 30: cheer_slow * 2,
+            8: [(30, 1), ('axe1', 1), (32, 1), ('axe3', 1), (34, 1), ('axe5', 1), (36, 2), (38, 2), (40, 1), ('axe9', 1), (42, 2), (42, 1), ('axe11', 1),
+                (44, 2), (46, 2)],
+            9: throw, 10: throw * 3, 28: throw * 3,
+            27: throw + [(0, 5), (2, 3), (4, 3), (2, 3), (0, 5), (2, 3), (4, 3), (2, 3), (0, 5)],
+            12: [('hit0', 1), (18, 1), ('hit2', 2), (20, 200)],
+            13: die + [(BLANK, 1), ('die13', 2)] * 4 + [(BLANK, 1)]}
+
+
+UNITS[221] = ('native_bird', images_native_bird, scripts_native_bird)
 
 
 def native_bounds(u):
@@ -193,6 +227,9 @@ def build(uid):
         frames += [1, len(rects)]
         rects.append([int(px), int(py), int(w), int(h), int(ax), int(ay), 0, page])
     raw, ncolors = obm_kind1(atlas)
+    remap = RECOLOR.get(str(uid))
+    if remap:
+        raw = recolor.recolor_obm(raw, remap['color_map'])
     atlas_name = f'{name}_frames.obm'
     (OUT / atlas_name).write_bytes(raw)
     hits, attacks = native_bounds(u)
@@ -202,7 +239,8 @@ def build(uid):
     for sid, tl in sorted(script_fn().items()):
         orig = [c for c in u.script(sid) if 'values' in c]
         animations[str(sid)] = rewrite(orig, tl, offset_of)
-    spec = {'textures': list(u.pages) + [atlas_name], 'sprite_descriptor': f'{name}_descriptor.json', 'animations': animations}
+    pages = [remap['pages'].get(n, n) for n in u.pages] if remap else list(u.pages)
+    spec = {'textures': pages + [atlas_name], 'sprite_descriptor': f'{name}_descriptor.json', 'animations': animations}
     (OUT / f'{name}_sprite.json').write_text(json.dumps(spec, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')
     ticks = {s: sum(c['values'][0] for c in cmds if c['opcode'] == 1) for s, cmds in animations.items()}
     print(uid, atlas_name, f'512x{height}', 'colors', ncolors, 'new images', len(crops), 'rects', len(rects), 'frames', len(frames),

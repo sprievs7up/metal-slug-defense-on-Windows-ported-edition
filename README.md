@@ -10,9 +10,10 @@ This edition adds keyboard controls and a **16:9 layout**. Expanded backgrounds 
 
 **Stamina regenerates at 1 point per second.** The original Android version regenerates 1 point per minute.
 
-**Update 26.11.9**
+**Update 26.11.10**
 
-- Improved the game's user interface.
+- Recolored the units that come from Metal Slug Advance and revised their sprites so that they match the original Metal Slug games more closely.
+- Fixed a sprite bug on NOP-03 SARUBIA (Future).
 
 Earlier updates are listed in [Update history](#update-history).
 
@@ -71,7 +72,15 @@ Worlds and stages, community units, custom EVENTs, independent scenes and music 
 
 Mods go in `mods/`, one folder per mod; the format is described in [mods/README.md](mods/README.md). Enable or disable them under MODS in the title-screen OPTION menu; changes take effect after the game restarts. Unit behaviors available to mods are listed in [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md).
 
+### Credits
+
+**Yossho** helped enormously in finding sprite material for this project. The added frames of Native (Bird) come from the sheet “Native Bird (Expanded)”, edited by Yossho from original sprites by SNK.
+
 ### Update history
+
+**Update 26.11.9**
+
+- Improved the game's user interface.
 
 **Update 26.11.8**
 
@@ -179,9 +188,10 @@ Esta edición añade controles de teclado y un **formato 16:9**. Los fondos ampl
 
 **La energía (stamina) se recupera a 1 punto por segundo.** La versión original de Android recupera 1 punto por minuto.
 
-**Actualización 26.11.9**
+**Actualización 26.11.10**
 
-- Se mejoró la interfaz del juego.
+- Se cambiaron los colores y se modificaron los sprites de las unidades procedentes de Metal Slug Advance para que se ajusten mejor a los juegos originales de Metal Slug.
+- Se corrigió un error de sprite de NOP-03 SARUBIA (Futuro).
 
 Las actualizaciones anteriores se encuentran en [Historial de actualizaciones](#historial-de-actualizaciones).
 
@@ -240,7 +250,15 @@ Los mundos y etapas, las unidades comunitarias, los EVENT propios, y los escenar
 
 Los mods se colocan en `mods/`, una carpeta por mod; el formato se describe en [mods/README.md](mods/README.md). Actívalos o desactívalos en MODS, dentro del menú OPTION de la pantalla de título; los cambios se aplican al reiniciar el juego. Los comportamientos de unidad disponibles para los mods se enumeran en [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md).
 
+### Agradecimientos
+
+**Yossho** ha ayudado enormemente a encontrar material de sprites para este proyecto. Los fotogramas añadidos de Native (Bird) proceden de la hoja “Native Bird (Expanded)”, editada por Yossho a partir de los sprites originales de SNK.
+
 ### Historial de actualizaciones
+
+**Actualización 26.11.9**
+
+- Se mejoró la interfaz del juego.
 
 **Actualización 26.11.8**
 
@@ -348,9 +366,10 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 
 **体力每秒恢复 1 点。** 安卓原版的恢复速率为每分钟 1 点。
 
-**26.11.9 更新**
+**26.11.10 更新**
 
-- 优化了游戏的 UI
+- 对 Metal Slug Advance 中出现的单位进行了配色以及 sprite 修改，使其更加贴合 Metal Slug 原版游戏
+- 修复了未来爆竹红的贴图 bug
 
 此前的更新见[更新记录](#更新记录)。
 
@@ -409,7 +428,15 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 
 模组放在 `mods/` 下，每个模组一个文件夹，格式见 [mods/README.md](mods/README.md)。在标题画面 OPTION 的「MOD 設定」中启用或停用，重启游戏后生效。模组可调用的单位行为见 [BEHAVIOR_CATALOG.md](docs/modding/BEHAVIOR_CATALOG.md)。
 
+### 鸣谢
+
+感谢 **Yossho** 在寻找 sprite 素材方面给予本项目的巨大帮助。鸟原住民（Native (Bird)）增加的帧取自 Yossho 编辑的素材表“Native Bird (Expanded)”，原画为 SNK。
+
 ### 更新记录
+
+**26.11.9 更新**
+
+- 优化了游戏的 UI
 
 **26.11.8 更新**
 

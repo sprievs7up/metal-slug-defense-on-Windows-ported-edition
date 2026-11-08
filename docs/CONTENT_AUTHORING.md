@@ -67,7 +67,7 @@
 | `triggers` | 可选，出兵触发，与自制 EVENT 相同：`when` 为 `time`（计时等于 `value`）、`base_hp`（敌方据点生命低于 `value`%）或 `front`（我方最前单位与敌方据点距离小于 `value`）；动作为 `spawn`（名单序号，出兵一次）、`jump`（把出兵计时设为该帧，可跳入 `loop` 之后只由触发进入的出兵段）或 `strength`（追加关卡强化级数）；`repeat` 缺省为每场一次。连同 `loop` 至多 32 条。2026-10-19 起。 |
 | `placed` | 可选，开战时已在战场上的敌方单位 `{"enemy": 名单序号, "x": 场景横坐标}`，至多 32 个。2026-10-19 起。 |
 | `difficulty`、`rank_times` | 可选，难度标签 0–5 与评级时间 `[S, A, B, C, D]`（秒，逐项递增），与自制 EVENT 相同；缺省沿用模板关卡。2026-10-19 起。 |
-| `ura_page`、`ura_background`（世界） | 可选：写 `ura_page`（4–6，自 4 起连续）时，该世界显示在原生里地图的第 4 页起（里世界 4 为原生世界号 12，关卡编号按原生规则 (世界号+1)×1000 + (区域+1)×10 + 关卡+1），不出现在扩展世界选择界面；`ura_background` 为 571×320 的 PNG / WebP 网格背景（左右两块各约 285 宽，同原生里地图背景），翻页时的交叉淡入与亮度起伏由原生绘制。需要核心 r69 起。2026-10-19 起。 |
+| `ura_page`、`ura_background`（世界） | 可选：写 `ura_page`（4–6，自 4 起连续）时，该世界显示在原生里地图的第 4 页起（里世界 4 为原生世界号 12，关卡编号按原生规则 (世界号+1)×1000 + (区域+1)×10 + 关卡+1），不出现在扩展世界选择界面；`ura_background` 为 571×320 的 PNG / WebP 网格背景（左右两块各约 285 宽，同原生里地图背景），翻页时的交叉淡入与亮度起伏由原生绘制。需要核心 r69 起。2026-10-19 起。 模组的世界不得写 `ura_page`（2026-11-08 起 `mod_loader` 跳过该模组，扩展页留给本体内容）。 |
 | `map_position`、`native_name` 或 `name`（区域）；`map_position`、`thumbnail`（关卡） | 里地图扩展页使用：区域的地图坐标 `[x, y]`（0–1440、0–709）与区域名称——`native_name` 为原生区域名称编号（0–56，各语言文字取自原版，例如 31 为「中非」），或写 `name` 自定义名称（11 种语言 `EN`、`JP`、`KR`、`ES`、`PT`、`FR`、`DE`、`IT`、`ZS`、`ZT`、`RU` 各一项，每项 1–64 字节；宿主追加到原生名称表之后，2026-10-21 起，例如里世界 4「泰国」），两者写且只写一个；每区域 1–6 关，关卡坐标 `[dx, dy]` 为相对区域坐标（−200…200、−80…80；进入区域后画面坐标约为 640 + 3.375·dx、342 + 3.375·dy，里地图右上为计时框、左上为区域名称条），`thumbnail` 为 128×56 略缩图。扩展页的区域按原版里世界整体开放、不设人质，`requires` 与 `reward_units` 写了即拒绝；进度按关卡与区域稳定键保存于 `campaign_progress.json`（字段 `seen`、`wins`、`best_time`，区域在 `areas`）。2026-10-19 起。 |
 | `menu_background`（关卡） | 可选，布尔，默认 `false`：里地图扩展页的关卡写 `true` 时，通关后与原版表世界 1–3 已通关的小关一起作为主菜单背景的候选。原生 `GetMainMenuBGStageID` 从候选中随机取一关、不与上次相同，每关概率相同；候选数组上限 256 项（原版至多 195 项），已通关的标记关卡按目录顺序加入至数组填满。东南亚第 1 关未通关时原生固定使用该关。扩展世界选择界面的世界写 `true` 即拒绝。需要核心 r150 起（`msd_ura_world_version` 2）。2026-11-08 起。 |
 | `requires` | 世界、区域或关卡的前置通关键列表；相关上级条件同时生效，目录校验拒绝循环依赖。 |
@@ -85,7 +85,7 @@
 
 ### 原版单位外观替换（stock_sprites）
 
-`content.json` 可写 `"stock_sprites": {"原版 UnitID": "替换文件.json"}`，替换原版单位的动作外观（数据行、动作类与其他单位不变）。替换文件含 `textures`（原版图集名或已在 `assets` 登记的本体图集）、`sprite_descriptor`（以原版描述符为底本：原版矩形与帧原样在前，新增的矩形与帧追加在后，受击框与攻击框取原版）与 `animations`（改写的脚本，其余脚本沿用原版）。改写脚本时，攻击框、发射、音效、弹起等指令须保持原版所在的 tick 与脚本总长。现有用途为 Walter（385）与 Tyra（381）的补帧（`walter_rian_*`、`tyra_elson_*`，生成脚本 `artwork/msadv_frames_20261024/build_stock_sprites.py`）。
+`content.json` 可写 `"stock_sprites": {"原版 UnitID": "替换文件.json"}`，替换原版单位的动作外观（数据行、动作类与其他单位不变）。替换文件含 `textures`（原版图集名或已在 `assets` 登记的本体图集）、`sprite_descriptor`（以原版描述符为底本：原版矩形与帧原样在前，新增的矩形与帧追加在后，受击框与攻击框取原版）与 `animations`（改写的脚本，其余脚本沿用原版）。改写脚本时，攻击框、发射、音效、弹起等指令须保持原版所在的 tick 与脚本总长。现有用途为 Walter（385）与 Tyra（381）的补帧（`walter_rian_*`、`tyra_elson_*`，生成脚本 `artwork/msadv_frames_20261024/build_stock_sprites.py`）。只换图集（改色）时替换文件可只写 `textures` 与空的 `animations`：沿用原版矩形、帧、脚本、受击框与攻击框，`textures` 按原版图集的顺序逐页对应（数量相同，换上的图集尺寸与布局须与原版相同）；不写 `sprite_descriptor` 时不得改写脚本。现有用途为《合金弹头 Advance》出处单位的改色（Dararin Dara Dara 248、Balor 340 / 341、Native (Bird) 221 只换图集，Walter、Tyra 的补帧替换中原版图集换成改色副本；生成脚本 `artwork/msadv_recolor_20261108/build_recolor.py`，换色表 `palette_maps.json`）。
 
 ## 4. 新场景、OBM 与 PNG
 

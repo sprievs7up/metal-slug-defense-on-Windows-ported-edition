@@ -31,7 +31,11 @@
     3,
     2
   ],
-  "texture": "sarubia_future.obm",
+  "textures": [
+    "sarubia_future.obm",
+    "sarubia_future_sfx.obm"
+  ],
+  "sprite_descriptor": "sarubia_future_descriptor.json",
   "icon": {
     "page": 1,
     "rect": [
@@ -143,7 +147,7 @@
         "opcode": 12,
         "values": [
           17,
-          0,
+          1,
           -34,
           -70
         ]
@@ -310,7 +314,7 @@
         "opcode": 12,
         "values": [
           17,
-          0,
+          1,
           -34,
           -70
         ]
@@ -631,7 +635,7 @@
         "opcode": 12,
         "values": [
           17,
-          0,
+          1,
           -34,
           -70
         ]
@@ -791,7 +795,7 @@
         "opcode": 12,
         "values": [
           17,
-          0,
+          1,
           -34,
           -70
         ]
@@ -951,334 +955,7 @@
         "opcode": 12,
         "values": [
           17,
-          0,
-          -34,
-          -70
-        ]
-      },
-      {
-        "address": "0x8f520c",
-        "opcode": 23,
-        "values": [
-          276
-        ]
-      },
-      {
-        "address": "0x8f5214",
-        "opcode": 0,
-        "values": [
-          24
-        ]
-      },
-      {
-        "address": "0x8f521c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5224",
-        "opcode": 22,
-        "values": [
-          13,
-          0,
-          -26,
-          -64
-        ]
-      },
-      {
-        "address": "0x8f5154",
-        "opcode": 0,
-        "values": [
-          26
-        ]
-      },
-      {
-        "address": "0x8f515c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5164",
-        "opcode": 0,
-        "values": [
-          28
-        ]
-      },
-      {
-        "address": "0x8f516c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5174",
-        "opcode": 0,
-        "values": [
-          30
-        ]
-      },
-      {
-        "address": "0x8f517c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5198",
-        "opcode": 0,
-        "values": [
-          32
-        ]
-      },
-      {
-        "address": "0x8f51a0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51a8",
-        "opcode": 0,
-        "values": [
-          30
-        ]
-      },
-      {
-        "address": "0x8f51b0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51b8",
-        "opcode": 0,
-        "values": [
-          28
-        ]
-      },
-      {
-        "address": "0x8f51c0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51c8",
-        "opcode": 0,
-        "values": [
-          26
-        ]
-      },
-      {
-        "address": "0x8f51d0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51d8",
-        "opcode": 0,
-        "values": [
-          24
-        ]
-      },
-      {
-        "address": "0x8f51e0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51e8",
-        "opcode": 0,
-        "values": [
-          22
-        ]
-      },
-      {
-        "address": "0x8f51f0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51f8",
-        "opcode": 12,
-        "values": [
-          17,
-          0,
-          -34,
-          -70
-        ]
-      },
-      {
-        "address": "0x8f520c",
-        "opcode": 23,
-        "values": [
-          276
-        ]
-      },
-      {
-        "address": "0x8f5214",
-        "opcode": 0,
-        "values": [
-          24
-        ]
-      },
-      {
-        "address": "0x8f521c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5224",
-        "opcode": 22,
-        "values": [
-          13,
-          0,
-          -26,
-          -64
-        ]
-      },
-      {
-        "address": "0x8f5154",
-        "opcode": 0,
-        "values": [
-          26
-        ]
-      },
-      {
-        "address": "0x8f5164",
-        "opcode": 0,
-        "values": [
-          28
-        ]
-      },
-      {
-        "address": "0x8f516c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5174",
-        "opcode": 0,
-        "values": [
-          30
-        ]
-      },
-      {
-        "address": "0x8f517c",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f5198",
-        "opcode": 0,
-        "values": [
-          32
-        ]
-      },
-      {
-        "address": "0x8f51a0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51a8",
-        "opcode": 0,
-        "values": [
-          30
-        ]
-      },
-      {
-        "address": "0x8f51b0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51b8",
-        "opcode": 0,
-        "values": [
-          28
-        ]
-      },
-      {
-        "address": "0x8f51c0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51c8",
-        "opcode": 0,
-        "values": [
-          26
-        ]
-      },
-      {
-        "address": "0x8f51d0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51d8",
-        "opcode": 0,
-        "values": [
-          24
-        ]
-      },
-      {
-        "address": "0x8f51e0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51e8",
-        "opcode": 0,
-        "values": [
-          22
-        ]
-      },
-      {
-        "address": "0x8f51f0",
-        "opcode": 1,
-        "values": [
-          1
-        ]
-      },
-      {
-        "address": "0x8f51f8",
-        "opcode": 12,
-        "values": [
-          17,
-          0,
+          1,
           -34,
           -70
         ]
@@ -1445,7 +1122,334 @@
         "opcode": 12,
         "values": [
           17,
+          1,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
           0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          1,
+          -34,
+          -70
+        ]
+      },
+      {
+        "address": "0x8f520c",
+        "opcode": 23,
+        "values": [
+          276
+        ]
+      },
+      {
+        "address": "0x8f5214",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f521c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5224",
+        "opcode": 22,
+        "values": [
+          13,
+          0,
+          -26,
+          -64
+        ]
+      },
+      {
+        "address": "0x8f5154",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f515c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5164",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f516c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5174",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f517c",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f5198",
+        "opcode": 0,
+        "values": [
+          32
+        ]
+      },
+      {
+        "address": "0x8f51a0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51a8",
+        "opcode": 0,
+        "values": [
+          30
+        ]
+      },
+      {
+        "address": "0x8f51b0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51b8",
+        "opcode": 0,
+        "values": [
+          28
+        ]
+      },
+      {
+        "address": "0x8f51c0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51c8",
+        "opcode": 0,
+        "values": [
+          26
+        ]
+      },
+      {
+        "address": "0x8f51d0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51d8",
+        "opcode": 0,
+        "values": [
+          24
+        ]
+      },
+      {
+        "address": "0x8f51e0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51e8",
+        "opcode": 0,
+        "values": [
+          22
+        ]
+      },
+      {
+        "address": "0x8f51f0",
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "address": "0x8f51f8",
+        "opcode": 12,
+        "values": [
+          17,
+          1,
           -34,
           -70
         ]
@@ -1581,6 +1585,168 @@
       },
       {
         "address": "0x8f52bc",
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "17": [
+      {
+        "opcode": 0,
+        "values": [
+          194
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          196
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          198
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          200
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          202
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          204
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          206
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          208
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          210
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          212
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          214
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          216
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          218
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
         "opcode": 21,
         "values": []
       }
