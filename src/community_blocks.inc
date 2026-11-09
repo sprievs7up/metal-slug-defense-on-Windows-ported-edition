@@ -1978,4 +1978,6 @@ if((old_fio_rocket_ground=find_block(0x1016ddf3u))){register_block(0x1016ddf3u,f
 if((old_effect_create=find_block(0x101823c7u))){register_block(0x101823c7u,effect_create);++reflect_hooks;}
 if((old_rugal_receive=find_block(0x101badcfu))){register_block(0x101badcfu,rugal_receive);++reflect_hooks;}
 if((old_rugal_reflected=find_block(0x101baf4bu))){register_block(0x101baf4bu,rugal_reflected);++reflect_hooks;}
+if((old_vfo_attack_done=find_block(0x101b3cafu))){register_block(0x101b3cafu,vfo_attack_done);++vfo_hooks;}
+if((old_vfo_risen=find_block(0x101b3c73u))){register_block(0x101b3c73u,vfo_risen);++vfo_hooks;}
 }

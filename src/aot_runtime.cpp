@@ -3,7 +3,7 @@
 
 // Retention follows each original BattleUnit instance, including truck
 // passengers. No new save fields, global unit-ID flags or frame polling.
-// 角色类：原版十类角色为自身 UnitID；带 retained_special_weapon 行为的社区单位为其基准 UnitID（community_content.cpp）。
+// 角色类：原版圣诞英里、圣诞菲欧为自身 UnitID（核心 r156 起原版主角四人组与胖子版恢复原生）；带 retained_special_weapon 行为的社区单位为其基准 UnitID（community_content.cpp）。
 uint32_t msd_retained_class(Context& c,uint32_t uid);
 void msd_retained_count(Context& c,uint32_t uid);
 static uint32_t retained_unit(Context& c){

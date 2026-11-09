@@ -1,20 +1,47 @@
 {
   "schema": 1,
-  "stage_id": 13116,
+  "stage_id": 2011,
   "enemy_deck": [
     [
-      1070,
+      1103,
       40
     ],
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    [
+      1104,
+      40
+    ],
+    [
+      1105,
+      40
+    ],
+    [
+      1106,
+      40
+    ],
+    [
+      82,
+      40
+    ],
+    [
+      83,
+      40
+    ],
+    [
+      234,
+      40
+    ],
+    [
+      262,
+      40
+    ],
+    [
+      266,
+      40
+    ],
+    [
+      285,
+      40
+    ]
   ],
   "player_deck": [
     [
@@ -64,20 +91,20 @@
   "player_atk_boost": 0,
   "enemy_hp_boost": 0,
   "enemy_atk_boost": 0,
-  "player_unlimited_ap": false,
-  "enemy_unlimited_ap": false,
-  "player_no_cooldown": false,
-  "enemy_no_cooldown": false,
-  "player_unlimited_support": 0,
-  "enemy_unlimited_support": 0,
+  "player_unlimited_ap": true,
+  "enemy_unlimited_ap": true,
+  "player_no_cooldown": true,
+  "enemy_no_cooldown": true,
+  "player_unlimited_support": false,
+  "enemy_unlimited_support": false,
   "player_unlimited_special": false,
   "enemy_unlimited_special": false,
   "player_stop": false,
   "enemy_stop": false,
-  "enemy_ai": true,
-  "player_ai": true,
-  "enemy_auto_special": true,
-  "player_auto_special": true,
+  "enemy_ai": false,
+  "player_ai": false,
+  "enemy_auto_special": false,
+  "player_auto_special": false,
   "enemy_ai_slug": false,
   "player_ai_slug": false,
   "player_support": 0,

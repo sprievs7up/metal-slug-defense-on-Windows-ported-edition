@@ -3920,8 +3920,8 @@ extern "C" __declspec(dllexport) uint32_t msd_community_icon_pages_version(){ret
 // 保留强化武器（行为 retained_special_weapon）：返回 UnitID 对应的角色类（原版十类角色为其自身 UnitID）；
 // 社区单位在逐单位行为标记（头部 +116）位 1 置位时取其基准 UnitID（行为库限定为这十类）；其他单位返回 0。
 uint32_t msd_retained_class(Context& c,uint32_t uid){
- switch(uid){
-  case 16u:case 17u:case 18u:case 19u:case 96u:case 97u:case 98u:case 99u:case 344u:case 362u:return uid;
+ switch(uid){   // 2026-11-09（核心 r156，用户要求）：原版主角四人组 16–19 与胖子版 96–99 恢复原生（绝招后丢弃武器），只有圣诞英里、圣诞菲欧保留
+  case 344u:case 362u:return uid;
   default:break;
  }
  uint32_t p=record(c,uid);
@@ -5037,7 +5037,8 @@ static void big_weapon_rocket(Context& c){
 static constexpr uint32_t FIO_ROCKET_ACTIONS[]={0x10960608u,0x10960614u,0x10960268u};   // bulletAction_Fio、bulletAction_FatFio、bulletAction_XmasFio
 static Block old_fio_rocket_ground;
 static void fio_rocket_ground(Context& c){
- for(uint32_t a:FIO_ROCKET_ACTIONS)if(c.r[0]==a){c.pc=c.r[14];return;}
+ uint32_t uid=rd<uint32_t>(c,c.r[1]+0x128u);   // 核心 r156（用户要求）：原版 Fio 19、Fat Fio 99 恢复原生的触地爆炸；圣诞菲欧与真 Fio 保持
+ if(uid!=19u&&uid!=99u)for(uint32_t a:FIO_ROCKET_ACTIONS)if(c.r[0]==a){c.pc=c.r[14];return;}
  old_fio_rocket_ground(c);
 }
 extern "C" __declspec(dllexport) uint32_t msd_community_big_weapon_version(){return big_weapon_hooks==3u?1u:0u;}
@@ -5109,6 +5110,29 @@ static void rf_fix(Context& c,uint32_t old,uint32_t rugal,uint32_t b){
 static Block old_rugal_receive;static void rugal_receive(Context& c){if(rf_type(c,c.r[2])==1u){c.pc=c.r[14];return;}old_rugal_receive(c);}
 static Block old_rugal_reflected;static void rugal_reflected(Context& c){rf_fix(c,c.r[4],c.r[5],c.r[6]);old_rugal_reflected(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_reflect_version(){return reflect_hooks==3u?1u:0u;}
+// ---------- 飞行核心的攻击次数离场（2026-11-09，核心 r155，用户要求，对原版单位的削弱）----------
+// 原版 FLYING CORE（UnitID 254，BattleAction_VFO::update 0x101b3984）。普通攻击（状态 30 / 40）的动作播完时（块 0x101b3cae，原生在此进入攻击等待）计数，
+// 记在对象 +0x40（VFO 只用 +0x1c / +0x20 / +0x24 / +0x34，生成时由 clearActionParams 清零）；满 VFO_LEAVE_ATTACKS 次后转入原生的升空分支（块 0x101b3bb0：
+// 动作 6、升到画面上方、禁止攻击、预约状态 21）。绝招（状态 50）走另一分支，不计入。状态 21 升空结束（块 0x101b3c72，原生在此移到本方据点上空）时，计数已满者移除，
+// 不再返回。敌方前线越过本机时的原生返回不变，计数保留。动作演示（z_viewer）中不计数。状态只在客体对象中（回滚安全）。
+static constexpr uint32_t VFO_UID=254u,VFO_LEAVE_ATTACKS=3u,VFO_COUNT=0x40u,VFO_RISE=0x101b3bb1u,VFO_EXIT=0x101b3d2du;
+static uint32_t vfo_hooks=0u;
+static Block old_vfo_attack_done;
+static void vfo_attack_done(Context& c){
+ uint32_t o=c.r[4];
+ if(rd<uint32_t>(c,o+0x128u)==VFO_UID&&!z_viewer(c)){
+  uint32_t n=rd<uint32_t>(c,o+VFO_COUNT)+1u;wr<uint32_t>(c,o+VFO_COUNT,n);
+  if(n>=VFO_LEAVE_ATTACKS){c.pc=VFO_RISE;return;}
+ }
+ old_vfo_attack_done(c);
+}
+static Block old_vfo_risen;
+static void vfo_risen(Context& c){
+ uint32_t o=c.r[4];
+ if(rd<uint32_t>(c,o+0x128u)==VFO_UID&&rd<uint32_t>(c,o+VFO_COUNT)>=VFO_LEAVE_ATTACKS){is_call(c,IS_KILL,o);c.pc=VFO_EXIT;return;}
+ old_vfo_risen(c);
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_vfo_version(){return vfo_hooks==2u?1u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}
