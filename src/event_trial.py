@@ -432,14 +432,13 @@ class EventTrial:
         self.reset_event_context()
         p.call('_ZN7AppMain12SceneEndFuncEi',self.app,p.word(self.app+0x22bc))
         p.call('_ZN7AppMain11ChangeExeSTEi',self.app,31)
-    def leave_to_menu(self,immediate=False):
-        """已进入的活动顶层（女教官基地）退出：恢复非活动上下文后直接返回主菜单（R10）。"""
+    def leave_to_browser(self,immediate=False):
+        """已进入的活动顶层（女教官基地）退出：恢复非活动上下文后回到活动浏览页，停在进入时的活动（“開始”已把它存为
+        浏览偏好，EventBrowser.open 据此定位）。2026-11-10 用户要求；此前按 R10 直接返回主菜单。"""
         if self.active_battle:return
-        if not immediate:return self.transition(lambda:self.leave_to_menu(True))
-        p=self.p
+        if not immediate:return self.transition(lambda:self.leave_to_browser(True))
         self.reset_event_context()
-        p.call('_ZN7AppMain12SceneEndFuncEi',self.app,p.word(self.app+0x22bc))
-        p.call('_ZN7AppMain11ChangeExeSTEi',self.app,27)
+        self.browser.open(True)
     def apply_unit_rewards(self,stage,saved):
         """自制 EVENT 小关的首次胜利单位奖励（与扩展世界相同：未拥有时给予 Lv1，开放阶段 20）。"""
         if not stage.get('reward_units') or saved.get('unit_rewards_claimed'):return
@@ -491,7 +490,7 @@ class EventTrial:
         if page=='medal_shop':return self.open_medal_shop()
         if page=='stages':return self.native_map.open()
         if page=='events':return self.browser.open()
-        if page=='main_menu':return self.leave_to_menu()
+        if page=='browser':return self.leave_to_browser()
         if page in ('tasks','cooperation'):
             self.overlay=None
             if page=='tasks':
@@ -550,8 +549,6 @@ class EventTrial:
             p.call('_ZN7AppMain23Sound_RequestPlayMenuSEE7SoundID',self.app,0x12)
             message=p.call('_Z13GetStringShopii',0xe,0xffffffff);title=p.call('_Z13GetStringShopii',0xd,0xffffffff)
             p.call('_ZN7AppMain10SetPopupOKEPcS0_PFvvEiiii',self.app,message,title,0,0x122,0x32,0xffffff00,0)
-            from cockpit_hold import instance
-            instance(p).release(p.word(self.app+0x36e0))
             p.log('HISTORICAL_MEDAL_SHOP_EMPTY',self.selected,self.selected_phase)
             return False
         if not immediate:return self.transition(lambda:self.open_medal_shop(True))
@@ -662,9 +659,9 @@ class EventTrial:
         command=None
         if scene==67 and self.selected:
             # 宿主受理的原生按钮：底栏按钮写入原生按压字段（青色框与三灯），面板转送原生触点（白光）；
-            # 释放在框内时保持反馈至闸门合拢，拖出框外取消。
+            # 释放时反馈消失（底栏按钮与原生相同：按住期间显示），拖出框外取消。
             panel=self.has_shop() or self.has_medal_shop()
-            buttons=[(0x36d8,'cockpit',xx<175 and yy>=525,('open','main_menu')),
+            buttons=[(0x36d8,'cockpit',xx<175 and yy>=525,('open','browser')),
                      (0x36e0,'cockpit',panel and 400<=xx<=555 and yy>=525,
                       ('open','medal_shop' if self.has_medal_shop() else 'shop')),
                      (0x3400,'panel',panel and 400<=xx<=655 and 430<=yy<=505,
@@ -710,12 +707,12 @@ class EventTrial:
             return True
         if action==3:
             activate=inside and not current['cancelled']
-            if current['kind']=='panel' or not activate:self.release_host_press(keep=current)
+            self.release_host_press(keep=current)
             self.host_press=None
             if activate:
                 from lab_ui import play_se,SE_DECIDE,SE_CLOSE
                 command=current['command']
-                play_se(self.p,SE_CLOSE if command in (('open','main_menu'),('close_shop',),('open','shop'),('open','medal_shop')) else SE_DECIDE)
+                play_se(self.p,SE_CLOSE if command in (('open','browser'),('close_shop',),('open','shop'),('open','medal_shop')) else SE_DECIDE)
                 if command==('close_shop',):self.close_native_shop()
                 else:self.command(*command)
             return True
@@ -733,19 +730,30 @@ class EventTrial:
                 Probe.touch_event(self.p,3,-1000,-1000)
                 self.p.call('_ZN7AppMain16ClearSelectPanelEP17GENERAL_TASK_BASEi',self.app,task,0)
         if keep is None:self.host_press=None
+    def world_event_button(self):
+        """世界地图 EVENT 按钮（底栏任务 app+0x3748，图号 131）可受理输入时的任务与触点范围；按钮隐藏（区域画面、
+        切换期间的占位绘制）或底栏停用（app+0xb178 为 0）时为 None。范围取按钮当前位置：原生 createMenuTask_CockpitButton
+        的 SetPanelRect 为任务位置起 (−10, −10)、140×120（核心第 30 版起 EVENT 在第 5 槽，此前随等距排法变动）。"""
+        from probe import f32
+        p=self.p;task=p.word(self.app+0x3748)
+        if not task or p.word(task+0x50)!=131 or p.word(task+0x80)&3 or not p.read(self.app+0xb178,1)[0]:return None
+        left=f32(p.word(task+0x84))+f32(p.word(task+0x9c));top=f32(p.word(task+0x88))+f32(p.word(task+0xa0))
+        return task,left-10,top-10
     def world_event_touch(self,action,x,y):
-        """世界地图 EVENT（底栏任务 app+0x3748，图号 131）：底栏按钮按下即由原生受理，故不送入原生触点；
-        按下期间写入原生按压字段（+0x174）显示蓝光，释放在框内时打开浏览页（R01）。"""
-        xx,yy=self.native_point(x,y);inside=480<=xx<=640 and yy>=525
-        pressed=getattr(self,"event_press",None);task=self.p.word(self.app+0x3748)
+        """世界地图 EVENT：底栏按钮按下即由原生受理，故不送入原生触点；按住期间写入原生按压字段（+0x174）显示蓝光，
+        释放时蓝光消失（与原生底栏按钮相同），释放在框内时打开浏览页（R01）。"""
+        xx,yy=self.native_point(x,y);button=self.world_event_button()
+        pressed=getattr(self,"event_press",None)
         from cockpit_hold import instance
         hold=instance(self.p)
         if action==1:
-            if not inside:return False
-            self.event_press=[True,False]
-            hold.hold(task)
+            if not button or not (button[1]<=xx<=button[1]+140 and yy>=button[2]):return False
+            self.event_press=[button[0],False]
+            hold.hold(button[0])
             return True
         if not pressed:return False
+        task=pressed[0]
+        inside=bool(button) and button[0]==task and button[1]<=xx<=button[1]+140 and yy>=button[2]
         if action==5:
             if not inside and not pressed[1]:
                 pressed[1]=True
@@ -753,7 +761,7 @@ class EventTrial:
             return True
         if action==3:
             self.event_press=None
-            if not inside or pressed[1]:hold.release(task)
+            hold.release(task)
             if inside and not pressed[1]:
                 from lab_ui import play_se,SE_DECIDE
                 play_se(self.p,SE_DECIDE);self.open('events')

@@ -33,6 +33,8 @@ class TrialProbe(OriginalProbe):
         super().initialize()
         from world_level_rules import WorldLevelRules
         self.world_level_rules=WorldLevelRules(self)
+        from medal_rules import MedalRules
+        self.medal_rules=MedalRules(self)
         self.event_trial=EventTrial(self,ROOT)
         from community_campaign import CommunityCampaign
         self.campaign=CommunityCampaign(self,self.event_trial)
@@ -47,6 +49,7 @@ class TrialProbe(OriginalProbe):
     def step_frame(self):
         super().step_frame()
         self.world_level_rules.update()
+        self.medal_rules.update()
         self.event_trial.update()
         self.campaign.update()
         self.ura_world.update()
@@ -67,7 +70,7 @@ class TrialProbe(OriginalProbe):
         if trial.overlay:trial.command('close');return True
         if trial.browser.active and trial.browser.back():return True
         if trial.native_selector.active:trial.native_selector.back();return True
-        if trial.selected and scene==67 and not trial.active_battle:trial.leave_to_menu();return True
+        if trial.selected and scene==67 and not trial.active_battle:trial.leave_to_browser();return True
         if trial.native_map.active and not self.word(HEADER+84) and not trial.active_battle and scene==34 and self.word(app+0x22dc) in (4,7,9):
             trial.native_map.back();return True
         if trial.is_native_shop_context():trial.close_native_shop();return True
@@ -104,7 +107,7 @@ import lab_runtime
 lab_runtime.install()
 lab_runtime.install_platform()
 def create_player(self_test=False,audio_mode=None,fullscreen=None):
-    player.TITLE='MSD WINDOWS S1XLV · 26.11.11'
+    player.TITLE='MSD WINDOWS S1XLV · 26.11.12'
     session=player.Player(self_test=self_test,audio_mode=audio_mode,fullscreen=fullscreen)
     session.guest_root=ROOT/('ui_test_guest' if self_test else config['profile'])
     session.status_file=ROOT/('ui_test_status.json' if self_test else 'event_trial_status.json')
@@ -113,7 +116,7 @@ def create_player(self_test=False,audio_mode=None,fullscreen=None):
     return session
 if __name__=='__main__':
     try:
-        parser=argparse.ArgumentParser(description='MSD WINDOWS S1XLV 26.11.11')
+        parser=argparse.ArgumentParser(description='MSD WINDOWS S1XLV 26.11.12')
         parser.add_argument('--self-test',action='store_true')
         parser.add_argument('--mute',action='store_true')
         parser.add_argument('--windowed',action='store_true')

@@ -575,8 +575,8 @@ class Probe:
         if method[1]=='getDefaultLanguageNo': return 0  # English, matching Java locale mapping.
         if method[1]=='GetWeekDay':
             # APK: Calendar.getInstance().get(Calendar.DAY_OF_WEEK).
-            # Local time; Java numbers Sunday=1 through Saturday=7.
-            return (time.localtime().tm_wday+1)%7+1
+            # Local time; Java numbers Sunday=1 through Saturday=7. 与原生 time() 同取宿主墙钟（time.time）。
+            return (time.localtime(time.time()).tm_wday+1)%7+1
         if method[1] in ('getInternalUseableMem','getExternalUseableMem','getInternalTotalMem','getExternalTotalMem'):
             usage=__import__('shutil').disk_usage(ROOT)
             value=usage.total if 'Total' in method[1] else usage.free
@@ -744,12 +744,18 @@ class Probe:
             self.rng48=(0x5deece66d*getattr(self,'rng48',0x1234abcd330e)+0xb)&((1<<48)-1)
             return self.rng48>>17
         if name in ('localtime','gmtime'):
-            # C returns borrowed static storage. Preserve the existing UTC mapping.
+            # C returns borrowed static storage. localtime 按 PC 系统时区（含夏令时）换算，gmtime 为 UTC。
+            # 原生以 localtime 判定每日奖励（登入奖励、支援物资、对战每日奖励等）的换日、头目出现时段
+            # （12–13、18–19、22–23 时）与星期头目的剩余时间，故这些均随 PC 的本地时间（2026-11-10；此前两者都按 UTC）。
             if not getattr(self, 'tm_buffer', 0): self.tm_buffer = self.alloc(44)
-            t=time.gmtime(self.word(a[0])); p=self.tm_buffer
-            self.write(p,struct.pack('<11i',t.tm_sec,t.tm_min,t.tm_hour,t.tm_mday,t.tm_mon-1,t.tm_year-1900,(t.tm_wday+1)%7,t.tm_yday-1,0,0,0)); return p
+            seconds=self.word(a[0]); t=(time.localtime if name=='localtime' else time.gmtime)(seconds); p=self.tm_buffer
+            # tm_gmtoff 取“本地字段按 UTC 计的秒数 − 实际秒数”（Python 在 Windows 上的 tm_gmtoff 对 2038 年后的值不可靠）。
+            self.write(p,struct.pack('<11i',t.tm_sec,t.tm_min,t.tm_hour,t.tm_mday,t.tm_mon-1,t.tm_year-1900,(t.tm_wday+1)%7,t.tm_yday-1,max(t.tm_isdst,0),__import__('calendar').timegm(t)-seconds,0)); return p
         if name=='mktime':
-            t=struct.unpack('<9i',self.read(a[0],36)); return int(__import__('calendar').timegm((t[5]+1900,t[4]+1,t[3],t[2],t[1],t[0])))
+            # localtime 的逆运算（PC 系统时区）；tm_isdst 为负时由系统判定，无法表示时按 C 约定返回 -1。
+            t=struct.unpack('<9i',self.read(a[0],36))
+            try:return int(time.mktime((t[5]+1900,t[4]+1,t[3],t[2],t[1],t[0],0,0,t[8])))&0xffffffff
+            except (OverflowError,ValueError):return 0xffffffff
 
     def pthread(self,name,a):
         if name in ('pthread_mutex_init','pthread_mutex_lock','pthread_mutex_unlock','pthread_mutex_destroy','pthread_attr_init','pthread_attr_setdetachstate','pthread_attr_destroy','pthread_setname_np','pthread_detach','pthread_key_delete'): return 0

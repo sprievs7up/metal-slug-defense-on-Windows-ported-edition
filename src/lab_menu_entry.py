@@ -15,7 +15,6 @@ class LabMenuEntry:
         self.native_image = None
         self.pressed = False
         self.pointer_inside = False
-        self.lit = False             # 释放确认后保持原生青色框，直至 LAB 闸门合拢
         self.p.write(MENU_HEADER, bytes(64))
         if lab.native_hooks < 8:
             return
@@ -58,16 +57,11 @@ class LabMenuEntry:
         visible = bool(app and self.p.word(app + 0x22bc) in (27, 28)
                        and not (self.lab.active or self.lab.prep.open))
         if not visible:
-            self.pressed = self.pointer_inside = self.lit = False
+            self.pressed = self.pointer_inside = False
             self.p.put(MENU_HEADER + 36, 0)
-        elif self.lit:
-            # 准备界面闸门开始合拢后记为进行中；闸门回到开启状态而界面未打开时解除保持。
-            if self.lab.prep.busy():
-                self.lit = 'closing'
-            elif self.lit == 'closing':
-                self.lit = False
         self.p.put(MENU_HEADER + 56, int(visible))
-        self.p.put(MENU_HEADER + 52, 2 if self.lit else int(self.pressed and self.pointer_inside))
+        # 青色框只在按住且指针在图标内时显示，释放即消失（与原生底栏按钮相同：PushPanel 在释放的一帧清除按压字段）。
+        self.p.put(MENU_HEADER + 52, int(self.pressed and self.pointer_inside))
 
     def visible(self):
         p, lab = self.p, self.lab
@@ -112,7 +106,6 @@ class LabMenuEntry:
             if inside:
                 from lab_ui import play_se, SE_DECIDE
                 play_se(self.p, SE_DECIDE)
-                self.lit = True
                 self.lab.commands.append(('prep', 'lab'))
                 self.p.log('LAB_MENU_OPEN', self.p.frame)
         return True

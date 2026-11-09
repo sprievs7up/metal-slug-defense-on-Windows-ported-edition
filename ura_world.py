@@ -7,6 +7,8 @@
 - 区域名称：native_name 为原生区域名称表的编号；写 name（11 种语言）的区域由宿主把名称追加到原生表之后（编号 57 起，
   strAreaNameTbl 的各语言指针换为宿主副本，GetAreaName 按表读取）；
 - 进度按关卡与区域稳定键保存于存档目录 campaign_progress.json（与扩展世界共用文件，字段 seen / wins / best_time、areas）；
+- 区域通关奖励：区域记录 +0x48 写奖励表（medal_rules.ura_area_rewards，每区域的通关勋章），URA+64 置 1；核心在原生
+  BattleEndGetAreaResult 中按表发放并显示（2026-11-10，msd_ura_world_version 3）；
 - 主菜单背景：写 menu_background 的关卡编号表写入 URA+56 / +60，核心 menu_bg 钩子在 GetMainMenuBGStageID 洗牌前追加其中
   已通关者（2026-11-08）；
 - 里地图背景：原生背景图案表 0x8fdb58（按页号取图案）第 4 页起写入未被里地图使用的图案（表世界 3、1、2 的 0x85、0x36、0x37；
@@ -65,7 +67,10 @@ class UraWorld:
         missing = p.uc.lib.msd_enable_ura_world_hooks()
         if missing:
             raise RuntimeError(f'里地图扩展页钩子有 {missing} 处未找到原生块')
+        if p.uc.lib.msd_ura_world_version() < 3:
+            raise RuntimeError('里地图扩展页的区域通关奖励需要核心 area_result 钩子（msd_ura_world_version 3）')
         from community_campaign import mission_words
+        from medal_rules import ura_area_rewards
         self.catalog = catalog
         if getattr(p, 'campaign', None) is None:
             self.own_progress = self.load_progress()
@@ -103,7 +108,7 @@ class UraWorld:
                     name_index = area['native_name']
                 head = struct.pack('<IiibxhhH', name_index, x, y, AREA_THUMB, -1, -1, len(stage_ptrs))
                 body = b''.join(struct.pack('<I', ptr) for ptr in stage_ptrs)
-                rec = (head + body).ljust(0x40, b'\0') + struct.pack('<II', first, len(areas))
+                rec = (head + body).ljust(0x40, b'\0') + struct.pack('<III', first, len(areas), self.blob(ura_area_rewards()))
                 area_ptrs.append(self.blob(rec))
                 areas.append(area['key'])
             world_rows.append(struct.pack('<I', len(area_ptrs)) + b''.join(struct.pack('<I', v) for v in area_ptrs).ljust(64, b'\0'))
@@ -131,6 +136,7 @@ class UraWorld:
             raise RuntimeError('主菜单背景关卡（menu_background）需要核心 menu_bg 钩子（msd_ura_world_version 2）')
         menu_list = self.blob(struct.pack(f'<{len(menu_ids)}I', *menu_ids)) if menu_ids else 0
         p.write(URA + 56, struct.pack('<2I', menu_list, len(menu_ids)))
+        p.put(URA + 64, 1)                     # 区域记录 +0x48 为通关奖励表
         p.put(URA, URA_MAGIC)
         self.counter = 0
         p.log('URA_WORLD_INSTALLED', [(page, number, w['key']) for page, number, w in self.pages], len(missions), menu_ids)

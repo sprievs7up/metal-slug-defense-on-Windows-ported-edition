@@ -8,6 +8,8 @@
 - 開始、細則与底栏 BACK 保留原生按压白光（按下、移动送入原生，释放在框外结束原生触点后由宿主执行）。
 - 浏览期间不绑定活动数据；只有“開始”调用 EventTrial.select 进入女教官基地。浏览偏好单独保存在
   historical_event_browse.json，与活动进度分离。
+- 女教官基地的 BACK / Esc（EventTrial.leave_to_browser）恢复非活动上下文后回到本页；“開始”已把该活动存为浏览偏好，
+  本页据此停在进入时的活动（2026-11-10）。
 """
 from pathlib import Path
 import json
@@ -452,8 +454,7 @@ class EventBrowser:
             return True
         if action == 3:
             activate = not self.cancelled and inside(rects[key], x, y)
-            if not (activate and key == 'back'):
-                self.end_native_press()            # BACK 确认后保持原生青色框至闸门合拢（场景切换时解除）
+            self.end_native_press()                # 释放即解除按压：BACK 的青色框与原生底栏按钮一样在释放的一帧消失
             self.pressed, self.cancelled = None, False
             self.write_header(True)
             if activate:

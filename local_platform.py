@@ -1,6 +1,6 @@
 """Local Windows services for the archived game's original JNI contracts."""
 
-MEDAL_PACKS={f'msd_{i:03d}_medalpack':n for i,n in enumerate((30,90,180,330,690,1080,1860,3900),1)}
+from medal_rules import MEDAL_PACKS,SUPPLY_PRICES,SUPPLY_NAMES,LANGUAGE,native_text
 CALLBACK_PREFIX='Java_com_snkplaymore_android003_MainActivity_'
 
 def app_instance(p):
@@ -8,12 +8,40 @@ def app_instance(p):
     getter=p.symbols['_ZN7AppMain11getInstanceEv']&~1
     return p.word(p.word(getter+6+p.word(getter+12)))
 
-def queue_callback(p,name,args,refs=()):
-    if not hasattr(p,'platform_callbacks'):p.platform_callbacks=[]
+def callback(p,name,args,refs=()):
     for ref in refs:
         p.jni_retain(ref,'global')
         p.jni_release(ref)
-    p.platform_callbacks.append((CALLBACK_PREFIX+name,tuple(args),tuple(refs)))
+    return CALLBACK_PREFIX+name,tuple(args),tuple(refs)
+
+def queue_callback(p,name,args,refs=()):
+    if not hasattr(p,'platform_callbacks'):p.platform_callbacks=[]
+    p.platform_callbacks.append(callback(p,name,args,refs))
+
+def queue_action(p,action):
+    # 宿主动作：本帧原生返回之后由 pump 执行（此时可调用原生函数）。
+    if not hasattr(p,'platform_callbacks'):p.platform_callbacks=[]
+    p.platform_callbacks.append(action)
+
+def buy_supply(p,sku):
+    """支援物资（medal_rules.SUPPLY_PRICES）以 MSP 购买：余额足够时扣除，再按原生购买成功结束（setPurchaseOK 置领取许可并写存档）；
+    不足时按原生购买失败结束，失败窗口的文字（strMedal 6）在回调期间换为原生 strShop 11（“还差 %d [deco2]”，%d 为不足额；
+    该窗口按纯文字绘制，MSP 图标标记 [deco2] 写成“MSP”）。"""
+    app=app_instance(p);price=SUPPLY_PRICES[sku]
+    msp=p.call('_ZN7AppMain18GetMSPointSaveDataEv',app)
+    ref=p.managed_obj(sku)
+    p.log('LOCAL_SUPPLY_BUY',sku,price,'MSP',msp,'OK' if msp>=price else 'SHORT')
+    if msp>=price:
+        p.call('_ZN7AppMain18AddMSPointSaveDataEi',app,-price)
+        queue_callback(p,'purchaseFinished',(p.env,0,0,ref),(ref,))
+        return
+    if not hasattr(p,'supply_text'):p.supply_text=p.alloc(256)
+    text=native_text(p,'strShopTbl',11).replace('%d',str(price-msp)).replace('[deco2]','MSP').encode()[:255]
+    p.write(p.supply_text,text+b'\0')
+    slot=p.word(p.symbols['strMedalTbl']+4*p.word(app+LANGUAGE))+4*6
+    original=p.word(slot);p.put(slot,p.supply_text)
+    try:deliver(p,*callback(p,'purchaseFinished',(p.env,0,4,ref),(ref,)))
+    finally:p.put(slot,original)
 
 def string_array(p,values):
     refs=[p.managed_obj(value) for value in values]
@@ -36,9 +64,9 @@ def handle_java_call(p,method,arg):
     if name=='checkUnCosumableData':return True,0
     if name=='getPurchasesData':
         products=[p.objects[ref] for ref in p.objects[arg(0)]['items']]
-        titles=[f'{MEDAL_PACKS[sku]} MEDALS' if sku in MEDAL_PACKS else sku for sku in products]
-        prices=['FREE' if sku in MEDAL_PACKS else '--' for sku in products]
-        descriptions=['Local medal reward' if sku in MEDAL_PACKS else 'Unavailable' for sku in products]
+        titles=[f'{MEDAL_PACKS[sku]} MEDALS' if sku in MEDAL_PACKS else native_text(p,'strMedalTbl',SUPPLY_NAMES[sku]) if sku in SUPPLY_NAMES else sku for sku in products]
+        prices=['FREE' if sku in MEDAL_PACKS else f'{SUPPLY_PRICES[sku]} MSP' if sku in SUPPLY_PRICES else '--' for sku in products]
+        descriptions=['Local medal reward' if sku in MEDAL_PACKS else 'Local supply reward' if sku in SUPPLY_PRICES else 'Unavailable' for sku in products]
         arrays=[string_array(p,values) for values in (titles,prices,['inapp']*len(products),descriptions,products)]
         queue_callback(p,'purchaseListFinished',(p.env,0,len(products),*arrays),arrays)
         p.log('LOCAL_MEDAL_CATALOG',products)
@@ -46,6 +74,10 @@ def handle_java_call(p,method,arg):
     if name=='requestUnManagedConsume' and method[2]=='()V':return True,0
     if name in ('requestBilling','requestUnManagedConsume'):
         sku=p.objects[arg(0)]
+        if sku in SUPPLY_PRICES:
+            # 支援物资以 MSP 购买：余额核对与扣除调用原生存档函数，延后到本帧原生返回之后。
+            queue_action(p,lambda p:buy_supply(p,sku))
+            return True,0
         # Completion remains in the original game: it selects the SKU quantity,
         # adds medals with the original cap, and commits its own save format.
         code=0 if sku in MEDAL_PACKS else 4
@@ -100,17 +132,21 @@ def handle_java_call(p,method,arg):
     if name=='isShowMoreAppsState':return True,0
     return False,0
 
+def deliver(p,name,args,refs):
+    # A real Java -> JNI native call has an implicit local-reference frame.
+    locals_before={ref:counts['local'] for ref,counts in p.jni_refs.items()}
+    p.log('LOCAL_CALLBACK',name,[hex(x) for x in args],[(hex(ref),p.jni_refs.get(ref)) for ref in refs])
+    try:p.call(name,*args)
+    finally:
+        for ref,counts in list(p.jni_refs.items()):
+            extra=counts['local']-locals_before.get(ref,0)
+            for _ in range(max(0,extra)):p.jni_release(ref)
+        for ref in refs:p.jni_release(ref,'global')
+
 def pump(p):
     """Deliver Java-to-native callbacks only after the active native frame returns."""
     callbacks=getattr(p,'platform_callbacks',None)
     while callbacks:
-        name,args,refs=callbacks.pop(0)
-        # A real Java -> JNI native call has an implicit local-reference frame.
-        locals_before={ref:counts['local'] for ref,counts in p.jni_refs.items()}
-        p.log('LOCAL_CALLBACK',name,[hex(x) for x in args],[(hex(ref),p.jni_refs.get(ref)) for ref in refs])
-        try:p.call(name,*args)
-        finally:
-            for ref,counts in list(p.jni_refs.items()):
-                extra=counts['local']-locals_before.get(ref,0)
-                for _ in range(max(0,extra)):p.jni_release(ref)
-            for ref in refs:p.jni_release(ref,'global')
+        entry=callbacks.pop(0)
+        if callable(entry):entry(p)
+        else:deliver(p,*entry)

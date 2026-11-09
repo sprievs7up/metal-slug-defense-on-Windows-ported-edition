@@ -74,7 +74,7 @@
 - 在正式版 Git 工作区开发；测试使用隔离存档（`verification/lab_ui_20261006/save` 副本），禁止写入任何 `play_save*`、`lab_test_save`、LAB 配置与预设。
 - 不计算 SHA-256；不暂存、提交或推送（用户经 GitHub Desktop 操作）。
 - 完成并验证后，按第 2.2、2.3 节以明确清单同步 `dist/MSD_Windows` 与用户固定运行副本，并更新 `F:\egg\AGENTS.md`。
-- 测试存档在 UTC 换日后会弹出原生登入奖励；回归驱动可用 `verification/event_fixes_20261009/run_shifted.py` 前移宿主墙钟运行。
+- 测试存档在换日后会弹出原生登入奖励（2026-11-10 起按 PC 本地日期，此前按 UTC）；回归驱动可用 `verification/event_fixes_20261009/run_shifted.py` 前移宿主墙钟运行。
 - 原生核心修改需重建 DLL（`src/build.py --library <新名> --no-activate --no-sha256`），并跑既有回归：13 入口原生流程、浏览页、勋章商店、按钮反馈、对战页、双人对战（入口见 AGENTS 第 83、85 节）。
 
 验收（数值在 P0 后与用户确认）：

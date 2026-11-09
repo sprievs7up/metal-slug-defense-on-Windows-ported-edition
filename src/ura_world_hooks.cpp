@@ -3,7 +3,8 @@
 // （区域记录 5 个关卡指针、关卡图标任务槽 0x16–0x1a、存档按“世界号×80 + 区域×5 + 关卡”编排）。
 // 宿主在共享头 H 写入魔数后，下列钩子对扩展世界号返回宿主数据，其余世界号沿用原生路径：
 //   区域与关卡数据（可超过 5 关）、任务记录（关卡编号按原生规则 (世界号+1)×1000 + (区域+1)×10 + 关卡+1）、
-//   开放 / 通关 / 新标记 / 用时 / 评级奖励（宿主进度表，按稳定键保存于 campaign_progress.json）、人质（恒为 0）、区域通关奖励（无）；
+//   开放 / 通关 / 新标记 / 用时 / 评级奖励（宿主进度表，按稳定键保存于 campaign_progress.json）、人质（恒为 0）、
+//   区域通关奖励（区域记录 +0x48 的奖励表，H+64 为 1 时有效；2026-11-10，版本 3）；
 //   里地图场景：菜单表副本加入扩展页的页面任务（槽 base+k），页数上限 b210 = 2 + 扩展页数，
 //   页面任务槽号 0x1d+页号 ≥ 0x20 时换为扩展槽；第 6 关起的关卡图标占用上一区域箭头的槽 0x1b，
 //   区域画面期间箭头任务暂存于 H+52，信息窗与区域画面结束时按原生顺序复原。
@@ -11,9 +12,11 @@
 //    +16 区域表（每个扩展世界 0x44 字节：区域数 + 16 个区域记录指针），+20 任务记录表（每条 120 字节），+24 记录数，
 //    +28 关卡进度表（每关 8 字节：+0 标志 1 开放 / 2 通关 / 4 新，+4 用时），+32 区域进度表（每区域 4 字节：1 新 / 2 评级奖励已领取），
 //    +36 写入计数（宿主据此保存），+40 菜单表副本，+44 副本项数，+48 箭头暂存标志，+52 暂存的上一区域箭头任务，
-//    +56 主菜单背景关卡表（关卡编号，int32），+60 表项数（2026-11-08，menu_bg）。
+//    +56 主菜单背景关卡表（关卡编号，int32），+60 表项数（2026-11-08，menu_bg），
+//    +64 区域记录含通关奖励表指针的标志（2026-11-10）。
 // 区域记录：原生布局（+0 名称编号，+4/+8 地图坐标，+0xc 略缩图，+0xe 头目 −1，+0x10 人质 −1，+0x12 关卡数，+0x14 起关卡指针，
-//    可多于 5 个），+0x40 关卡进度起始序号，+0x44 区域进度序号。关卡记录为原生 0x18 字节布局。
+//    可多于 5 个），+0x40 关卡进度起始序号，+0x44 区域进度序号，+0x48 通关奖励表指针（每项 12 字节：类型、编号、数量，
+//    类型 −1 结束；类型 11 为勋章；0 为无奖励）。关卡记录为原生 0x18 字节布局。
 #include "aot_runtime.h"
 namespace {
 constexpr uint32_t H=0x1ffe9000u,MAGIC=0x34415255u;
@@ -57,6 +60,13 @@ void area_flag(Context& c,uint32_t bit,int op){
     if(slot){wr<uint32_t>(c,slot,op>0?(flags|bit):(flags&~bit));bump(c);}
     c.pc=c.r[14];
 }
+// 区域通关奖励表第 r2 项的字段（原生 GetAreaResultType / ID / Num：世界, 区域, 序号, WorldType；BattleEndGetAreaResult
+// 自序号 0 起逐项读取，类型为 −1 时结束）。
+uint32_t area_result(Context& c,uint32_t field){
+    uint32_t rec=rd<uint32_t>(c,H+64u)?area_rec(c,c.r[0],c.r[1]):0u;
+    uint32_t list=rec?rd<uint32_t>(c,rec+0x48u):0u;
+    return list?rd<uint32_t>(c,list+c.r[2]*12u+field):0xffffffffu;
+}
 uint32_t missing_blocks=0u;
 }
 #define URA_HOOK(NAME,...) static Block old_##NAME;static void NAME(Context& c){__VA_ARGS__ old_##NAME(c);}
@@ -70,7 +80,9 @@ URA_HOOK(stage_data,if(extra(c,c.r[0],c.r[3])){
 URA_HOOK(stage_enable,if(extra(c,c.r[0],c.r[3])){
     uint32_t slot=stage_slot(c,c.r[0],c.r[1],c.r[2]);ret(c,slot&&(rd<uint32_t>(c,slot)&1u)?1u:0u);return;
 })
-URA_HOOK(area_result_type,if(extra(c,c.r[0],c.r[3])){ret(c,0xffffffffu);return;})
+URA_HOOK(area_result_type,if(extra(c,c.r[0],c.r[3])){ret(c,area_result(c,0u));return;})
+URA_HOOK(area_result_id,if(extra(c,c.r[0],c.r[3])){ret(c,area_result(c,4u));return;})
+URA_HOOK(area_result_num,if(extra(c,c.r[0],c.r[3])){ret(c,area_result(c,8u));return;})
 URA_HOOK(stage_prisoner_rate,if(extra(c,c.r[0],c.r[3])){ret(c,0u);return;})
 URA_HOOK(area_prisoner_rate,if(extra(c,c.r[0],c.r[2])){ret(c,0u);return;})
 URA_HOOK(mission,if(active(c)){
@@ -189,12 +201,13 @@ URA_HOOK(menu_bg,if(active(c)){
         if(slot&&(rd<uint32_t>(c,slot)&2u)){wr<uint32_t>(c,c.r[7]+c.r[8]*4u,id);++c.r[8];}
     }
 })
-extern "C" __declspec(dllexport) uint32_t msd_ura_world_version(){return missing_blocks?0u:2u;}
+extern "C" __declspec(dllexport) uint32_t msd_ura_world_version(){return missing_blocks?0u:3u;}
 extern "C" __declspec(dllexport) uint32_t msd_enable_ura_world_hooks(){
     static bool installed=false;if(installed)return missing_blocks;installed=true;
 #define INSTALL(NAME,PC) old_##NAME=find_block(PC);if(!old_##NAME)++missing_blocks;else register_block(PC,NAME)
     INSTALL(area_num,0x10165efdu);INSTALL(area_data,0x10165f49u);INSTALL(stage_data,0x10165fb3u);
     INSTALL(stage_enable,0x10166411u);INSTALL(area_result_type,0x101660a9u);
+    INSTALL(area_result_id,0x101660e5u);INSTALL(area_result_num,0x10166125u);
     INSTALL(stage_prisoner_rate,0x10166951u);INSTALL(area_prisoner_rate,0x101669fdu);
     INSTALL(mission,0x101d09fdu);INSTALL(continue_stage,0x10168a03u);
     INSTALL(stage_enable_save,0x10167f0du);INSTALL(stage_enable_add,0x10167f4du);INSTALL(stage_enable_del,0x10167f9fu);

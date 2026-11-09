@@ -83,7 +83,6 @@ class LabPrep:
         self.pressed = None
         self.pressed_rect = None
         self.pointer_inside = False
-        self.lit = None                  # 抬起后保持青色框的图标按钮命令（闸门合拢期间）
         self.icons = {}
         self.press_overlay = None
         self.tier_colors = {}
@@ -199,7 +198,7 @@ class LabPrep:
     def show(self, from_closed=False):
         """显示准备界面并播放 MISSION BGM。from_closed：画面已被闸门遮住（原生战斗结束闸门），直接开闸。"""
         def reveal():
-            self.open, self.page, self.pressed, self.lit = True, 'main', None, None
+            self.open, self.page, self.pressed = True, 'main', None
             self.revision += 1
             play_bgm(self.lab.p, BGM_MISSION)
             self.shutter.open()
@@ -235,7 +234,7 @@ class LabPrep:
     def set_open(self, value):
         """无动画的开关（启动战斗、测试脚本使用）。"""
         self.open = bool(value)
-        self.page, self.pressed, self.lit = 'main', None, None
+        self.page, self.pressed = 'main', None
         self.revision += 1
 
     def busy(self):
@@ -450,8 +449,6 @@ class LabPrep:
             pressed, self.pressed = self.pressed, None
             if hit is not None and hit == pressed:
                 play_se(self.lab.p, SE_CLOSE if hit[0] in BACK_COMMANDS else SE_DECIDE)
-                if hit in self.icons and hit[0] in ('start', 'close'):
-                    self.lit = hit       # 与原生选单按钮相同：选中后青色框保持到画面切换
                 self.command(*hit)
         return True
 
@@ -480,11 +477,11 @@ class LabPrep:
         self.shutter.update_and_draw(self.skin)
 
     def draw_press(self):
-        """按下反馈：原生图标按钮叠加青色框与三灯（按住且指针在按钮上，或抬起后至闸门合拢）；
+        """按下反馈：原生图标按钮叠加青色框与三灯（按住且指针在按钮上；抬起即消失，与原生底栏按钮相同）；
         其他按钮叠加该区域的压暗小图并下移 2 像素。"""
         if getattr(self, 'rendered', None) is None:
             return
-        command = self.lit if self.lit in self.icons else (self.pressed if self.pointer_inside else None)
+        command = self.pressed if self.pointer_inside else None
         if command is None or (command not in self.icons and not self.pressed_rect):
             return
         if self.press_overlay is None:

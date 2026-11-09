@@ -152,7 +152,7 @@ mods/
 - 完成并验证、经用户确认后，按第 2.2、2.3 节以明确清单同步两个固定运行目录，并更新 AGENTS。
 - 单位平衡参数遵守第 6.1 节；迁移与重构不得改变现有本体单位参数。
 - 与性能任务（`docs/performance/PERFORMANCE_AND_PRELOAD_TASK_2026-10-09.md`）协调。
-- 测试存档在 UTC 换日后会弹出原生登入奖励，回归驱动可用 `verification/event_fixes_20261009/run_shifted.py` 运行。
+- 测试存档在换日后会弹出原生登入奖励（2026-11-10 起按 PC 本地日期，此前按 UTC），回归驱动可用 `verification/event_fixes_20261009/run_shifted.py` 运行。
 
 ## 7. 待用户确认的问题
 

@@ -67,10 +67,10 @@ def cmd(op, *v):
 
 
 HEROES = {
-    'marco': dict(uid=16, identity='Regular Army (PF)', ap=90, hp=[25, 8], voice=800, gun_throw=23),
-    'tarma': dict(uid=17, identity='Regular Army (PF)', ap=90, hp=[10, 3], voice=803, gun_throw=23),
-    'eri': dict(uid=18, identity='Regular Army (Sparrows)', ap=100, hp=[46, 15], voice=801, gun_throw=28),
-    'fio': dict(uid=19, identity='Regular Army (Sparrows)', ap=110, hp=[10, 3], voice=802, gun_throw=28),
+    'marco': dict(uid=16, identity='Regular Army (PF)', ap=80, hp=[25, 8], voice=800, gun_throw=23),
+    'tarma': dict(uid=17, identity='Regular Army (PF)', ap=85, hp=[10, 3], voice=803, gun_throw=23),
+    'eri': dict(uid=18, identity='Regular Army (Sparrows)', ap=90, hp=[46, 15], voice=801, gun_throw=28),
+    'fio': dict(uid=19, identity='Regular Army (Sparrows)', ap=100, hp=[10, 3], voice=802, gun_throw=28),
 }
 ZS_TEXT = {
     'marco': ('马可', '普通攻击：手枪     特殊攻击：重机枪\n正规军少校。经过千锤百炼的军人，擅长写程序。\n持有相当好用的重机枪。'),

@@ -231,9 +231,93 @@ void result_icons_zero(Context& c){
     wr<uint8_t>(c,c.r[4]+0x130u,0u);                      // b_101d38bc：原块本身写入 0
     old_result_icons_zero(c);
 }
+// ---------- 第 30 版：世界地图底栏固定六槽（2026-11-10，核心 r158，用户要求） ----------
+// 生成代码在 GT_MenuCockpit（0x101ff3fc，即 menu_layout 所钩的块）每帧把可见的底栏按钮按当前横坐标排序后等距排开。
+// 表世界地图（场景 34，SC_StageLoop）与里地图（场景 134，SC_StageLoopEx）右侧的按钮随画面切换：AreaInit 显示 MAP、EVENT，
+// AreaEnd 隐藏；StageInit 显示 RANKING 与 POW（里地图中区域无俘虏时为 MAP），StageEnd 隐藏；信息窗隐藏 RANKING。
+// 隐藏期间只剩左侧 4 个按钮被排满整行；再次显示时按已改动的横坐标排序，次序随之变化（进入区域再返回后 EVENT 与 SHOP 互换）。
+// 此处改为固定槽位：BACK、OPTION、SHOP、MEDAL、第 5 槽 EVENT（地图）/ RANKING（区域内）、第 6 槽 MAP / POW。
+// 第 5、6 槽在原生没有显示候选按钮的帧（入场、地图与区域之间的切换、信息窗）由目的画面的按钮占位绘制：目的画面按场景状态
+// 判断，按钮的取舍条件同原生 AreaInit / StageInit（教程标记 1、4，里地图区域有无俘虏）。占位按钮保持原生的隐藏标记
+// （+0x80 位 1；GT_CockpitButton 据此不调用 PushPanel，不受理输入），只在 GT_CockpitButtonDraw 读取该标记的块内临时清除。
+// 适用条件：非活动地图（event_trial_hooks 共享头 +80 为 0）、左侧四个按钮均显示、表世界已过教程标记 1；其余情形沿用等距排法。
+constexpr uint32_t MAP_LEFT_SLOTS[]={0x36d8u,0x36dcu,0x36e0u,0x36e4u},MAP_LEFT_IMAGES[]={30u,32u,33u,34u};
+constexpr uint32_t MAP_RANKING=0x36f0u,MAP_POW=0x36fcu,MAP_SWITCH=0x3714u,MAP_EVENT=0x3748u;
+constexpr uint32_t EVENT_H=0x1ffed000u,EVENT_MAGIC=0x45565431u,G_AREA_PRISONER_MAX=0x101661b5u,COCKPIT_HIDDEN=0x102003dbu;
+uint32_t map_scene=0u,map_app=0u,map_placeholder[2]={0u,0u},map_placeholder_slot[2]={0u,0u};
+bool map_stage=false;
+Block old_cockpit_hidden;
+bool map_button(Context& c,uint32_t app,uint32_t slot,uint32_t image,uint32_t& t){
+    t=rd<uint32_t>(c,app+slot);
+    return menu_pointer(t,0x1bcu) && rd<uint32_t>(c,t)==MENU_BUTTON && rd<uint32_t>(c,t+0x50u)==image;
+}
+// SC_StageLoop：0–3 头目出现演出与 4 入场（转入 7 AreaInit），5 / 6 入场后直接进入区域 / 信息窗，7–9 地图，10–13 进入区域，
+// 14 / 15 返回地图，16 起信息窗、RAID 与出击。SC_StageLoopEx 的 0–5 为演出与地图入场，其后各状态号比 SC_StageLoop 大 1。
+bool map_stage_state(uint32_t scene,uint32_t state){
+    if(scene==134u){if(state<=5u)return false;--state;}
+    return state>=5u && !(state>=7u && state<=9u) && state!=14u && state!=15u;
+}
+bool map_tutorial(Context& c,uint32_t app,uint32_t bit){return (rd<uint32_t>(c,app+0x3dacu)>>bit)&1u;}   // IsTutorialData
+void map_cockpit(Context& c,uint32_t app){
+    map_placeholder[0]=map_placeholder[1]=0u;
+    if(!menu_pointer(app,0xc640u))return;
+    uint32_t scene=rd<uint32_t>(c,app+0x22bcu);
+    if(scene<119u || scene>122u){                          // 119–122 为叠在地图之上的弹窗场景：沿用弹窗前的画面
+        map_scene=(scene==34u || scene==134u)?scene:0u;
+        if(map_scene)map_stage=map_stage_state(scene,rd<uint32_t>(c,app+0x22dcu));
+    }
+    if(!map_scene || (rd<uint32_t>(c,EVENT_H)==EVENT_MAGIC && rd<uint32_t>(c,EVENT_H+80u)))return;
+    uint32_t left[4],ranking,pow,world_switch,event;
+    for(uint32_t i=0;i<4u;++i)
+        if(!map_button(c,app,MAP_LEFT_SLOTS[i],MAP_LEFT_IMAGES[i],left[i]) || (rd<uint32_t>(c,left[i]+0x80u)&2u))return;
+    if(!map_button(c,app,MAP_RANKING,115u,ranking) || !map_button(c,app,MAP_POW,112u,pow) ||
+       !map_button(c,app,MAP_SWITCH,117u,world_switch) || !map_button(c,app,MAP_EVENT,131u,event))return;
+    bool ex=map_scene==134u,tutorial1=map_tutorial(c,app,1u),tutorial4=map_tutorial(c,app,4u);
+    if(!ex && tutorial1)return;
+    float margin=float(int32_t(rd<uint32_t>(c,app+0x3cu)));
+    float first=40.0f-margin,step=(float(rd<uint32_t>(c,app+0x34u))+2.0f*margin-200.0f)/5.0f;
+    if(!std::isfinite(step) || step<=0.0f)return;
+    auto shown=[&](uint32_t t){return !(rd<uint32_t>(c,t+0x80u)&2u);};
+    if(!shown(ranking) && !shown(event)){
+        bool use_ranking=map_stage;
+        if(!use_ranking || !tutorial1){
+            map_placeholder[0]=use_ranking?ranking:event;map_placeholder_slot[0]=use_ranking?MAP_RANKING:MAP_EVENT;
+        }
+    }
+    if(!shown(pow) && !shown(world_switch)){
+        bool use_pow=map_stage;
+        if(use_pow && ex){                                 // StageInitEx：区域有俘虏（且不是世界 11、区域 8）时显示 POW，否则 MAP
+            uint32_t world=rd<uint32_t>(c,app+0xb200u)+rd<uint32_t>(c,app+0xb204u),area=rd<uint32_t>(c,app+0xb208u),count=0u;
+            use_pow=guest_call(c,G_AREA_PRISONER_MAX,world,area,0u,0u,nullptr,0u,&count) && int32_t(count)>0 &&
+                    world!=11u && area!=8u;
+        }
+        if(!use_pow || !tutorial4){
+            map_placeholder[1]=use_pow?pow:world_switch;map_placeholder_slot[1]=use_pow?MAP_POW:MAP_SWITCH;
+        }
+    }
+    map_app=app;
+    for(uint32_t i=0;i<4u;++i)wr<float>(c,left[i]+0x84u,first+step*float(i));
+    wr<float>(c,event+0x84u,first+step*4.0f);wr<float>(c,ranking+0x84u,first+step*4.0f);
+    wr<float>(c,world_switch+0x84u,first+step*5.0f);wr<float>(c,pow+0x84u,first+step*5.0f);
+}
+// GT_CockpitButtonDraw 在 0x102003da 读取 +0x80，位 1 置位时不绘制。占位按钮在本块内临时清除该位（块内已完成判断）。
+void cockpit_hidden(Context& c){
+    uint32_t t=c.r[4];
+    for(uint32_t i=0;i<2u;++i)
+        if(t && t==map_placeholder[i] && menu_pointer(map_app,0xc640u) &&
+           rd<uint32_t>(c,map_app+map_placeholder_slot[i])==t && rd<uint32_t>(c,t)==MENU_BUTTON){
+            uint32_t flags=rd<uint32_t>(c,t+0x80u);
+            wr<uint32_t>(c,t+0x80u,flags&~2u);
+            old_cockpit_hidden(c);
+            wr<uint32_t>(c,t+0x80u,flags);
+            return;
+        }
+    old_cockpit_hidden(c);
+}
 void menu_layout(Context& c){
     uint32_t app=c.r[0];
     old_menu_layout(c);                                    // 保留原块的分配、寄存器与后续控制流
+    map_cockpit(c,app);
     if(rd<uint32_t>(c,MENU_H)!=MENU_MAGIC)return;
     wr<uint32_t>(c,MENU_H+4u,0u);
     if(!menu_pointer(app,0xc21eu))return;
@@ -291,7 +375,8 @@ void menu_button_tail(Context& c){
        rd<uint32_t>(c,MENU_H+56u) && t==rd<uint32_t>(c,MENU_H+24u) &&
        current_menu_medal(c,t) && menu_pointer(image,56u) && menu_pointer(app,0x80u)){
         uint32_t graphics=rd<uint32_t>(c,app+0x7cu);
-        // +52：1 为按住且指针在图标内（需输入许可），2 为确认后保持至 LAB 闸门合拢。
+        // +52：1 为按住且指针在图标内（需输入许可），2 为不经输入许可的保持（宿主自 2026-11-10 起不再写入：
+        // 释放后光泽即消失，与原生底栏按钮相同）。
         uint32_t press=rd<uint32_t>(c,MENU_H+52u);
         bool pressed=press==2u || (press && rd<uint32_t>(c,MENU_H+36u));
         uint32_t x=rd<uint32_t>(c,MENU_H+8u),y=rd<uint32_t>(c,MENU_H+12u);
@@ -1939,7 +2024,7 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     return n;
 }
 // 第 29 版（核心 r151）：分栏底栏的右侧滚动箭头按 drawConv 调用处平移，6 帧动画完整显示；左侧箭头保持原位。
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 29u;}
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 30u;}
 // 2026-11-02（核心 r136，docs/UNIT_CAP_2026-11-02.md 第 13 节）：LAB 每帧的单位修正（lab.py Lab.fix_units、vs_cpu.py VsCpu.fix_units）的核心实现，
 // 逐单位读写与宿主原代码相同，只省去每个单位数次跨 FFI 的读取。单位按 Lab.team_list 遍历：getTeamUnitList（管理器 + (队伍 + 6) × 4）起沿 +0x120，
 // 回到起点、地址无效（不在 0x10000000–0x1fffefff）或满 4096 个为止。mode 0 为 Lab.fix_units（team = 敌方队伍，red_team 为 0xffffffff 表示无），
@@ -1996,6 +2081,7 @@ extern "C" __declspec(dllexport) void msd_enable_lab_hooks(){
     old_result_icons_zero=find_block(0x101d38bdu);register_block(0x101d38bdu,result_icons_zero);
     old_menu_button_draw=find_block(0x102003bdu);register_block(0x102003bdu,menu_button_draw);
     old_menu_button_tail=find_block(0x1020047bu);register_block(0x1020047bu,menu_button_tail);
+    old_cockpit_hidden=find_block(COCKPIT_HIDDEN);register_block(COCKPIT_HIDDEN,cockpit_hidden);
     install_ui_hooks();
     install_se_hooks();
     old_ai_wait=find_block(0x101cbfcbu);register_block(0x101cbfcbu,ai_wait);
