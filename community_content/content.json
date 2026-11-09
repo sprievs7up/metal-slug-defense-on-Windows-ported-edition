@@ -90,7 +90,11 @@
     "s1xlv.big_gate_builder": 1099,
     "s1xlv.big_gate": 1100,
     "s1xlv.launcher_walker": 1101,
-    "s1xlv.kraken_no_special": 1102
+    "s1xlv.kraken_no_special": 1102,
+    "s1xlv.shin_marco": 1103,
+    "s1xlv.shin_tarma": 1104,
+    "s1xlv.shin_eri": 1105,
+    "s1xlv.shin_fio": 1106
   },
   "units_dir": "units",
   "asset_digest": "blake2b-256",
@@ -191,7 +195,11 @@
     "balor_submarine_out.obm": "75f226dd743c70825eca11394ad06056126e41cdc03ca90f5f6f0c82734bf3b4",
     "native_bird_native2_out.obm": "f0a8466a0646b73939057fa2fe537f621da750f5eac1999796e8a7eb39a7c24d",
     "native_bird_frames.obm": "e3cac81a1ce6ed099d769a2abcdd1aded32498dd6a0333d9750170d021ba5474",
-    "sarubia_future_sfx.obm": "a5e3d67cd001d69f5ac5cf6e1c6ffc2e01158de11f3bd5463cfdf197a0fe3356"
+    "sarubia_future_sfx.obm": "a5e3d67cd001d69f5ac5cf6e1c6ffc2e01158de11f3bd5463cfdf197a0fe3356",
+    "shin_marco.obm": "1ca609445096a16b6d47c194dab9bb5b0af60834b7400eb69e4159d96b4167f8",
+    "shin_tarma.obm": "914d74cfcbdf76d21f68823905510a120a69af33bafc7a6cab7cd59508fec192",
+    "shin_eri.obm": "a7bde0890fb84a3de89f859d82463fdc27b89b6cf644412f65524b2f66a657d6",
+    "shin_fio.obm": "c596aefd3733a1440bc7f1dec04bbcade5b11cd4a27d49b51193cd426865d94f"
   },
   "stock_sprites": {
     "221": "native_bird_sprite.json",

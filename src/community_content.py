@@ -542,6 +542,8 @@ class CommunityContent:
         # R3 光环瞄准（BulletAction_MordenXX_Attack_SP 第 1 帧的远近判定块）与字 62–78 重排，需版本 3，核心 r143；R5 空中到达飞行上限时移除（同函数的超限块），需版本 4，核心 r144；R11 first_summon_wait（字 79），需版本 5，核心 r145。
         if any(u['zombie_spec']['flags']&1073741824 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_big_gate_version') or p.uc.lib.msd_community_big_gate_version()<5):raise RuntimeError('Native core lacks big gate')
         # 2026-11-06 带炮管的雷贝尔沃克（launcher_walker，ZSpec 标记 2147483648）：LevelWalker::update、弹体更新与攻击、对空距离（核心 r146）；R7 起要求版本 2（追踪视野字 82、普通攻击中可发动特殊攻击）。
+        # 2026-11-09 “真”主角四人组的 Big 特殊攻击（big_weapon，ZSpec 字 135）：BulletAction_Eri::update 的尾块与 BulletAction_Fio::update（核心 r152）。
+        if any(u['zombie_spec'].get('big_weapon') for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_big_weapon_version') or p.uc.lib.msd_community_big_weapon_version()<1):raise RuntimeError('Native core lacks big weapon')
         if any(u['zombie_spec']['flags']&2147483648 for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_launcher_walker_version') or p.uc.lib.msd_community_launcher_walker_version()<2):raise RuntimeError('Native core lacks launcher walker')
         # 2026-11-04 攻击轮数（attack_rounds，ZSpec 字 139）：BattleAction_McsnlFive::update 攻击计数的 1 个块（核心 r140）。
         if any(u['zombie_spec'].get('attack_rounds') for u in self.units if u.get('zombie_spec')) and (not hasattr(p.uc.lib,'msd_community_attack_rounds_version') or p.uc.lib.msd_community_attack_rounds_version()<1):raise RuntimeError('Native core lacks attack rounds')
@@ -1163,6 +1165,10 @@ class CommunityContent:
             # 2026-11-06：53–81 带炮管的雷贝尔沃克（launcher_walker v1，核心 r146；基准 228，与其他用字 53 起的行为不会同时出现）：动作号、发射 tick、
             # 导弹首个方向动作、前烟 / 后焰 / 烟团动作、出膛角、出生点与效果位置、初速、加速度、上限、追踪起始与转向上限、存在帧数、烟团间隔、命中效果、对空
             for i,v in enumerate(spec.get('lwalker',[])):words[53+i]=v&0xffffffff
+            # 2026-11-09：53–57 “真”主角四人组的 Big 特殊攻击（big_weapon v1，核心 r152；基准 18 / 19）：激光帧偏移、上限、攻击矩形半边长、火箭循环与爆炸动作；
+            # 字 135 为识别魔数 0x53484e31（标记位已用尽；字 134–138 另由 bike_extra 使用，基准不同，不会同时出现）
+            for i,v in enumerate(spec.get('big_weapon',[])):words[53+i]=v&0xffffffff
+            if spec.get('big_weapon'):words[135]=0x53484e31
             # 2026-10-29：132 受击召唤的冷却 tick（summon_on_hit，核心 r105）
             words[132]=spec.get('hit_summon_cooldown',0)
             # 2026-10-29：133 钢铁死亡蠕虫的钻离 / 钻击中开始扣击退计量的脚本 tick（iron_death_worm v5，核心 r109）

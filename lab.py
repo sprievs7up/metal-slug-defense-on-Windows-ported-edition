@@ -8,7 +8,7 @@
 - F5：退出 LAB 战斗并返回菜单（联机模式下原生暂停/脱离不可用，正式版并入 LAB 战斗菜单）。
 - F4：敌方 AI 自动出兵 开/关；F3：我方 AI 自动出兵 开/关。自动绝招为独立开关（战斗中菜单，钩子版本 ≥ 4）。
 - Esc：战斗中菜单（lab_menu.py，打开期间暂停战斗）：按方的 AI 自动出兵、AI 自动绝招、AI 使用辅助技能、无限AP、出兵无冷却、
-  辅助技能无限使用、停止活动，音乐 / 音效，重新开始、返回准备界面、继续。
+  辅助技能无限使用、无限绝招、停止活动，音乐 / 音效，重新开始、返回准备界面、继续。
 - 存档隔离（T9）：LAB 期间原生存档写入改写到内存，离开时还原内存中的主存档映像。
 - 战斗结束或进入结算场景时直接返回主菜单，不进入 Wi-Fi 结算。
 
@@ -41,7 +41,9 @@ DEFAULT_CONFIG = {
     'enemy_no_cooldown': True,
     'player_unlimited_support': False,
     'enemy_unlimited_support': False,
-    'player_stop': False,          # 停止活动：该方单位停止一切攻击（原生身体状态 DontShort / DontLong / DontSpAttack）
+    'player_unlimited_special': False,   # 无限绝招：绝招等待每帧清零（前一次绝招结束后才能再次发动）
+    'enemy_unlimited_special': False,
+    'player_stop': False,          # 停止活动：该方单位停止一切攻击（原生身体状态 DontShort / DontLong / DontSpAttack）；只在战斗中菜单开启
     'enemy_stop': False,
     'enemy_ai': False,             # 敌方 AI 自动出兵（含弹头车）
     'player_ai': False,            # 我方 AI 自动出兵（含弹头车）
@@ -68,10 +70,12 @@ VERSUS_KEYS = {'p1': {'left': 'A', 'right': 'D', 'ap': 'Y', 'deploy': 'R', 'spec
                'p2': {'left': 'LEFT', 'right': 'RIGHT', 'ap': 'PERIOD', 'deploy': 'M', 'special': 'COMMA', 'slug': 'SLASH'}}
 # 双人对战期间暂时关闭的 LAB 开关（开战时保存、离开战斗时还原，不写入设定文件）。
 CHEATS = ('player_unlimited_ap', 'enemy_unlimited_ap', 'player_no_cooldown', 'enemy_no_cooldown',
-          'player_unlimited_support', 'enemy_unlimited_support', 'player_stop', 'enemy_stop')
+          'player_unlimited_support', 'enemy_unlimited_support', 'player_unlimited_special', 'enemy_unlimited_special',
+          'player_stop', 'enemy_stop')
 VERSUS_OVERRIDES = CHEATS + ('player_ai', 'enemy_ai', 'player_auto_special', 'enemy_auto_special')
 SLUG_CHARGE = 1036             # 控制器偏移：弹头车充能（isUseMetasuraHou 0x1cbdc0 以充能 ≥ SLUG_FULL 判定可用）
 SLUG_FULL = 0x101cbdd0         # isUseMetasuraHou 的字面量池：充满所需的充能值
+SP_WAIT, SP_STATE = 800, 50    # BattleUnit 绝招等待：大于 0 时每帧减 1，为 0 时可发动（isSpAttack 0x1e0e36）；绝招状态号
 BODY_STATE = 0x6c              # BattleObject 身体状态位（changeBodyState 0x1de0fa）
 STOP_BITS = 0x4 | 0x200 | 0x400   # DontSpAttack（0x177f68）、DontLongAttack（0x178588）、DontShortAttack（0x17859a）
 # 停止前进：当前状态（+0x7c，BattleObject::update 0x1dd874 由预约状态 +0x80 写入）为前进（20）的单位以原生
@@ -472,6 +476,9 @@ class Lab:
             self.config.update(self.config_override)
         self.vs_restore()
         self.cpu_restore()
+        # 停止活动只在战斗中菜单开启（准备界面无此开关），每场开始时关闭，设定文件与预设中的旧值不生效。
+        self.player_stop = self.enemy_stop = False
+        self.config.update(player_stop=False, enemy_stop=False)
         if self.versus:
             # 双人对战：完全控制、双方 AI 与自动绝招关闭（正常 AP 增长与冷却），离开战斗时还原。
             self.vs_saved = {name: getattr(self, name) for name in VERSUS_OVERRIDES}
@@ -933,7 +940,8 @@ class Lab:
         self.apply_cheats(mine, enemy)
 
     def apply_cheats(self, mine, enemy):
-        """每帧：无限AP 补满 AP，出兵无冷却清零出兵冷却（刚出兵的槽位保留数帧冷却显示），辅助技能无限使用补满弹头车充能。"""
+        """每帧：无限AP 补满 AP，出兵无冷却清零出兵冷却（刚出兵的槽位保留数帧冷却显示），辅助技能无限使用补满弹头车充能，
+        无限绝招清零绝招等待。"""
         p = self.p
         full = None
         for side, controller in (('player', mine), ('enemy', enemy)):
@@ -949,7 +957,20 @@ class Lab:
                 full = p.word(SLUG_FULL) if full is None else full
                 if p.word(controller + SLUG_CHARGE) < full:
                     p.put(controller + SLUG_CHARGE, full)
+            if getattr(self, side + '_unlimited_special'):
+                self.apply_unlimited_special(controller)
             self.apply_stop(side, controller)
+
+    def apply_unlimited_special(self, controller):
+        """无限绝招：该方除据点外、当前状态 < 50 的单位绝招等待（+800）大于 0 时清零。原生 changeState(50)（0x1e0668）在绝招开始时
+        写入等待，isSpAttack（0x1e0e36）另要求当前状态 ≤ 49：绝招进行中（状态 ≥ 50）等待保持原生、不能再次发动，结束后的下一帧即可发动；
+        等待为 -1 的单位（词 35 ≤ 0，原生只能发动一次）保持原生。"""
+        from battle_controls import team_units
+        p = self.p
+        base = p.call('_ZNK16BattleController11getBaseUnitEv', controller)
+        for unit in team_units(p, controller):
+            if unit != base and 0 < p.word(unit + SP_WAIT) < 0x80000000 and p.word(unit + ACTION_STATE) < SP_STATE:
+                p.put(unit + SP_WAIT, 0)
 
     def apply_stop(self, side, controller):
         """停止活动：该方除据点外的单位每帧置原生身体状态 DontSpAttack、DontLongAttack、DontShortAttack（STOP_BITS），

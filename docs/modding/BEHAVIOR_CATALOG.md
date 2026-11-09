@@ -1,4 +1,4 @@
-# 单位行为目录 / Unit behavior catalog（行为库版本 45）
+# 单位行为目录 / Unit behavior catalog（行为库版本 46）
 
 本文件由 `content_tool.py list-behaviors --markdown` 从 `behavior_library.json` 生成，请勿手工修改。
 Generated from `behavior_library.json` by `content_tool.py list-behaviors --markdown`; do not edit by hand.
@@ -840,4 +840,20 @@ MS7 Mission 7 Rebel Walker with shoulder rocket launchers (2026-11-06, core r146
 | `hit_effect` | int | default: 65283; min: 0; max: 65534 |
 | `air_targets` | int | default: 1; min: 0; max: 1 |
 | `target_range` | int | default: 750; min: 1; max: 9999 |
+
+## big_weapon（v1）
+
+- 适用的原版基准单位 / base_id: 18, 19
+
+“真”主角四人组的 Big 特殊攻击（2026-11-09，核心 r152）：基准 18（BattleAction_Eri）或 19（BattleAction_Fio）。只作用于攻击组 50（特殊攻击）发射的弹体，普通攻击（攻击组 40）的弹体照原生。Eri 的激光（BulletAction_Eri）：绘制用的三个帧偏移（发射点、光束段、末端）小于 laser_frame_limit 时加 laser_frame_delta，即 Big 帧按原生帧的编排追加在描述符帧表中；攻击矩形改为以原矩形中心为中心、半边长 laser_half_box（图像像素）的正方形。Fio 的火箭（BulletAction_Fio）：飞行动作播完后转入 rocket_loop_animation（原生 32），爆炸播放 rocket_explosion_animation（原生 33）；起始动作由脚本 op22 的动作号指定。两个动作号为 0 时不接管 Fio 的弹体。
+
+Big special attack of the "Shin" heroes (2026-11-09, core r152): base 18 (BattleAction_Eri) or 19 (BattleAction_Fio). Applies only to projectiles fired by attack group 50 (special attack); projectiles of the normal attack (group 40) stay native. Eri laser (BulletAction_Eri): the three drawing frame offsets (origin, beam segment, far end) get laser_frame_delta added while below laser_frame_limit, so the Big frames are appended to the descriptor frame table in the native layout; the attack rectangle becomes a square of half side laser_half_box (image pixels) around the centre of the native rectangle. Fio rocket (BulletAction_Fio): after the flight animation ends it continues with rocket_loop_animation (native 32) and the explosion plays rocket_explosion_animation (native 33); the first animation comes from the script op22. When both animation numbers are 0 the projectiles of Fio are left native.
+
+| 参数 / parameter | 类型 / type | 约束 / constraints |
+| --- | --- | --- |
+| `laser_frame_delta` | int | default: 0; min: 0; max: 65535 |
+| `laser_frame_limit` | int | default: 0; min: 0; max: 65535 |
+| `laser_half_box` | int | default: 30; min: 1; max: 200 |
+| `rocket_loop_animation` | int | default: 0; min: 0; max: 1023 |
+| `rocket_explosion_animation` | int | default: 0; min: 0; max: 1023 |
 

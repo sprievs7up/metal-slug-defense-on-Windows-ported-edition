@@ -9,7 +9,7 @@ GameMode 1 中原生暂停页不可用；打开菜单时置 BattleGameMaster+0x1
 - 文字：与原生文字渲染相同的字体（简体 msyh、繁体 msjh、日语 msgothic、英语 arial），超出格宽时缩小字号。
   音乐 / 音效按钮为“名称：开 / 关”加原生暂停页的喇叭图标（SPEAKER，取自 2560×1440 下的原生画面）。
 - LAB：左块 AI 设定、右块战斗设定（行 = 功能，列 = 我方 / 敌方，LAB_BLOCKS），其下音乐 / 音效与重新开始、返回准备界面、继续。
-  新功能在 LAB_BLOCKS 中追加一行（每块最多 4 行）。VS CPU 与本地对战：原生暂停页的 5 行单列。
+  新功能在 LAB_BLOCKS 中追加一行（每块最多 4 行，2026-11-09 起两块均已满）。VS CPU 与本地对战：原生暂停页的 5 行单列。
 - 操作：鼠标点击（按下显示按下状态，同一项上抬起执行）；↑/↓/←/→ 移动选择、Enter 执行、Esc 打开 / 关闭（手柄同）。
   打开时选中“继续”。打开时自上方滑入（OPEN_FRAMES，略有回弹），关闭时上移滑出（CLOSE_FRAMES）；打开 / 选择播放原生确定音，
   关闭播放原生关闭音。背景不压暗（同原生暂停页）。
@@ -48,9 +48,9 @@ VS_W, VS_PITCH = round(190 * K), round(34 * K)   # 原生暂停页按钮宽 190�
 SIDES = ('player', 'enemy')
 # LAB 表格：(块标题, ((功能名, 开关属性后缀), ...))；属性为 player/enemy + 后缀。
 LAB_BLOCKS = (('menu_ai_group', (('menu_ai_deploy', '_ai'), ('menu_ai_special', '_auto_special'),
-                                 ('menu_ai_support', '_ai_slug'))),
+                                 ('menu_ai_support', '_ai_slug'), ('stop_activity', '_stop'))),
               ('menu_rule_group', (('unlimited_ap', '_unlimited_ap'), ('no_cooldown', '_no_cooldown'),
-                                   ('unlimited_support', '_unlimited_support'), ('stop_activity', '_stop'))))
+                                   ('unlimited_support', '_unlimited_support'), ('unlimited_special', '_unlimited_special'))))
 
 
 class Item:

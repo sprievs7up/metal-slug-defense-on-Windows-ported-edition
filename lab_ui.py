@@ -110,6 +110,8 @@ TEXT = {
     'no_cooldown': ('出兵無冷卻', '出兵无冷却', '出撃待ち時間なし', 'NO DEPLOY COOLDOWN'),
     'unlimited_support': ('輔助技能無限使用', '辅助技能无限使用', '支援スキル無制限', 'UNLIMITED SUPPORT'),
     'unlimited_support_short': ('輔助技能無限', '辅助技能无限', '支援無制限', '∞ SUPPORT'),
+    'unlimited_special': ('無限絕招', '无限绝招', '必殺技無制限', 'UNLIMITED SPECIAL'),
+    'unlimited_special_short': ('無限絕招', '无限绝招', '必殺技無制限', '∞ SPECIAL'),
     'stop_activity': ('停止活動', '停止活动', '行動停止', 'HOLD ALL ACTIONS'),
     'auto_special_short': ('自動施放絕招', '自动释放绝招', '必殺技自動', 'AUTO SPECIAL'),
     'on': ('開', '开', 'ON', 'ON'), 'off': ('關', '关', 'OFF', 'OFF'),
@@ -582,8 +584,8 @@ class Skin:
         return self.cache[key]
 
     def icon_rects(self):
-        """UnitID → (图集, 矩形)。原版：菜单表（320 行 × 20 字节，+10 头像序号）→ ConvUnitIcon（16 字节：
-        x,y,w,h,锚点 x,y,0,页）；社区单位：注册表 icon.rect（页 1）。"""
+        """UnitID → (图集, 矩形, 锚点)。原版：菜单表（320 行 × 20 字节，+10 头像序号）→ ConvUnitIcon（16 字节：
+        x,y,w,h,锚点 x,y,0,页）；社区单位：注册表 icon.rect、icon.anchor（页 1）。"""
         if self.icons is None:
             import struct
             p = self.lab.p
@@ -594,15 +596,16 @@ class Skin:
                 uid = p.word(menu + row * 20)
                 index = struct.unpack('<h', p.read(menu + row * 20 + 10, 2))[0]
                 if uid and 0 <= index < 340:
-                    x, y, w, h, _, _, _, page = struct.unpack('<8h', p.read(conv + index * 16, 16))
+                    x, y, w, h, ax, ay, _, page = struct.unpack('<8h', p.read(conv + index * 16, 16))
                     if w > 0 and h > 0:
-                        icons[uid] = (ICON_PAGES.get(page, ICON_PAGES[1]), (x, y, w, h))
+                        icons[uid] = (ICON_PAGES.get(page, ICON_PAGES[1]), (x, y, w, h), (ax, ay))
             community = getattr(p, 'community', None)
             for unit in (community.units if community is not None else []):
                 icon = unit.get('icon')
                 if icon:
                     # 页 2 起为社区图标页图集（icon.atlas）。
-                    icons[unit['id']] = (icon.get('atlas') or ICON_PAGES[icon.get('page', 1)], tuple(icon['rect']))
+                    icons[unit['id']] = (icon.get('atlas') or ICON_PAGES[icon.get('page', 1)], tuple(icon['rect']),
+                                         tuple(icon.get('anchor', (0, 0))))
             self.icons = icons
         return self.icons
 
@@ -614,7 +617,7 @@ class Skin:
             return None
         key = ('icon', uid, round(scale, 3))
         if key not in self.cache:
-            name, rect = entry
+            name, rect, _ = entry
             src = self.atlas(name).crop((rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3]))
             if src.getbbox() is None:
                 self.cache[key] = None
@@ -622,6 +625,14 @@ class Skin:
                 self.cache[key] = src.resize((max(1, int(src.width * scale)), max(1, int(src.height * scale))),
                                              Image.NEAREST)
         return self.cache[key]
+
+    def paste_icon(self, canvas, uid, x, y, size):
+        """单位头像放入左上角 (x, y)、边长 size 的编组格：同原生编队格，贴图左上角 = 格左上角减去锚点（均按格的倍率）。"""
+        scale = size / 50
+        icon = self.icon(uid, scale)
+        if icon is not None:
+            ax, ay = self.icon_rects()[uid][2]
+            canvas.paste(icon, (x - round(ax * scale), y - round(ay * scale)))
 
 
 class Shutter:

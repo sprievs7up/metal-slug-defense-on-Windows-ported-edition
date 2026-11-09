@@ -1,0 +1,186 @@
+{
+ "16": {
+  "EN": [
+   "MARCO",
+   "STAND. ATK : Handgun     SPEC. ATK : Heavy Machine Gun\nA major in the military. Excels at programming soldiers \nin training. Has an easy-to-use heavy machine gun."
+  ],
+  "JP": [
+   "マルコ",
+   "通常攻撃：ハンドガン     特殊攻撃：ヘビーマシンガン\n正規軍少佐。叩き上げの軍人でプログラミングに秀でる。\n使いやすいヘビーマシンガンを所持。"
+  ],
+  "KR": [
+   "마르코",
+   "일반 공격: 권총     특수 공격: 헤비 머신건\n군 소령. 군인 훈련에 탁월. 사용하기 쉬운 헤비 머신건을 소지."
+  ],
+  "ES": [
+   "MARCO",
+   "ATQ ESTÁND. : Revólver     ATQ ESPEC. : Ametralladora pesada\nUn comandante en el ejército. Destaca en el entrenamiento a\nsoldados. Tiene una ametralladora pesada fácil de usar."
+  ],
+  "PT": [
+   "MARCO",
+   "ATQ. PADR. : Pistola   ATQ. ESPEC. : Metralhadora Pesada\nUm major no exército. É excelente para coordenar soldados \nem treinamento. Possui uma metralhadora pesada fácil de usar."
+  ],
+  "FR": [
+   "MARCO",
+   "ATT. STAND : Pistolet   ATT. SPÉ : Mitraillette lourde\nUn major dans l'armée. Excelle dans l'art de programmer les soldats\npour l'entraînement. A une mitraillette facile à prendre en main."
+  ],
+  "DE": [
+   "",
+   ""
+  ],
+  "IT": [
+   "MARCO ",
+   "ATC STAND.: Pistola ATC SPEC.: Mitragliatrice Pesante\nUn maggiore nell'esercito. Eccelle nell'insegnamento ai soldati \nnell'addestramento. Ha una pesante mitragliatrice, facile da usare."
+  ],
+  "ZS": [
+   "",
+   ""
+  ],
+  "ZT": [
+   "馬可",
+   "普通攻擊：手槍     特殊攻擊：重機槍\n正規軍少校。經過千錘百鍊的軍人，擅長寫程式。\n持有相當好用的重機槍。"
+  ],
+  "RU": [
+   "МАРКО",
+   "СТАНД. АТАК: Пистолет   СПЕЦ. АТАК: Тяжёлый Пулемёт\nГлавный в вооружённых силах. Превосходно программирует солдат \nна тренировке. У него есть простой в обращении пулемёт."
+  ]
+ },
+ "17": {
+  "EN": [
+   "TARMA",
+   "STAND. ATK : Handgun     SPEC. ATK : Shotgun\nA captain in the military. Trademarked sunglasses look. \nHas a shotgun for mass-destruction of enemies."
+  ],
+  "JP": [
+   "ターマ",
+   "通常攻撃：ハンドガン     特殊攻撃：ショットガン\n正規軍大尉。サングラスがトレードマーク。\n敵をまとめて撃破可能なショットガンを所持。"
+  ],
+  "KR": [
+   "타마",
+   "일반 공격: 권총     특수 공격: 샷건\n군 대위. 선글라스가 트레이드 마크. \n적을 한꺼번에 격파할 수 있는 샷건을 소지."
+  ],
+  "ES": [
+   "TARMA",
+   "ATQ ESTÁND. : Revólver     ATQ ESPEC. : Escopeta\nUn capitán en el ejército. Utiliza gafas de marca registrada. \nTiene una escopeta para destrucción masiva de enemigos."
+  ],
+  "PT": [
+   "TARMA",
+   "ATQ. PADR. : Pistola   ATQ. ESPEC. : Espingarda\nUm capitão no exército. O visual com óculos escuros é marca registrada. \nPossui uma espingarda para destruição em massa dos inimigos."
+  ],
+  "FR": [
+   "TARMA",
+   "ATT. STAND : Pistolet   ATT. SPÉ : Fusil à pompe\nUn capitaine dans l'armée. Le look avec lunettes de soleil, marque\ndéposée. A un fusil à pompe pour le massacre d'ennemis en masse."
+  ],
+  "DE": [
+   "",
+   ""
+  ],
+  "IT": [
+   "TARMA",
+   "ATC STAND.: Pistola   ATC SPEC.: Fucile\nUn capitano nell'esercito. Look distintivo con occhiali da sole. \nHa un fucile da caccia per la distruzione di massa dei nemici."
+  ],
+  "ZS": [
+   "",
+   ""
+  ],
+  "ZT": [
+   "塔瑪",
+   "普通攻擊：手槍     特殊攻擊：散彈槍\n正規軍上尉。墨鏡是他的註冊商標。\n擁有可以一次打倒多數敵人的散彈槍。"
+  ],
+  "RU": [
+   "ТАРМА",
+   "СТАНД. АТАК: Пистолет   СПЕЦ. АТАК: Дробовик\nКапитан вооружённых сил. Отличительная черта - солнечные очки. \nУ него есть дробовик для массового уничтожения врагов."
+  ]
+ },
+ "18": {
+  "EN": [
+   "ERI",
+   "STAND. ATK : Handgun     SPEC. ATK : Laser\nA staff sergeant in the military intelligence special forces. \nA.K.A. Memphis Bomb Princess. Has a laser with maximum range."
+  ],
+  "JP": [
+   "エリ",
+   "通常攻撃：ハンドガン     特殊攻撃：レーザーガン\n正規軍情報特殊部隊の二等軍曹。メンフィスの爆弾娘の異名を持つ。\n最大射程を誇るレーザーガンを所持。"
+  ],
+  "KR": [
+   "에리",
+   "일반 공격: 권총     특수 공격: 레이저\n군 정보 특수 부대의 이등 중사. \n멤피스의 폭탄 공주로 불린다. 최대 사거리를 자랑하는 레이저 총을 소지."
+  ],
+  "ES": [
+   "ERI",
+   "ATQ ESTÁND. : Revólver     ATQ ESPEC. : Láser\nSargento en las fuerzas especiales de inteligencia militar. \nApodado Princesa Memphis Bomb. Tiene un láser de máximo alcance."
+  ],
+  "PT": [
+   "ERI",
+   "ATQ. PADR. : Pistola   ATQ. ESPEC. : Laser\nPrimeira-sargento nas forças especiais da inteligência militar. A\n\"Princesa Bombardeira de Memphis\"  tem um laser com alcance máximo."
+  ],
+  "FR": [
+   "ERI",
+   "ATT. STAND : Pistolet ATT. STAND : Laser\nSergent-chef des forces spéciales de renseignement militaire. Alias\nla Princesse des Bombes de Memphis. A un laser à grande portée."
+  ],
+  "DE": [
+   "",
+   ""
+  ],
+  "IT": [
+   "ERI",
+   "ATC STAND.: Pistola   ATC SPEC.: Laser\nUn sergente maggiore nelle forze speciali dell'intelligence. \nAlias Memphis Bomb Princess. Ha un laser con la portata massima."
+  ],
+  "ZS": [
+   "",
+   ""
+  ],
+  "ZT": [
+   "英里",
+   "普通攻擊：手槍     特殊攻擊：雷射槍\n正規軍情報特殊部隊的下士。擁有「孟菲斯炸彈女」的綽號。\n擁有最大射程極佳的雷射槍。"
+  ],
+  "RU": [
+   "ЭРИ",
+   "СТАНД. АТАК: Пистолет   СПЕЦ. АТАК: Лазер\nСержант в составе спецвойск военной интеллигенции.  \nПринцесса Бомба Мемфиса. Лазер с макс. диапазоном."
+  ]
+ },
+ "19": {
+  "EN": [
+   "FIO",
+   "STAND. ATK : Handgun     SPEC. ATK : Rocket Launcher\nA sergeant major in the military intelligence special forces. Quiet\nbut a bit of an airhead. Has a high-powered rocket launcher."
+  ],
+  "JP": [
+   "フィオ",
+   "通常攻撃：ハンドガン     特殊攻撃：ロケットランチャー\n正規軍情報特殊部隊の上級曹長。おっとりした性格でやや天然。\n高火力なロケットランチャーを所持。"
+  ],
+  "KR": [
+   "피오",
+   "일반 공격: 권총     특수 공격: 로켓 발사기\n군 정보 특수 부대의 상급 상사.\n차분하지만 약간 모자란 면이 있다. 고화력 로켓 발사기를 소지."
+  ],
+  "ES": [
+   "FIO",
+   "ATQ ESTÁND. : Revólver     ATQ ESPEC. : Lanzacohetes\nComandante Sargento en las fuerzas especiales. Silencioso pero \nun tanto distraído. Tiene un lanzacohetes de alta potencia."
+  ],
+  "PT": [
+   "FIO",
+   "ATQ. PADR. : Pistola   ATQ. ESPEC. : Lança-Mísseis\nUma sargento-mor nas forças especiais da inteligência militar. Quieta,\nmas um tanto distraída. Possui um lança-mísseis altamente poderoso."
+  ],
+  "FR": [
+   "FIO",
+   "ATT. STAND : Pistolet   ATT. SPÉ : Lance-roquette\nSergent-major des forces spéciales de renseignement militaire.\nCalme mais un peu crétin. A un lance-roquette puissant."
+  ],
+  "DE": [
+   "",
+   ""
+  ],
+  "IT": [
+   "FIO",
+   "ATC STAND.: Pistola   ATC SPEC.: Lanciarazzi\nUn sergente maggiore nelle forze speciali dell'intelligence militare. \nTranquillo ma un po' tra le nuvole. Ha un potente lanciarazzi."
+  ],
+  "ZS": [
+   "",
+   ""
+  ],
+  "ZT": [
+   "菲歐",
+   "普通攻擊：手槍     特殊攻擊：火箭砲\n正規軍情報特殊部隊的軍士長。性格穩重，但有點天然呆\n擁有火力強大的火箭砲。"
+  ],
+  "RU": [
+   "ФИО",
+   "СТАНД. АТАК: Пистолет   СПЕЦ. АТАК: Ракетопускатель\nСержант-майор в спецвойсках военной интеллигенции. Спокойный,\nно слегка пустоголовый. Высокомощный ракетопускатель."
+  ]
+ }
+}

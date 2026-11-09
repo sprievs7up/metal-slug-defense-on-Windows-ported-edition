@@ -515,9 +515,7 @@ class LabPrep:
         down = c.is_pressed(('slot', side, label and int(label) - 1)) if label else False
         c.paste(self.skin.darken(part) if down else part, (x, y))
         if uid is not None:
-            icon = self.skin.icon(uid, size / 50)
-            if icon is not None:
-                c.paste(icon, (x + (size - icon.width) // 2, y + (size - icon.height) // 2))
+            self.skin.paste_icon(c, uid, x, y, size)
         if label is not None:
             c.text((x + 6, y + 3), label, 14, WHITE)
 
@@ -638,7 +636,7 @@ class LabPrep:
         return T(p, 'cpu_you_deck' if side == self.human_side() else 'cpu_cpu_deck', slot)
 
     def draw_control(self, box, top, height):
-        """控制：LAB 为双方 AI（开/关 + 段位选择器），以及按方的自动绝招、AI 使用辅助技能、无限AP、出兵无冷却、辅助技能无限使用；
+        """控制：LAB 为双方 AI（开/关 + 段位选择器），以及按方的自动绝招、AI 使用辅助技能、无限AP、出兵无冷却、辅助技能无限使用、无限绝招；
         VS CPU 为玩家位置、CPU 段位与 CPU 使用弹头车；双人对战显示双方键位与对战规则（上述开关在对战中关闭，设定保留）。
         两种模式由入口决定，此处不提供切换。"""
         lab, c, p = self.lab, self.c, self.lab.p
@@ -671,7 +669,7 @@ class LabPrep:
         # 双方 AI（开/关 + 段位）各一行；其余为按方开关（我方、敌方各一个按钮，同战斗中菜单的表格）。
         rows = (('player_ai', None), ('enemy_ai', None), ('auto_special_short', '_auto_special'),
                 ('ai_slug', '_ai_slug'), ('unlimited_ap', '_unlimited_ap'), ('no_cooldown', '_no_cooldown'),
-                ('unlimited_support_short', '_unlimited_support'), ('stop_activity', '_stop'))
+                ('unlimited_support_short', '_unlimited_support'), ('unlimited_special_short', '_unlimited_special'))
         for index, (name, suffix) in enumerate(rows):
             y = top + 34 + index * 26
             if suffix is None:
@@ -779,9 +777,7 @@ class LabPrep:
             if c.is_pressed(('pick', uid)):
                 c.paste(self.skin.darken(self.skin.scaled(CELLS['player' if side == 'player' else 'enemy'],
                                                           PICK_CELL, PICK_CELL)), (x, y))
-                icon = self.skin.icon(uid, PICK_CELL / 50)
-                if icon is not None:
-                    c.paste(icon, (x + (PICK_CELL - icon.width) // 2, y + (PICK_CELL - icon.height) // 2))
+                self.skin.paste_icon(c, uid, x, y, PICK_CELL)
             if community:
                 c.text((x + PICK_CELL - 4, y + 3), T(p, 'community_mark'), 12, GOLD, 'ra', 2)
             c.text((x + PICK_CELL / 2, y + PICK_CELL + 13), name, 13, WHITE, 'mm', 2, PICK_PITCH - 6)
@@ -888,10 +884,7 @@ class LabPrep:
                                    self.lab.stage_label(entry.get('stage_id'))), 16, WHITE, 'lm', 2, 380)
             for side_index, key in enumerate(('player_units', 'enemy_units')):
                 for i, uid in enumerate([u for u in entry.get(key, []) if u][:10]):
-                    icon = self.skin.icon(uid, 36 / 50)
-                    if icon is not None:
-                        c.paste(icon, (430 + side_index * 410 + i * 38 + (36 - icon.width) // 2,
-                                       y + 4 + (36 - icon.height) // 2))
+                    self.skin.paste_icon(c, uid, 430 + side_index * 410 + i * 38, y + 4, 36)
 
     def close_resources(self):
         for overlay in (self.overlay, self.press_overlay):

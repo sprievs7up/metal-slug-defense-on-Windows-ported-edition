@@ -1,0 +1,2157 @@
+{
+  "key": "s1xlv.shin_fio",
+  "base_id": 19,
+  "faction": 0,
+  "identity": "Regular Army (Sparrows)",
+  "shop_price": 0,
+  "available_from_start": false,
+  "shop_unlock_reference_id": 136,
+  "world_clear_reward": {
+    "world": 1,
+    "area": 11,
+    "world_type": 0
+  },
+  "ap": 110,
+  "hp_multiplier": [
+    10,
+    3
+  ],
+  "knockback_threshold_multiplier": [
+    10,
+    3
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    3,
+    2
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 19,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "status_word_values": {
+    "22": [
+      320,
+      480,
+      640,
+      800,
+      960,
+      1120
+    ],
+    "24": [
+      999,
+      999,
+      999,
+      999,
+      999,
+      999
+    ],
+    "26": [
+      400,
+      400,
+      400,
+      400,
+      400,
+      400
+    ],
+    "27": [
+      25,
+      25,
+      25,
+      25,
+      25,
+      25
+    ]
+  },
+  "attack_attributes": {
+    "normal": 2
+  },
+  "status_float_values": {
+    "23": 10.0,
+    "25": 0.0
+  },
+  "image_direction": 90,
+  "icon": {
+    "page": 1,
+    "rect": [
+      910,
+      770,
+      39,
+      36
+    ],
+    "anchor": [
+      -13,
+      -9
+    ]
+  },
+  "textures": [
+    "fio_out.obm",
+    "fio_eff.obm",
+    "0C1_2_2_out.obm",
+    "0C4_3_out.obm",
+    "shin_fio.obm"
+  ],
+  "sprite_descriptor": "shin_fio_descriptor.json",
+  "animations": {
+    "0": [
+      {
+        "opcode": 0,
+        "values": [
+          698
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          700
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          702
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          704
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          706
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          8
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          708
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          710
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          712
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          714
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          716
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          718
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          720
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          722
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          724
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          726
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          728
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "1": [
+      {
+        "opcode": 0,
+        "values": [
+          624
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          626
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          628
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          630
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          632
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          634
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          636
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          638
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          640
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          642
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          644
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          646
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "6": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          616
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          618
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          620
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          622
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          620
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          618
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "7": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          624
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          626
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          628
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          630
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          632
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          634
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          636
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          638
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          640
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          642
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          644
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          646
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "8": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          648
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          650
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          652
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          654
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 4,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          656
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          658
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 4,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          656
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          658
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          660
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          662
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          664
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          648
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "38": [
+      {
+        "opcode": 4,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 7,
+        "values": [
+          200,
+          200,
+          20,
+          -20
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          690
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          694
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          690
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          694
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          690
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          694
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          690
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          694
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          690
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          694
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          682
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          686
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          674
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          678
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 8,
+        "values": [
+          800
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "39": [
+      {
+        "opcode": 4,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 12,
+        "values": [
+          24,
+          -3,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          666
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          670
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "40": [
+      {
+        "opcode": 4,
+        "values": [
+          6
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          203
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          388
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          390
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          34,
+          0,
+          20,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          392
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          394
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          35,
+          0,
+          40,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          396
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          398
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          400
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          402
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          404
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 4,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          406
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          408
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          410
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          412
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          414
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          416
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          418
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          420
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          422
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          424
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          426
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          428
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          430
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          432
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          434
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          436
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          438
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          440
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          442
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "9": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          279
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          154
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          25,
+          -1,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          156
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          31,
+          -2,
+          40,
+          -20
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          158
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          160
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          162
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          162
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          164
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          166
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          168
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          170
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          172
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "10": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          802
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          279
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          154
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 11,
+        "values": [
+          25,
+          -1,
+          0,
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          156
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          38,
+          -2,
+          40,
+          -20
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          158
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          160
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          162
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          162
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          164
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          166
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          168
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          170
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          172
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ]
+  },
+  "localization": {
+    "EN": {
+      "name": "SHIN FIO",
+      "description": "STAND. ATK : Rocket Launcher     SPEC. ATK : Rocket Launcher (Big)\nA sergeant major in the military intelligence special forces. Quiet\nbut a bit of an airhead. Has a high-powered rocket launcher."
+    },
+    "JP": {
+      "name": "真 フィオ",
+      "description": "通常攻撃：ロケットランチャー     特殊攻撃：ロケットランチャー（大）\n正規軍情報特殊部隊の上級曹長。おっとりした性格でやや天然。\n高火力なロケットランチャーを所持。"
+    },
+    "KR": {
+      "name": "진 피오",
+      "description": "일반 공격: 로켓 발사기     특수 공격: 로켓 발사기 (대)\n군 정보 특수 부대의 상급 상사.\n차분하지만 약간 모자란 면이 있다. 고화력 로켓 발사기를 소지."
+    },
+    "ES": {
+      "name": "SHIN FIO",
+      "description": "ATQ ESTÁND. : Lanzacohetes     ATQ ESPEC. : Lanzacohetes (grande)\nComandante Sargento en las fuerzas especiales. Silencioso pero \nun tanto distraído. Tiene un lanzacohetes de alta potencia."
+    },
+    "PT": {
+      "name": "SHIN FIO",
+      "description": "ATQ. PADR. : Lança-Mísseis   ATQ. ESPEC. : Lança-Mísseis (grande)\nUma sargento-mor nas forças especiais da inteligência militar. Quieta,\nmas um tanto distraída. Possui um lança-mísseis altamente poderoso."
+    },
+    "FR": {
+      "name": "SHIN FIO",
+      "description": "ATT. STAND : Lance-roquette   ATT. SPÉ : Lance-roquette (grand)\nSergent-major des forces spéciales de renseignement militaire.\nCalme mais un peu crétin. A un lance-roquette puissant."
+    },
+    "DE": {
+      "name": "SHIN FIO",
+      "description": "STAND. ATK : Rocket Launcher     SPEC. ATK : Rocket Launcher (Big)\nA sergeant major in the military intelligence special forces. Quiet\nbut a bit of an airhead. Has a high-powered rocket launcher."
+    },
+    "IT": {
+      "name": "SHIN FIO",
+      "description": "ATC STAND.: Lanciarazzi   ATC SPEC.: Lanciarazzi (grande)\nUn sergente maggiore nelle forze speciali dell'intelligence militare. \nTranquillo ma un po' tra le nuvole. Ha un potente lanciarazzi."
+    },
+    "ZS": {
+      "name": "真 菲欧",
+      "description": "普通攻击：火箭炮     特殊攻击：火箭炮（大）\n正规军情报特殊部队的军士长。性格稳重，但有点天然呆\n拥有火力强大的火箭炮。"
+    },
+    "ZT": {
+      "name": "真 菲歐",
+      "description": "普通攻擊：火箭砲     特殊攻擊：火箭砲（大）\n正規軍情報特殊部隊的軍士長。性格穩重，但有點天然呆\n擁有火力強大的火箭砲。"
+    },
+    "RU": {
+      "name": "СИН ФИО",
+      "description": "СТАНД. АТАК: Ракетопускатель   СПЕЦ. АТАК: Ракетопускатель (большой)\nСержант-майор в спецвойсках военной интеллигенции. Спокойный,\nно слегка пустоголовый. Высокомощный ракетопускатель."
+    }
+  },
+  "tags": [
+    "shin"
+  ],
+  "behaviors": [
+    {
+      "name": "big_weapon",
+      "version": 1,
+      "params": {
+        "rocket_loop_animation": 39,
+        "rocket_explosion_animation": 40
+      }
+    }
+  ]
+}

@@ -26,8 +26,8 @@ MIN_SAVE_FRAMES = 900                 # 中途退出时至少 30 秒才保存回
 CONFIG_KEYS = ('stage_id', 'player_deck', 'enemy_deck', 'player_base_level', 'enemy_base_level', 'player_hp_boost',
                'player_atk_boost', 'enemy_hp_boost', 'enemy_atk_boost', 'player_support', 'enemy_support',
                'player_unlimited_ap', 'enemy_unlimited_ap', 'player_no_cooldown', 'enemy_no_cooldown',
-               'player_unlimited_support', 'enemy_unlimited_support', 'player_stop', 'enemy_stop', 'player_ai',
-               'enemy_ai', 'player_auto_special', 'enemy_auto_special', 'player_ai_tier', 'enemy_ai_tier')
+               'player_unlimited_support', 'enemy_unlimited_support', 'player_unlimited_special', 'enemy_unlimited_special',
+               'player_stop', 'enemy_stop', 'player_ai', 'enemy_ai', 'player_auto_special', 'enemy_auto_special', 'player_ai_tier', 'enemy_ai_tier')
 
 
 def enabled():

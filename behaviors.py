@@ -600,13 +600,18 @@ def internal_fields(resolved):
             'air_targets',
             'target_range',
         )])
+    # 2026-11-09 “真”主角四人组的 Big 特殊攻击（行为库 v46 / 行为 v1，核心 r152，基准 18 / 19）：ZSpec 标记位已用尽，以字 135 的魔数识别；
+    # 字 53 激光帧偏移，54 帧偏移上限，55 攻击矩形半边长，56 火箭循环动作，57 火箭爆炸动作。
+    if 'big_weapon' in resolved:
+        v = resolved['big_weapon']
+        zombie['big_weapon'] = [v[k] for k in ('laser_frame_delta', 'laser_frame_limit', 'laser_half_box', 'rocket_loop_animation', 'rocket_explosion_animation')]
     # 2026-10-31 R9 落地延续生命（行为库 v30，核心 r112，基准 160）：ZSpec 标记 67108864，无参数字。
     if 'landing_keeps_hp' in resolved:
         zombie['flags'] |= 67108864
     # 2026-11-04 攻击轮数（行为库 v42，核心 r140，基准 187）：ZSpec 字 139 为飞离前的攻击轮数（不占标记位）。
     if 'attack_rounds' in resolved:
         zombie['attack_rounds'] = resolved['attack_rounds']['rounds']
-    if zombie['flags'] or zombie.get('attack_rounds'):
+    if zombie['flags'] or zombie.get('attack_rounds') or zombie.get('big_weapon'):
         fields['zombie_spec'] = zombie
     return fields
 

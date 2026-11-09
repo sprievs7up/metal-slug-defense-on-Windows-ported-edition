@@ -1,0 +1,1308 @@
+{
+  "key": "s1xlv.shin_eri",
+  "base_id": 18,
+  "faction": 0,
+  "identity": "Regular Army (Sparrows)",
+  "shop_price": 0,
+  "available_from_start": false,
+  "shop_unlock_reference_id": 136,
+  "world_clear_reward": {
+    "world": 1,
+    "area": 11,
+    "world_type": 0
+  },
+  "ap": 100,
+  "hp_multiplier": [
+    46,
+    15
+  ],
+  "knockback_threshold_multiplier": [
+    46,
+    15
+  ],
+  "damage_multiplier": [
+    1,
+    1
+  ],
+  "special_damage_multiplier": [
+    3,
+    2
+  ],
+  "move_speed_multiplier": [
+    1,
+    1
+  ],
+  "attack_wait_multiplier": [
+    1,
+    1
+  ],
+  "attack_range_multiplier": [
+    1,
+    1
+  ],
+  "knockback_distance_multiplier": [
+    1,
+    1
+  ],
+  "ballistic_range_multiplier": [
+    1,
+    1
+  ],
+  "production_reference_id": 18,
+  "production_interval_multiplier": [
+    1,
+    1
+  ],
+  "status_word_values": {
+    "22": [
+      32,
+      48,
+      64,
+      80,
+      96,
+      112
+    ],
+    "24": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "26": [
+      700,
+      700,
+      700,
+      700,
+      700,
+      700
+    ],
+    "27": [
+      25,
+      25,
+      25,
+      25,
+      25,
+      25
+    ]
+  },
+  "attack_attributes": {
+    "normal": 2
+  },
+  "status_float_values": {
+    "23": 1.0,
+    "25": 0.0
+  },
+  "image_direction": 90,
+  "icon": {
+    "page": 1,
+    "rect": [
+      864,
+      770,
+      42,
+      38
+    ],
+    "anchor": [
+      -10,
+      -7
+    ]
+  },
+  "textures": [
+    "eri_out.obm",
+    "0C1_1_out.obm",
+    "0C3_2_out.obm",
+    "shin_eri.obm"
+  ],
+  "sprite_descriptor": "shin_eri_descriptor.json",
+  "animations": {
+    "0": [
+      {
+        "opcode": 0,
+        "values": [
+          630
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          632
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          634
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          636
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          638
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          8
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          640
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          642
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          644
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          646
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          648
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          650
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          652
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          654
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          656
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          658
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          660
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "1": [
+      {
+        "opcode": 0,
+        "values": [
+          514
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          516
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          518
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          520
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          522
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          524
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          526
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          528
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          530
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          532
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          534
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "6": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          506
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          508
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          510
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          512
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          510
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          508
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          3
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "7": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          514
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          516
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          518
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          520
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          522
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          524
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          526
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          2
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          528
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          530
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          532
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          534
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 5,
+        "values": []
+      }
+    ],
+    "8": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          536
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          538
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          540
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          542
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 4,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          544
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          546
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 4,
+        "values": [
+          0
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          544
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          546
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          548
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          550
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          552
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          536
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "9": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          23,
+          1,
+          32,
+          -20
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          220
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          120
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          122
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          124
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          126
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          128
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          130
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          124
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          126
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          132
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          134
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          136
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          138
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          140
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          142
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ],
+    "10": [
+      {
+        "opcode": 3,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 22,
+        "values": [
+          23,
+          1,
+          32,
+          -20
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          801
+        ]
+      },
+      {
+        "opcode": 23,
+        "values": [
+          220
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          120
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          122
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          124
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          126
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          128
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          130
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          124
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          126
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          132
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          134
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          136
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          138
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          1
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          140
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          5
+        ]
+      },
+      {
+        "opcode": 0,
+        "values": [
+          142
+        ]
+      },
+      {
+        "opcode": 1,
+        "values": [
+          4
+        ]
+      },
+      {
+        "opcode": 21,
+        "values": []
+      }
+    ]
+  },
+  "localization": {
+    "EN": {
+      "name": "SHIN ERI",
+      "description": "STAND. ATK : Laser     SPEC. ATK : Laser (Big)\nA staff sergeant in the military intelligence special forces. \nA.K.A. Memphis Bomb Princess. Has a laser with maximum range."
+    },
+    "JP": {
+      "name": "真 エリ",
+      "description": "通常攻撃：レーザーガン     特殊攻撃：レーザーガン（大）\n正規軍情報特殊部隊の二等軍曹。メンフィスの爆弾娘の異名を持つ。\n最大射程を誇るレーザーガンを所持。"
+    },
+    "KR": {
+      "name": "진 에리",
+      "description": "일반 공격: 레이저     특수 공격: 레이저 (대)\n군 정보 특수 부대의 이등 중사. \n멤피스의 폭탄 공주로 불린다. 최대 사거리를 자랑하는 레이저 총을 소지."
+    },
+    "ES": {
+      "name": "SHIN ERI",
+      "description": "ATQ ESTÁND. : Láser     ATQ ESPEC. : Láser (grande)\nSargento en las fuerzas especiales de inteligencia militar. \nApodado Princesa Memphis Bomb. Tiene un láser de máximo alcance."
+    },
+    "PT": {
+      "name": "SHIN ERI",
+      "description": "ATQ. PADR. : Laser   ATQ. ESPEC. : Laser (grande)\nPrimeira-sargento nas forças especiais da inteligência militar. A\n\"Princesa Bombardeira de Memphis\"  tem um laser com alcance máximo."
+    },
+    "FR": {
+      "name": "SHIN ERI",
+      "description": "ATT. STAND : Laser   ATT. SPÉ : Laser (grand)\nSergent-chef des forces spéciales de renseignement militaire. Alias\nla Princesse des Bombes de Memphis. A un laser à grande portée."
+    },
+    "DE": {
+      "name": "SHIN ERI",
+      "description": "STAND. ATK : Laser     SPEC. ATK : Laser (Big)\nA staff sergeant in the military intelligence special forces. \nA.K.A. Memphis Bomb Princess. Has a laser with maximum range."
+    },
+    "IT": {
+      "name": "SHIN ERI",
+      "description": "ATC STAND.: Laser   ATC SPEC.: Laser (grande)\nUn sergente maggiore nelle forze speciali dell'intelligence. \nAlias Memphis Bomb Princess. Ha un laser con la portata massima."
+    },
+    "ZS": {
+      "name": "真 英里",
+      "description": "普通攻击：激光枪     特殊攻击：激光枪（大）\n正规军情报特殊部队的下士。拥有「孟菲斯炸弹女」的绰号。\n拥有最大射程极佳的激光枪。"
+    },
+    "ZT": {
+      "name": "真 英里",
+      "description": "普通攻擊：雷射槍     特殊攻擊：雷射槍（大）\n正規軍情報特殊部隊的下士。擁有「孟菲斯炸彈女」的綽號。\n擁有最大射程極佳的雷射槍。"
+    },
+    "RU": {
+      "name": "СИН ЭРИ",
+      "description": "СТАНД. АТАК: Лазер   СПЕЦ. АТАК: Лазер (большой)\nСержант в составе спецвойск военной интеллигенции.  \nПринцесса Бомба Мемфиса. Лазер с макс. диапазоном."
+    }
+  },
+  "tags": [
+    "shin"
+  ],
+  "behaviors": [
+    {
+      "name": "big_weapon",
+      "version": 1,
+      "params": {
+        "laser_frame_delta": 308,
+        "laser_frame_limit": 554,
+        "laser_half_box": 30
+      }
+    }
+  ]
+}

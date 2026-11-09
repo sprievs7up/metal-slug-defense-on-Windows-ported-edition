@@ -278,7 +278,7 @@ class NetplayBattle:
                   'enemy_hp_boost': 0, 'enemy_atk_boost': 0, 'player_support': 0, 'enemy_support': 0,
                   'player_unlimited_ap': False, 'enemy_unlimited_ap': False, 'player_no_cooldown': False,
                   'enemy_no_cooldown': False, 'player_unlimited_support': False, 'enemy_unlimited_support': False,
-                  'player_stop': False, 'enemy_stop': False,
+                  'player_stop': False, 'enemy_stop': False, 'player_unlimited_special': False, 'enemy_unlimited_special': False,
                   'player_ai': False, 'enemy_ai': False,
                   'player_auto_special': False, 'enemy_auto_special': False}
         if p1_status is not None and p2_status is not None:

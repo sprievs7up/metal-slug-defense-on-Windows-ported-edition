@@ -4977,6 +4977,136 @@ static bool lw_distance(Context& c){
 }
 static Block old_lw_update;static void launcher_walker_update(Context& c){if(lw_update(c))return;old_lw_update(c);}
 extern "C" __declspec(dllexport) uint32_t msd_community_launcher_walker_version(){return launcher_walker_hooks==1u&&elder_centipede_hooks==10u?2u:0u;}   // 1：r146；2：R7（target_range 字 82、普通攻击中可发动特殊攻击）
+// ---------- “真”主角四人组的 Big 特殊攻击（2026-11-09，行为库 v46：big_weapon v1，ZSpec 字 135 = 魔数，字 53–57；基准 18 Eri / 19 Fio；核心 r152）----------
+// verification/shin_heroes_20261109/summary.md。只作用于攻击组 50（特殊攻击，发射者 +0x88，弹体第 0 帧记入 +0x3c）发射的弹体；普通攻击（攻击组 40）的弹体与原版大招相同。
+// Eri：BulletAction_Eri::update（0x172500）把绘制用的帧偏移写入 +0x48（发射点）、+0x4c（光束段）、+0x50（末端），由 draw 读取；
+//  尾块 0x17274c 为各路径共同出口（已 kill 的路径也经过），帧偏移小于上限时才加偏移（字 53，上限字 54），重复进入不累加。
+//  攻击矩形 onEventSetAttackRect 存逻辑坐标 +0xdc / +0xe0 / +0xe4 / +0xe8（int32，图像像素 ×2）；存活 tick ≤ 7（r6）时改为以原矩形水平中心为中心、半边长字 55（图像像素）。
+// Fio：BulletAction_Fio::update（0x1768e2）只有状态 20（飞行动作播完转原生 32）与状态 60 / 200（第 0 帧播原生 33，播完移除）；Big 弹体改用字 56、57 的动作。
+static constexpr uint32_t BW_KIND=0x53484e31u,BW_NOT_SHOOTER=0xffffffffu;
+static uint32_t big_weapon_hooks=0u;
+static uint32_t bw_spec(Context& c,uint32_t b){
+ if(!active(c)||!head(c,168u)||!b||rd<uint32_t>(c,b)!=FS_BULLET_VPTR)return 0u;
+ uint32_t uid=rd<uint32_t>(c,b+0x128u);if(!record(c,uid))return 0u;
+ uint32_t s=rd<uint32_t>(c,head(c,168u)+(uid-U)*4u);
+ return s&&zw(c,s,135)==BW_KIND?s:0u;
+}
+// 弹体的 +0x62 为发射者的对象号（BulletAction_Eri::killLaser 同样按此匹配）；发射者的攻击组在 +0x88（setAnimationID 在状态 30 / 40 / 50 写入）。
+static uint32_t bw_owner_group(Context& c,uint32_t b){
+ uint32_t team=rd<uint32_t>(c,b+0x70u)&1u,head0=rd<uint32_t>(c,FS_MANAGER+(team?0x1cu:0x18u));if(!head0)return 0u;
+ uint32_t id=rd<uint16_t>(c,b+0x62u),e=head0;
+ for(uint32_t n=0;n<8192u;++n){
+  if(rd<uint16_t>(c,e+0x62u)==id)return rd<uint32_t>(c,e+0x128u)==rd<uint32_t>(c,b+0x128u)?rd<uint32_t>(c,e+0x88u):BW_NOT_SHOOTER;   // 反射的弹体（核心 r153）：+0x62 为 Rugal，不按其攻击组判定
+  uint32_t next=rd<uint32_t>(c,e+0x124u);if(!next)break;e=next-0x11cu;if(e==head0)break;
+ }
+ return 0u;
+}
+// 第 0 帧（first 为真）记录是否由特殊攻击发射，之后读记录（+0x3c；发射者之后可能进入下一次攻击）
+static uint32_t bw_bullet(Context& c,uint32_t b,bool first){
+ uint32_t s=bw_spec(c,b);if(!s)return 0u;
+ if(first){uint32_t g=bw_owner_group(c,b);if(g!=BW_NOT_SHOOTER)wr<uint32_t>(c,b+0x3cu,g==50u?BW_KIND:0u);}
+ return rd<uint32_t>(c,b+0x3cu)==BW_KIND?s:0u;
+}
+static Block old_bw_laser;
+static void big_weapon_laser(Context& c){
+ uint32_t b=c.r[4],s=bw_bullet(c,b,int32_t(c.r[6])==0);
+ if(s&&zw(c,s,53)){
+  uint32_t d=zw(c,s,53),limit=zw(c,s,54);
+  for(uint32_t f:{0x48u,0x4cu,0x50u}){uint32_t v=rd<uint32_t>(c,b+f);if(v<limit)wr<uint32_t>(c,b+f,v+d);}
+  if(int32_t(c.r[6])<=7){
+   int32_t cx=(rd<int32_t>(c,b+0xdcu)+rd<int32_t>(c,b+0xe4u))/2,h=int32_t(zw(c,s,55))*2;   // 这四个字是 int32（onEventSetAttackRect 以 vcvt.s32.f32 转换后存入）
+   wr<int32_t>(c,b+0xdcu,cx-h);wr<int32_t>(c,b+0xe4u,cx+h);wr<int32_t>(c,b+0xe0u,-h);wr<int32_t>(c,b+0xe8u,h);
+  }
+ }
+ old_bw_laser(c);
+}
+static Block old_bw_rocket;
+static void big_weapon_rocket(Context& c){
+ uint32_t b=c.r[1],state=c.r[2],t=c.r[3],s=bw_bullet(c,b,state==20u&&t==0u);
+ if(!s||!zw(c,s,56)){old_bw_rocket(c);return;}
+ if(state==20u){if(!rd<uint8_t>(c,b+0xc9u))is_call(c,IS_SET_ANIM,b,zw(c,s,56),0u,0u);}
+ else if(state==60u||state==200u){
+  if(t==0u)is_call(c,IS_SET_ANIM,b,zw(c,s,57),0u,1u);
+  else if(!rd<uint8_t>(c,b+0xc9u))is_call(c,IS_KILL,b);
+ }
+ c.pc=c.r[14];
+}
+// BattleBullet::update 的触地判定调用弹体动作的 hitGround（BulletAction_Fio 未重写，用 BattleBulletDefault::hitGround，0x16ddf2）；Big 火箭跳过（用户要求：不因地形爆炸）
+static Block old_bw_ground;
+static void big_weapon_ground(Context& c){
+ uint32_t s=bw_bullet(c,c.r[1],false);
+ if(s&&zw(c,s,56)){c.pc=c.r[14];return;}
+ old_bw_ground(c);
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_big_weapon_version(){return big_weapon_hooks==3u?1u:0u;}
+// ---------- 效果自生成链的终止条件与 Rugal 反射社区单位的自管弹体（2026-11-09，核心 r153，社区反馈）----------
+// 1) 效果自生成链：脚本 op12 指向自身的效果（蜈蚣长老损毁碎块 103；原版 JpnTank 34 / 38 / 42、Maggot 44 / 51、McsnlFive 38、WingedInvader 19）每隔几 tick 生成下一节。
+//    r134 及以前效果对象池为 128 个，爆发时占满使下一节建立失败，链随之终止；r135 把池扩到 328 后蜈蚣长老的链不再中断（稳态约 187 个，本体移除后一直向前蔓延）。
+//    BattleEffectDefault::createObject 入口（r1 效果、r2 脚本）：脚本等于该效果当前动作、场上效果已达 EFFECT_CHAIN_LIMIT（原池实际可用的个数）时不建立，恢复原来的
+//    终止条件；其余效果不受限（r135 扩充的容量照常使用）。判定只取对战状态，回滚与联机两端一致。动作演示（z_viewer）中不判定。
+static constexpr uint32_t EFFECT_CHAIN_LIMIT=126u;
+static uint32_t reflect_hooks=0u;
+static Block old_effect_create;
+static void effect_create(Context& c){
+ if(rd<uint32_t>(c,c.r[1]+0xc4u)==c.r[2]&&!z_viewer(c)){
+  uint32_t e=rd<uint32_t>(c,IS_MANAGER+0x28u),first=e,n=0u;   // 效果链表首尾相连
+  while(e&&n<EFFECT_CHAIN_LIMIT){++n;uint32_t link=rd<uint32_t>(c,e+0x120u);e=link?link-0x11cu:0u;if(e==first)break;}
+  if(n>=EFFECT_CHAIN_LIMIT){c.pc=c.r[14];return;}
+ }
+ old_effect_create(c);
+}
+// 2) Rugal 的反射（BattleAction_Rugal::bulletReceive 0x101badce，绝招的防护状态中受弹时调用）：以原弹体的 UnitID、动作对象与起始动画（+0x154）在 Rugal 处新建己方弹体，
+//    复制 +0x1c / +0x20 后移除原弹体，动作参数区 +0x24–+0x43 不继承。社区单位的自管弹体由该区的种类字段（+0x28）识别、位置由钩子逐帧写入；新弹体种类为 0，
+//    不进入各自的分支而走原生 update：没有位移（停在原处），命中或触地时切换到原生命中动作号（BulletAction_Alien 19 / 20），这些号在社区单位的描述符中
+//    是单位自身的动作（UNION 1 号机前进、侵略者之王受击、Fall Climber 机体）。
+//  入口（r1 Rugal、r2 弹体）：光束、贴地攻击、碎块与部件等不是飞行物的弹体不反射（同原生 +0x14c 为 0 的弹体：Rugal 不受伤，弹体不变）。
+//  块 0x101baf4a（新弹体已建立、起始动画与 +0x1c / +0x20 已写入，r4 原弹体、r5 Rugal、r6 新弹体）：飞行物继承参数区，朝 Rugal 前方重新出发（存在 tick 清零、
+//  已结算目标清空、新建攻击 ID）。陨石换为追踪阶段；UNION 瞄准弹重新瞄准最近的敌方单位，追踪弹与平射弹沿 Rugal 朝向飞出。其余社区弹体沿用原生反射。
+static uint32_t rf_type(Context& c,uint32_t b){   // 0 原生处理，1 不反射，2 起由 rf_fix 接续
+ uint32_t k=rd<uint32_t>(c,b+0x28u);
+ if(ec_bullet_spec(c,b))return k==2u||k==3u?2u:1u;   // 蜈蚣长老：飞沫与酸块反射，地面攻击与酸块命中不反射
+ if(ik_bullet_spec(c,b)||wd_bullet_spec(c,b))return 1u;   // 侵略者之王的激光、钢铁死亡蠕虫的碎块与部件
+ if(fc_orb(c,b))return 3u;
+ if(un_bullet(c,b))return ((k-UN_KIND)&15u)==4u||rd<uint32_t>(c,b+0x24u)==1u?1u:4u;   // UNION：分离弹体与播放命中动作中的弹体不反射
+ if(fs_bullet(c,b)&&k>=1u&&k<=4u)return k==3u?1u:6u;   // 飞行护盾的陨石：升空段不反射
+ return 0u;
+}
+static void rf_fix(Context& c,uint32_t old,uint32_t rugal,uint32_t b){
+ if(bw_spec(c,old))wr<uint32_t>(c,b+0x3cu,rd<uint32_t>(c,old+0x3cu));   // “真”主角的弹体沿用原生反射，只继承是否 Big 的记录
+ uint32_t t=rf_type(c,old);if(t<2u)return;
+ for(uint32_t f=0x24u;f<0x44u;f+=4u)wr<uint32_t>(c,b+f,rd<uint32_t>(c,old+f));
+ int32_t d=ik_dir(c,rugal);float x=rd<float>(c,b+0x8cu),y=rd<float>(c,b+0x90u),dir=float(d);
+ uint32_t forward=d>0?0u:2048u;
+ wr<uint16_t>(c,b+0x144u,uint16_t(is_call(c,WD_NEW_ID,IS_MANAGER,rd<uint32_t>(c,b+0x70u),0u)));
+ if(t==2u){   // 蜈蚣长老：飞沫由脚本运动；酸块的速度在建立时设定一次（同 ec_create 的 5）
+  wr<uint32_t>(c,b+0x2cu,0u);
+  if(rd<uint32_t>(c,b+0x28u)==3u)fs_move(c,b,dir*5.0f,0.0f);
+ }else if(t==3u){   // Fall Climber 的光球：直接进入水平段，以反射点为发射处，已结算的目标清空（+0x1c 为第 4、5 个实例号）
+  float v=fc_f(c,fc_orb_spec(c,old),FC_SHOT_SPEED);
+  wr<uint32_t>(c,b+0x24u,1u);wr<uint32_t>(c,b+0x2cu,0u);wr<float>(c,b+0x30u,dir*v);wr<float>(c,b+0x34u,0.0f);wr<float>(c,b+0x38u,y);
+  wr<float>(c,b+0x20u,x);wr<uint32_t>(c,b+0x1cu,0u);wr<uint32_t>(c,b+0x3cu,0u);wr<uint32_t>(c,b+0x40u,0u);
+ }else if(t==4u){   // UNION：种类 1 平射、2 瞄准、5 追踪由本行为写入位置，种类 3 由脚本运动
+  uint32_t k=(rd<uint32_t>(c,b+0x28u)-UN_KIND)&15u;
+  wr<uint32_t>(c,b+0x24u,0u);wr<uint32_t>(c,b+0x2cu,0u);
+  if(k==1u||k==2u||k==5u){
+   float ovx=rd<float>(c,old+0x30u),ovy=rd<float>(c,old+0x34u),v=k==5u?rd<float>(c,old+0x40u):std::sqrt(ovx*ovx+ovy*ovy),vx=dir*v,vy=0.0f;
+   if(k==2u)if(uint32_t e=fs_nearest(c,b)){
+    float dx=rd<float>(c,e+0x8cu)-x,dy=rd<float>(c,e+0x90u)-float(int32_t(is_call(c,IS_HEIGHT,e))>>1)-y,dd=std::sqrt(dx*dx+dy*dy);
+    if(dd>1e-3f){vx=dx/dd*v;vy=dy/dd*v;}
+   }
+   wr<float>(c,b+0x30u,vx);wr<float>(c,b+0x34u,vy);
+   if(k==5u)wr<uint32_t>(c,b+0x3cu,forward);
+  }
+ }else{   // 飞行护盾的陨石：换为追踪阶段（2），以反射点为发射处（射程 +0x40 与生命 +0x34 沿用）
+  uint32_t s=fs_bullet(c,old),id=rd<uint16_t>(c,b+0x144u);
+  wr<int32_t>(c,old+0xd4u,0);wr<int32_t>(c,old+0xd8u,0);   // 陨石有受击框：原弹体同帧仍在碰撞循环中，清除受击框（getHitRect 视为无框），否则新弹体立即与之相撞
+  wr<uint32_t>(c,b+0x28u,2u);wr<int32_t>(c,b+0x2cu,int32_t(x));wr<uint32_t>(c,b+0x30u,0u);wr<uint32_t>(c,b+0x38u,forward);wr<int32_t>(c,b+0x13cu,FS_NO_DESTINATION);
+  is_call(c,IS_SET_ANIM,b,zw(c,s,44),0u,1u);wr<uint16_t>(c,b+0x144u,uint16_t(id));
+ }
+}
+static Block old_rugal_receive;static void rugal_receive(Context& c){if(rf_type(c,c.r[2])==1u){c.pc=c.r[14];return;}old_rugal_receive(c);}
+static Block old_rugal_reflected;static void rugal_reflected(Context& c){rf_fix(c,c.r[4],c.r[5],c.r[6]);old_rugal_reflected(c);}
+extern "C" __declspec(dllexport) uint32_t msd_community_reflect_version(){return reflect_hooks==3u?1u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

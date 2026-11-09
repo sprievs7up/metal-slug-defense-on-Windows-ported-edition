@@ -1972,4 +1972,10 @@ if((old_gb_hit=find_block(0x1016f485u))){register_block(0x1016f485u,big_gate_hit
 if((old_gb_aim=find_block(0x10170981u))){register_block(0x10170981u,big_gate_aim);++big_gate_hooks;}
 if((old_gb_expire=find_block(0x10170addu))){register_block(0x10170addu,big_gate_expire);++big_gate_hooks;}
 if((old_lw_update=find_block(0x10192d55u))){register_block(0x10192d55u,launcher_walker_update);++launcher_walker_hooks;}
+if((old_bw_laser=find_block(0x1017274du))){register_block(0x1017274du,big_weapon_laser);++big_weapon_hooks;}
+if((old_bw_rocket=find_block(0x101768e3u))){register_block(0x101768e3u,big_weapon_rocket);++big_weapon_hooks;}
+if((old_bw_ground=find_block(0x1016ddf3u))){register_block(0x1016ddf3u,big_weapon_ground);++big_weapon_hooks;}
+if((old_effect_create=find_block(0x101823c7u))){register_block(0x101823c7u,effect_create);++reflect_hooks;}
+if((old_rugal_receive=find_block(0x101badcfu))){register_block(0x101badcfu,rugal_receive);++reflect_hooks;}
+if((old_rugal_reflected=find_block(0x101baf4bu))){register_block(0x101baf4bu,rugal_reflected);++reflect_hooks;}
 }

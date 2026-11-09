@@ -1,6 +1,6 @@
 static const char BEHAVIOR_MANIFEST[]=R"MSD({
   "schema": 1,
-  "library_version": 45,
+  "library_version": 46,
   "param_types": {
     "unit_key": "单位稳定键；internal 为 true 时须为内部单位（internal_only），为 false 时须为可选单位；规格写 native 时也可填原版 UnitID（1–399）",
     "rational": "[分子, 分母] 正整数倍率",
@@ -2676,6 +2676,50 @@ static const char BEHAVIOR_MANIFEST[]=R"MSD({
       "doc": {
         "ZS": "MS7 任务 7 带炮管的雷贝尔沃克（肩部火箭发射器版 Rebel Walker，2026-11-06，核心 r146）：基准 228（BattleAction_LevelWalker），行走、击退与损毁等照原生，只把攻击换为导弹。状态 30 / 40（近距 / 远距，本单位近距射程为 0，贴身时也以远距攻击）播放 attack_animation，第 fire_tick 帧发射 1 枚导弹；状态 50（特殊攻击）播放 special_animation，在 special_fire_ticks 的三帧各发射 1 枚。普通攻击中置击退守护（同原生远距），不置 DontSpAttack（原生远距会置），特殊攻击冷却结束后在普通攻击中也可点按发动特殊攻击（进入特殊攻击时清除击退守护）；动作播完后照原生进入攻击等待（远距组 40 / 特殊组 50）。发射时在发射器前端 front_offset 放 front_effect、后端 rear_offset 放 rear_effect（朝向坐标，逻辑单位），导弹在 muzzle 建立（普通攻击按远距组 40 结算，特殊攻击按特殊组 50 结算，每枚新建攻击 ID），出膛角为 launch_angle / special_angles（度，前方为 0、向上为负）。导弹以 speed / 10 起速、每帧加 acceleration / 100、上限 max_speed / 10（逻辑单位 / 帧）；第 homing_delay 帧后每帧向距导弹 target_range 以内最近的敌方单位（受击高度一半处）转向至多 homing_turn（4096 为一周），范围内没有敌方单位时保持航向；air_targets 为 1 时空中单位（NoTarget、DontToche）也作为追踪目标，本单位开始攻击的距离也计入前方的空中单位。单位菜单的动作演示中（没有敌人）导弹转向发射时前方远距射程处的地面。导弹精灵按航向取 missile_first_animation 起的 16 个动作（前方向下每 22.5° 一个），每 puff_interval 帧在尾部放 puff_effect；命中目标或触地时放 hit_effect（共用效果 0xff03 = 65283）并移除，存在 life 帧或飞出战场后移除。",
         "EN": "MS7 Mission 7 Rebel Walker with shoulder rocket launchers (2026-11-06, core r146): base 228 (BattleAction_LevelWalker); walking, knockback and destruction stay native and only the attacks are replaced by missiles. States 30 / 40 (near / far; this unit has near range 0, so it also uses the far attack at point-blank range) play attack_animation and fire one missile on frame fire_tick; state 50 (special) plays special_animation and fires one missile on each of the three special_fire_ticks. During the normal attack the knockback guard is set as in the native far attack but DontSpAttack is not (the native far attack sets it), so once the special cooldown is over the special can be triggered by tapping during a normal attack (entering the special clears the knockback guard); when the animation ends the native attack wait follows (far group 40 / special group 50). On each launch front_effect is placed at front_offset (launcher front) and rear_effect at rear_offset (launcher rear) (facing coordinates, logical units) and the missile is created at muzzle (settled with the far group 40 for the normal attack and the special group 50 for the special attack, each with a new attack ID), launched at launch_angle / special_angles (degrees, 0 = forward, negative = up). Missiles start at speed / 10, gain acceleration / 100 per frame up to max_speed / 10 (logical units per frame); after homing_delay frames they turn towards the nearest enemy unit within target_range of the missile (half its hit height) by at most homing_turn per frame (4096 = full turn) and keep their heading when no enemy unit is in range; when air_targets is 1, air units (NoTarget, DontToche) are homing targets as well and also count for the distance at which this unit starts attacking. In the unit menu action demo (no enemies) missiles turn towards the ground at the far attack range in front of the launch point. The missile sprite uses the 16 animations from missile_first_animation by heading (forward-down, every 22.5 degrees), puff_effect is placed behind it every puff_interval frames; on hitting a target or the ground it places hit_effect (shared effect 0xff03 = 65283) and is removed, and it is removed after life frames or when it leaves the battlefield."
+      }
+    },
+    {
+      "name": "big_weapon",
+      "version": 1,
+      "base_classes": [
+        18,
+        19
+      ],
+      "params": {
+        "laser_frame_delta": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 65535
+        },
+        "laser_frame_limit": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 65535
+        },
+        "laser_half_box": {
+          "type": "int",
+          "default": 30,
+          "min": 1,
+          "max": 200
+        },
+        "rocket_loop_animation": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 1023
+        },
+        "rocket_explosion_animation": {
+          "type": "int",
+          "default": 0,
+          "min": 0,
+          "max": 1023
+        }
+      },
+      "doc": {
+        "ZS": "“真”主角四人组的 Big 特殊攻击（2026-11-09，核心 r152）：基准 18（BattleAction_Eri）或 19（BattleAction_Fio）。只作用于攻击组 50（特殊攻击）发射的弹体，普通攻击（攻击组 40）的弹体照原生。Eri 的激光（BulletAction_Eri）：绘制用的三个帧偏移（发射点、光束段、末端）小于 laser_frame_limit 时加 laser_frame_delta，即 Big 帧按原生帧的编排追加在描述符帧表中；攻击矩形改为以原矩形中心为中心、半边长 laser_half_box（图像像素）的正方形。Fio 的火箭（BulletAction_Fio）：飞行动作播完后转入 rocket_loop_animation（原生 32），爆炸播放 rocket_explosion_animation（原生 33）；起始动作由脚本 op22 的动作号指定。两个动作号为 0 时不接管 Fio 的弹体。",
+        "EN": "Big special attack of the \"Shin\" heroes (2026-11-09, core r152): base 18 (BattleAction_Eri) or 19 (BattleAction_Fio). Applies only to projectiles fired by attack group 50 (special attack); projectiles of the normal attack (group 40) stay native. Eri laser (BulletAction_Eri): the three drawing frame offsets (origin, beam segment, far end) get laser_frame_delta added while below laser_frame_limit, so the Big frames are appended to the descriptor frame table in the native layout; the attack rectangle becomes a square of half side laser_half_box (image pixels) around the centre of the native rectangle. Fio rocket (BulletAction_Fio): after the flight animation ends it continues with rocket_loop_animation (native 32) and the explosion plays rocket_explosion_animation (native 33); the first animation comes from the script op22. When both animation numbers are 0 the projectiles of Fio are left native."
       }
     }
   ]

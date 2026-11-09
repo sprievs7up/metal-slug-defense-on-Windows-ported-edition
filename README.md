@@ -10,10 +10,11 @@ This edition adds keyboard controls and a **16:9 layout**. Expanded backgrounds 
 
 **Stamina regenerates at 1 point per second.** The original Android version regenerates 1 point per minute.
 
-**Update 26.11.10**
+**Update 26.11.11**
 
-- Recolored the units that come from Metal Slug Advance and revised their sprites so that they match the original Metal Slug games more closely.
-- Fixed a sprite bug on NOP-03 SARUBIA (Future).
+- Added versions of the four main heroes that can actually hold their own in battle. Clear World 2 to unlock them directly.
+- Fixed animation bugs on some new units.
+- Added the UNLIMITED SPECIAL option to LAB.
 
 Earlier updates are listed in [Update history](#update-history).
 
@@ -77,6 +78,11 @@ Mods go in `mods/`, one folder per mod; the format is described in [mods/README.
 **Yossho** helped enormously in finding sprite material for this project. The added frames of Native (Bird) come from the sheet “Native Bird (Expanded)”, edited by Yossho from original sprites by SNK.
 
 ### Update history
+
+**Update 26.11.10**
+
+- Recolored the units that come from Metal Slug Advance and revised their sprites so that they match the original Metal Slug games more closely.
+- Fixed a sprite bug on NOP-03 SARUBIA (Future).
 
 **Update 26.11.9**
 
@@ -188,10 +194,11 @@ Esta edición añade controles de teclado y un **formato 16:9**. Los fondos ampl
 
 **La energía (stamina) se recupera a 1 punto por segundo.** La versión original de Android recupera 1 punto por minuto.
 
-**Actualización 26.11.10**
+**Actualización 26.11.11**
 
-- Se cambiaron los colores y se modificaron los sprites de las unidades procedentes de Metal Slug Advance para que se ajusten mejor a los juegos originales de Metal Slug.
-- Se corrigió un error de sprite de NOP-03 SARUBIA (Futuro).
+- Se añadieron versiones de los cuatro protagonistas capaces de plantar cara en combate. Completa el Mundo 2 para desbloquearlas directamente.
+- Se corrigieron errores de animación de algunas unidades nuevas.
+- Se añadió la opción UNLIMITED SPECIAL a LAB.
 
 Las actualizaciones anteriores se encuentran en [Historial de actualizaciones](#historial-de-actualizaciones).
 
@@ -255,6 +262,11 @@ Los mods se colocan en `mods/`, una carpeta por mod; el formato se describe en [
 **Yossho** ha ayudado enormemente a encontrar material de sprites para este proyecto. Los fotogramas añadidos de Native (Bird) proceden de la hoja “Native Bird (Expanded)”, editada por Yossho a partir de los sprites originales de SNK.
 
 ### Historial de actualizaciones
+
+**Actualización 26.11.10**
+
+- Se cambiaron los colores y se modificaron los sprites de las unidades procedentes de Metal Slug Advance para que se ajusten mejor a los juegos originales de Metal Slug.
+- Se corrigió un error de sprite de NOP-03 SARUBIA (Futuro).
 
 **Actualización 26.11.9**
 
@@ -366,10 +378,11 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 
 **体力每秒恢复 1 点。** 安卓原版的恢复速率为每分钟 1 点。
 
-**26.11.10 更新**
+**26.11.11 更新**
 
-- 对 Metal Slug Advance 中出现的单位进行了配色以及 sprite 修改，使其更加贴合 Metal Slug 原版游戏
-- 修复了未来爆竹红的贴图 bug
+- 添加了能在游戏中有一战之力的主角四人组，通关世界 2 以直接解锁他们吧
+- 修复了一些新单位的动画 bug
+- 为 LAB 更新了“无限绝招”功能
 
 此前的更新见[更新记录](#更新记录)。
 
@@ -433,6 +446,11 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 感谢 **Yossho** 在寻找 sprite 素材方面给予本项目的巨大帮助。鸟原住民（Native (Bird)）增加的帧取自 Yossho 编辑的素材表“Native Bird (Expanded)”，原画为 SNK。
 
 ### 更新记录
+
+**26.11.10 更新**
+
+- 对 Metal Slug Advance 中出现的单位进行了配色以及 sprite 修改，使其更加贴合 Metal Slug 原版游戏
+- 修复了未来爆竹红的贴图 bug
 
 **26.11.9 更新**
 
