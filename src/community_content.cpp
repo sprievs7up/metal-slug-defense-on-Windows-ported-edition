@@ -5031,12 +5031,14 @@ static void big_weapon_rocket(Context& c){
  }
  c.pc=c.r[14];
 }
-// BattleBullet::update 的触地判定调用弹体动作的 hitGround（BulletAction_Fio 未重写，用 BattleBulletDefault::hitGround，0x16ddf2）；Big 火箭跳过（用户要求：不因地形爆炸）
-static Block old_bw_ground;
-static void big_weapon_ground(Context& c){
- uint32_t s=bw_bullet(c,c.r[1],false);
- if(s&&zw(c,s,56)){c.pc=c.r[14];return;}
- old_bw_ground(c);
+// BattleBullet::update 的触地判定（弹体下行且下缘触及地形时）调用弹体动作的 hitGround（r0 动作对象、r1 弹体）；BulletAction_Fio、_FatFio、_XmasFio 未重写，用 BattleBulletDefault::hitGround（0x16ddf2）。
+// Fio 各版本的火箭跳过这一判定，不因地形爆炸，照常飞到射程上限或命中目标（用户 2026-11-09）：r152 起为真 Fio 的 Big 火箭，核心 r154 起含 Fio 19、Fat Fio 99、Christmas Fio 362 与基准 19 的社区单位（真 Fio 的普通攻击同）。
+// 三个动作对象只由各自的 shotBullet 引用（verification/fio_rocket_ground_20261109/scan_refs.txt）。Monkey Fio 145 的手榴弹有自己的 hitGround，到达射程时不结束，靠落地爆炸，不在此列。
+static constexpr uint32_t FIO_ROCKET_ACTIONS[]={0x10960608u,0x10960614u,0x10960268u};   // bulletAction_Fio、bulletAction_FatFio、bulletAction_XmasFio
+static Block old_fio_rocket_ground;
+static void fio_rocket_ground(Context& c){
+ for(uint32_t a:FIO_ROCKET_ACTIONS)if(c.r[0]==a){c.pc=c.r[14];return;}
+ old_fio_rocket_ground(c);
 }
 extern "C" __declspec(dllexport) uint32_t msd_community_big_weapon_version(){return big_weapon_hooks==3u?1u:0u;}
 // ---------- 效果自生成链的终止条件与 Rugal 反射社区单位的自管弹体（2026-11-09，核心 r153，社区反馈）----------
