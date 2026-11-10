@@ -146,6 +146,54 @@ HOOK(gettime,0x10167bafu, uint32_t p=record(c,c.r[1]);if(p){ret(c,rd<uint32_t>(c
 HOOK(settime,0x10167bcfu, uint32_t p=record(c,c.r[1]);if(p){wr<uint32_t>(c,p+32,c.r[2]);dirty(c);ret(c,0);return;}if(active(c)&&c.r[1]>=400u){ret(c,0u);return;})
 HOOK(getdecktime,0x10167c0du, uint32_t p=record(c,c.r[1]);if(p){ret(c,rd<uint32_t>(c,p+0x88u));return;}if(active(c)&&c.r[1]>=400u){ret(c,0u);return;})
 HOOK(setdecktime,0x10167c2bu, uint32_t p=record(c,c.r[1]);if(p){wr<uint32_t>(c,p+0x88u,c.r[2]);dirty(c);ret(c,0);return;}if(active(c)&&c.r[1]>=400u){ret(c,0u);return;})
+// 第 4、5 组编队（2026-11-11，r161）：存档在 app+0x8880、app+0x88a8 留有两组各 10 格（接在第 2、3 组之后，原生初始化为首格 70、
+// 其余 -1），原生 GetDeckUnitSaveData（0x168f5a）对组号 3、4 读第 1 组；此处按第 2、3 组的排布读取。SetDeckUnitSaveData（0x168f8e）
+// 的写入路径对组号 ≥1 通用，只有格号为 -1（找第一个空格）时按第 1 组查找：改为在该组查找后交回原函数写入并存档。
+// 当前组号 app+0x88d0 取 3、4 时由宿主写入（原生 SetMultipleDeckSelectedNumSaveData 只接受 0–3）。
+HOOK(getdeckunit,0x10168f5bu, int32_t n=int32_t(c.r[2]);if(n<0)n=rd<int32_t>(c,c.r[0]+0x88d0u);if((n==3||n==4)&&c.r[1]<10u){ret(c,rd<uint32_t>(c,c.r[0]+0x8830u+40u*uint32_t(n-1)+4u*c.r[1]));return;})
+HOOK(setdeckunit,0x10168f8fu, int32_t n=int32_t(c.r[3]);if(n<0)n=rd<int32_t>(c,c.r[0]+0x88d0u);if((n==3||n==4)&&c.r[1]==0xffffffffu){uint32_t base=c.r[0]+0x8830u+40u*uint32_t(n-1);uint32_t slot=0u;while(slot<10u&&rd<int32_t>(c,base+4u*slot)!=-1)++slot;if(slot==10u){ret(c,0u);return;}c.r[1]=slot;c.r[3]=uint32_t(n);})
+// DeckApCheck（0x1f2760）在当前组 AP 变化时写原生 AP 数字任务 app+0x34dc+4·组号，原生只有 3 个；组号 3、4 时跳过
+// （该处为其他任务槽；5 个 DECK 标签与 AP 数字由宿主 deck_page 绘制）。
+HOOK(deckapcheck,0x101f2761u, if(rd<uint32_t>(c,c.r[0]+0x88d0u)-3u<2u){ret(c,0u);return;})
+// 编队页宿主模式（deck_page：选单位条每页 10 格，两侧渐暗层 app+0x3368 被移出画面）下，按下编队栏单位时
+// GT_DeckUnit（0x1f210c）不重建选单位条：跳过其 ClearDeckPanel（返回地址 0x1f21fe）与 InitDeckPanels2（0x1f1b28，
+// 仅此一处调用；原生列表此时只有当前页，按其重建会得到原生间距的面板或位置不对的 BACK / NEXT 翻页块）。
+// 跳到该单位所在页由宿主按触点处理。
+static bool deck_host_page(Context& c,uint32_t app){uint32_t t=rd<uint32_t>(c,app+0x3368u);return t&&rd<float>(c,t+0x88u)>=2000.0f;}
+HOOK(deckpanels2,0x101f1b29u, if(deck_host_page(c,c.r[0])){ret(c,0u);return;})
+HOOK(cleardeckpanel,0x101f1da5u, if((c.r[14]&~1u)==0x101f21feu&&deck_host_page(c,c.r[0])){ret(c,0u);return;})
+// 编队页图标底板的浅绿渐变（2026-11-11）：GT_DeckPanelDraw（0x1f0aec）先画底板（图块 0–2：墨绿 / 已编入的红 / 按下的浅绿），
+// 再画头像（0x1f0b62 的 drawPict，返回地址 0x1f0b66）。宿主模式的面板（序号 1000 起）按宿主登记的亮度表
+// （msd_deck_lit_table：客体地址，每格 1 字节 0–255）在两者之间以该透明度加画浅绿底板，宿主逐帧减小亮度即得到渐变；
+// 原生按下（0x800000，底板已是浅绿）与已编入（0x400000）的面板不加画。
+bool msd_guest_call_stack(Context& c,uint32_t fn,uint32_t a0,uint32_t a1,uint32_t a2,uint32_t a3,const uint32_t* stack,uint32_t stack_words,uint32_t* result);
+static uint32_t deck_lit=0u;
+extern "C" __declspec(dllexport) void msd_deck_lit_table(uint32_t address){deck_lit=address;}
+static void deck_panel_lit(Context& c){
+ if(!deck_lit||(c.r[14]&~1u)!=0x101f0b66u)return;
+ uint32_t task=c.r[1];uint32_t index=rd<uint32_t>(c,task+0x220u)-1000u;
+ if(index>=10u||(rd<uint32_t>(c,task+0x80u)&0xc00000u))return;
+ uint32_t alpha=rd<uint8_t>(c,deck_lit+index);if(!alpha)return;
+ uint32_t graphics=rd<uint32_t>(c,c.r[0]+0x7cu);uint32_t mode=rd<uint32_t>(c,task+0xd0u);const uint32_t pict[1]={2u};
+ msd_guest_call(c,0x10137710u,graphics,mode,alpha,0u,nullptr);                      // GraphicsOpt::setRenderMode
+ msd_guest_call_stack(c,0x10200160u,c.r[0],task,c.r[2],c.r[3],pict,1u,nullptr);       // drawPict(任务, x, y, 2)
+ msd_guest_call(c,0x10137710u,graphics,mode,rd<uint32_t>(c,task+0xd4u),0u,nullptr);
+}
+HOOK(deckpanelicon,0x10200161u, deck_panel_lit(c);)
+// SELECTED 标记（2026-11-11）：GT_DeckPanelDraw 在头像之后以 drawPict(任务, x, y, 0x18, 0x13, 0x19)（0x2005dc，返回地址 0x1f0b88）
+// 画在本面板之上、右侧相邻面板之下；每页 10 格时相邻面板更近，标记右端被下一格盖住。宿主为各面板另建与 EVENT 标记
+// 同层的任务绘制 SELECTED（画在全部面板之上），并在亮度表第 15 字节置 1；该面板的上层任务（槽 app+0x3510+4·序号）
+// 已显示（图块 0x19）时面板不再自己画。上层任务尚未显示的那一帧（单位刚被拖入编队：原生在本帧已把面板标为已编入，
+// 宿主在本帧画面之后才更新上层任务）仍由面板自己画，标记不缺帧。
+static bool deck_panel_stamp_on_top(Context& c){
+ if(!deck_lit||(c.r[14]&~1u)!=0x101f0b88u)return false;
+ uint32_t index=rd<uint32_t>(c,c.r[1]+0x220u)-1000u;
+ if(index>=10u||!rd<uint8_t>(c,deck_lit+15u))return false;
+ uint32_t stamp=rd<uint32_t>(c,c.r[0]+0x3510u+4u*index);
+ return stamp&&rd<uint32_t>(c,stamp+0x50u)==0x19u;
+}
+HOOK(deckpanelstamp,0x102005ddu, if(deck_panel_stamp_on_top(c)){ret(c,0u);return;})
+extern "C" __declspec(dllexport) uint32_t msd_deck_groups(){return 5u;}
 // 获得时间（GetUnitGetTimeSaveData / SetUnitGetTimeSaveData，0x167b74 / 0x167b90）：原生对 UnitID ≥ 300 读写
 // app+0x857c+4·uid，无上界（U1 开工说明附录 A.11）。社区单位改用头部 +160 的逐槽表（宿主随社区进度保存）。
 static uint32_t get_time_slot(Context& c,uint32_t uid){uint32_t t=head(c,160);return t&&record(c,uid)?t+(uid-U)*4u:0u;}

@@ -19,7 +19,7 @@ except BaseException:
 
 PROFILE = 'lab_test_save'
 # 含 LAB 钩子的核心由正式版配置统一加载；独立入口和验证保留显式指定核心接口。
-LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r160_20261110.dll'
+LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r161_20261111.dll'
 KEYS = {glfw.KEY_F7: ('prep',), glfw.KEY_F5: ('exit',), glfw.KEY_F8: ('toggle_full',),
         glfw.KEY_F4: ('toggle_enemy_ai',), glfw.KEY_F3: ('toggle_player_ai',),
         glfw.KEY_LEFT_BRACKET: ('enemy_ap',), glfw.KEY_RIGHT_BRACKET: ('enemy_slug',),
@@ -128,6 +128,8 @@ def install():
             self.versus_page.lobby = self.netplay_lobby
             from unit_browser import UnitBrowser
             self.unit_browser = UnitBrowser(self, self.lab, ROOT)
+            from deck_page import DeckPage
+            self.deck_page = DeckPage(self, self.lab, ROOT)   # 编队页的选单位条、排序与 DECK 标签
 
         def draw_text(self, a, idx):
             page = getattr(self, 'versus_page', None)
@@ -186,6 +188,9 @@ def install():
             if mods is not None and mods.touch(action, x, y):
                 return
             browser = getattr(self, 'unit_browser', None)
+            deck = getattr(self, 'deck_page', None)
+            if deck is not None and deck.touch(action, x, y):
+                return
             if browser is not None and browser.touch(action, x, y):
                 return
             lobby = getattr(self, 'netplay_lobby', None)
@@ -259,6 +264,9 @@ def install():
         def back(self):
             mods = getattr(self, 'mod_page', None)
             if mods is not None and mods.back():
+                return True
+            deck = getattr(self, 'deck_page', None)
+            if deck is not None and deck.back():
                 return True
             browser = getattr(self, 'unit_browser', None)
             if browser is not None and browser.back():
@@ -339,6 +347,9 @@ def install():
                     entry.draw()
                 if mods is not None:
                     mods.draw()
+                deck = getattr(self, 'deck_page', None)
+                if deck is not None:
+                    deck.draw()               # 在单位浏览组件的闸门之前
                 browser = getattr(self, 'unit_browser', None)
                 if browser is not None:
                     browser.draw()
@@ -362,6 +373,7 @@ def install():
                 # 文字输入（联机大厅的名称与 IP，N6a）：GLFW 字符回调在窗口线程送出已确认的字符（含输入法的结果）。
                 glfw.set_char_callback(self.window, self.text_input)
                 glfw.set_scroll_callback(self.window, self.scroll)
+                glfw.set_cursor_enter_callback(self.window, self.cursor_enter)
                 self.char_installed = True
             lab = getattr(self.probe, 'lab', None) if self.probe else None
             if lab is None or not self.ready:
@@ -379,13 +391,33 @@ def install():
                     self.pad_error = f'{type(error).__name__}: {error}'
                     self.probe.log('VS_PAD_ERROR', self.pad_error)
 
+        def cursor(self, window, x, y):
+            # 编队页：鼠标位置（未按下时用于图标的划过反馈）；在画面之外为 None。
+            super().cursor(window, x, y)
+            deck = getattr(self.probe, 'deck_page', None) if self.probe else None
+            if deck is not None:
+                deck.pointer = self.coordinates(x, y) if self.window_drag is None else None
+
+        def cursor_enter(self, window, entered):
+            deck = getattr(self.probe, 'deck_page', None) if self.probe else None
+            if deck is not None and not entered:
+                deck.pointer = None
+
         def scroll(self, window, dx, dy):
             # 单位浏览（U1）：滚轮翻页。
             browser = getattr(self.probe, 'unit_browser', None) if self.probe else None
+            deck = getattr(self.probe, 'deck_page', None) if self.probe else None
+            if deck is not None and self.ready and deck.was_alive and dy:
+                deck.commands.append(('wheel', dy))        # 编队页：滚轮翻页
+                return
             if browser is not None and self.ready and browser.open and dy:
                 browser.commands.append(('wheel', dy))
 
         def text_input(self, window, codepoint):
+            deck = getattr(self.probe, 'deck_page', None) if self.probe else None
+            if deck is not None and self.ready and deck.wants_text():
+                deck.commands.append(('text', chr(codepoint)))
+                return
             browser = getattr(self.probe, 'unit_browser', None) if self.probe else None
             if browser is not None and self.ready and browser.wants_text():
                 browser.commands.append(('text', chr(codepoint)))
@@ -397,6 +429,17 @@ def install():
         def key(self, window, key, scan, action, mods):
             if action == glfw.RELEASE:
                 return super().key(window, key, scan, action, mods)     # 经典键盘模式：松开一律登记（player.Player.key）
+            deck = getattr(self.probe, 'deck_page', None) if self.probe else None
+            if deck is not None and self.ready and deck.wants_keys() and key != glfw.KEY_ESCAPE:
+                # 编队页：←/→ 翻页；排序面板中 Enter 确定、Backspace 删除搜索字。
+                name = {glfw.KEY_LEFT: 'left', glfw.KEY_RIGHT: 'right', glfw.KEY_ENTER: 'enter', glfw.KEY_KP_ENTER: 'enter',
+                        glfw.KEY_BACKSPACE: 'backspace'}.get(key)
+                if name and (action == glfw.PRESS or (action == glfw.REPEAT and name != 'enter')):
+                    deck.commands.append(('key', name))
+                if deck.panel and key not in (glfw.KEY_F11, glfw.KEY_F12, glfw.KEY_F9):
+                    return
+                if name:
+                    return
             browser = getattr(self.probe, 'unit_browser', None) if self.probe else None
             if browser is not None and self.ready and browser.wants_keys() and key != glfw.KEY_ESCAPE:
                 # 单位浏览（U1）：←/→ 翻页（可按住连发）、Enter 确定、Backspace 删除搜索字；Esc 经原有返回流程。

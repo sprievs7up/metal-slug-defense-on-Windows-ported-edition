@@ -547,7 +547,7 @@ class UnitBrowser:
 
     def load_state(self):
         state = {'schema': STATE_SCHEMA, 'favorites': [], 'custom': default_settings('custom'),
-                 'shop': default_settings('shop')}
+                 'shop': default_settings('shop'), 'deck': default_settings('deck')}   # deck：编队页（deck_page）
         try:
             data = json.loads(self.state_path().read_text(encoding='utf-8'))
         except (OSError, ValueError):
@@ -556,7 +556,7 @@ class UnitBrowser:
             favorites = data.get('favorites')
             if isinstance(favorites, list):
                 state['favorites'] = [k for k in favorites if isinstance(k, str)][:10000]
-            for mode in ('custom', 'shop'):
+            for mode in ('custom', 'shop', 'deck'):
                 saved = data.get(mode)
                 if not isinstance(saved, dict):
                     continue

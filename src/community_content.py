@@ -1270,7 +1270,7 @@ class CommunityContent:
         owned=lambda u:struct.unpack('<i',p.read(self.records+(u['id']-UNIT_ID_BASE)*RECORD_SIZE+24,4))[0]>=0
         held=[e for e in self.progress.get('parked_deck_slots',[]) if isinstance(e,dict)]
         kept,events=[],[]
-        for deck in range(3):
+        for deck in range(5):
             for slot in range(10):
                 a=self.deck_address(deck,slot);uid=struct.unpack('<i',p.read(a,4))[0]
                 if uid<UNIT_ID_BASE:continue
@@ -1285,7 +1285,7 @@ class CommunityContent:
                     events.append(('parked',deck,slot,uid,key))
         for entry in held:
             deck,slot,key=entry.get('deck'),entry.get('slot'),entry.get('key')
-            if deck not in range(3) or slot not in range(10) or any(k['deck']==deck and k['slot']==slot for k in kept):continue
+            if deck not in range(5) or slot not in range(10) or any(k['deck']==deck and k['slot']==slot for k in kept):continue
             unit=by_key.get(key) if key else None
             if unit is None:
                 kept.append(entry)            # 单位仍未载入：保留记录
