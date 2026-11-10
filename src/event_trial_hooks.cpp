@@ -510,6 +510,33 @@ SHOP_HOOK(selector_chosen,0x1020e805u,if(rd<uint32_t>(c,H+124)){
 // Selecting an Event has no stamina charge. Its stages retain their own costs.
 SHOP_HOOK(selector_cost_icon,0x102005ddu,if(rd<uint32_t>(c,H+124)&&c.r[14]==0x1020e9c5u){ret(c,0);return;})
 SHOP_HOOK(selector_cost_number,0x101c4935u,if(rd<uint32_t>(c,H+124)&&c.r[14]==0x1020ea05u){ret(c,0);return;})
+// 合作活动区域任务的计分门槛（2026-11-10，r160，AGENTS 第 367 节 R1）：原生四级门槛 500 / 1000 / 1500 / 2000 为
+// PopupResultJobScoreRewordEventMSD、OpenEventMSDJobWindow、GT_EventMSDJobMeterScoreDraw 中的立即数，分数都经
+// GetTagTeamJobScoreNumSaveData（0x169280，app+(区域+0x24ea)*4）读取。0x1ffef340 为 'JOBS' 时 +4 为宿主设定的满额门槛
+// （例 400，每级为其四分之一）：上述三个函数的四个调用点（按返回地址识别）得到按 2000 / 门槛 换算的分数，原生的领取判定、
+// 进度条与“下一门槛”选择不变；任务窗口文字“分數: x / y”在组字块（0x1f81de：r9 分数、r10 门槛）之前换回实际分数与实际门槛。
+// 存档中的分数保持实际值。
+static constexpr uint32_t JOBS=0x1ffef340u,JOBS_MAGIC=0x53424f4au;
+static uint32_t job_score_target(Context& c){
+    if(rd<uint32_t>(c,JOBS)!=JOBS_MAGIC)return 0u;
+    uint32_t target=rd<uint32_t>(c,JOBS+4u);return target>=4u&&target!=2000u&&target<=99999u?target:0u;
+}
+SHOP_HOOK(job_score_scaled,0x10169281u,{
+    uint32_t target=job_score_target(c);uint32_t lr=c.r[14]&~1u;
+    if(target&&(lr==0x101f48c8u||lr==0x101f81aau||lr==0x101f8398u||lr==0x101f9776u)){
+        uint64_t score=rd<uint32_t>(c,c.r[0]+(c.r[1]+0x24eau)*4u);
+        ret(c,(uint32_t)(score*2000u/target));return;
+    }
+})
+SHOP_HOOK(job_score_text,0x101f81dfu,{
+    uint32_t target=job_score_target(c);
+    if(target){
+        uint32_t app=c.r[4];
+        c.r[9]=rd<uint32_t>(c,app+(rd<uint32_t>(c,app+0xc628u)+0x24eau)*4u);
+        c.r[10]=(uint32_t)((uint64_t)c.r[10]*target/2000u);
+    }
+})
+extern "C" __declspec(dllexport) uint32_t msd_event_job_score_version(){return 1u;}
 extern "C" __declspec(dllexport) uint32_t msd_custom_event_shop_version(){return 1u;}
 extern "C" __declspec(dllexport) uint32_t msd_custom_event_prisoner_version(){return 2u;}
 extern "C" __declspec(dllexport) uint32_t msd_custom_event_map_bgm_version(){return 1u;}
@@ -569,4 +596,5 @@ extern "C" __declspec(dllexport) void msd_enable_historical_event_hooks(){
     INSTALL(selector_mission,0x101d0a0fu);INSTALL(selector_enabled,0x10168b5du);
     INSTALL(selector_cleared,0x10168bc1u);INSTALL(selector_chosen,0x1020e805u);
     INSTALL(selector_cost_icon,0x102005ddu);INSTALL(selector_cost_number,0x101c4935u);
+    INSTALL(job_score_scaled,0x10169281u);INSTALL(job_score_text,0x101f81dfu);
 }

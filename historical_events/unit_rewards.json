@@ -1,0 +1,85 @@
+{
+ "schema": 1,
+ "note": "活动单位的直接给予与原版商店开放条件（2026-11-10，AGENTS 第 367 节，说明 docs/events/EVENT_UNIT_REWARDS_2026-11-10.md）。所选活动为 event_key 时，宿主在活动基地或活动地图静止时核对条件：grant 为 unit 时以原生 SetUnitBuySaveData 直接给予未拥有的单位（与原生区域任务奖励相同）并以原生弹窗提示，写有 menu_shop_id 时同时静默写入该单位原有兑换店商品的开放位（单位已拥有、目录不列出，原生日后不再提示“追加商品”）；grant 为 shop_open 时以原生 SetMenuShopEnableNewSaveData 开放该商品的购买位。条件：rank_point 为合作累计评价点数（基地显示的“階級積分”，原生 GetTagTeamRankPointSaveData；每场胜利按关卡得分累加，NORMAL 20、HARD 25、EXPERT 30、HELL 45，兑换不减少）；score_peak 为该活动积分峰值（宿主活动进度 score_peak 与当前积分的较大者）；stage_win 为该关在宿主活动进度中有胜利记录。条件按存档状态核对，已达成的旧存档在进入活动时补发。area_task_score 为合作区域任务计分项的满额门槛（原生 2000，四级各占四分之一；须为 4 的倍数；核心 r160 的 job_score 钩子按此换算，存档中的分数保持实际值）。",
+ "area_task_score": 400,
+ "rows": [
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 373,
+   "menu_shop_id": 334,
+   "name": "SUPER DEVIL",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原生 SC_BattleEnd：GetTagTeamMyRank() > 21（累计评价点数 10000–99999）时开放兑换店商品 334（10000 点）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 375,
+   "menu_shop_id": 335,
+   "name": "SUPER DEVIL",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原生 SC_BattleEnd 同上，兑换店商品 335（10000 点）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 374,
+   "menu_shop_id": 336,
+   "name": "SUPER DEVIL",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原生 SC_BattleEnd 同上，兑换店商品 336（10000 点）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 376,
+   "menu_shop_id": 337,
+   "name": "SUPER DEVIL",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原生 SC_BattleEnd 同上，兑换店商品 337（10000 点）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 380,
+   "menu_shop_id": 341,
+   "name": "KRAKEN",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "兑换店商品 341（5000 点）的购买位在 1.46 原生代码中无可达的写入（SaveDataInitUserData、UpdateAppVersion、BattleEndGetResult 均不含 341），新存档中不出现；2026-11-10 用户决定与大魔王相同"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 370,
+   "name": "PARTY PEOPLE",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原勋章店 score 规则（historical_events/medal_shop.json 商品 331，积分峰值 10000 后 10 勋章）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 371,
+   "name": "PARTY PEOPLE CADRE",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原勋章店 score 规则（商品 332，30 勋章）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "unit",
+   "unit_id": 372,
+   "name": "PARTY PEOPLE ELITE",
+   "condition": {"kind": "rank_point", "minimum": 1000},
+   "source": "原勋章店 score 规则（商品 333，90 勋章）；2026-11-10 用户决定改为階級積分 1000 时直接给予"
+  },
+  {
+   "event_key": "cooperation_2016_current",
+   "grant": "shop_open",
+   "menu_shop_id": 317,
+   "unit_id": 342,
+   "name": "CABRAKAN",
+   "condition": {"kind": "stage_win", "local_stage_key": "61054"},
+   "source": "原生 BattleEndClearEventStage：WorldType 3 世界 0 区域 4 关卡 3（合作第 5 区域第 4 关，61054）首次通关时 BattleEndGetResult(5, 317)；本移植合作活动以 WorldType 4 运行，判定不成立；2026-11-10 用户决定恢复原版条件（兑换店 2000 点购买）"
+  }
+ ]
+}

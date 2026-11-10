@@ -290,8 +290,8 @@
    "name": "PARTY PEOPLE",
    "medal_price": 10,
    "availability": {
-    "kind": "score",
-    "minimum": 10000
+    "kind": "unit_reward",
+    "note": "2026-11-10 起不在勋章店出售：階級積分（合作累计评价点数）达到 1000 时直接给予（historical_events/unit_rewards.json）；商品号仍登记为活动专属"
    },
    "source": "用户提供资料与本轮明确授权"
   },
@@ -303,8 +303,8 @@
    "name": "PARTY PEOPLE CADRE",
    "medal_price": 30,
    "availability": {
-    "kind": "score",
-    "minimum": 10000
+    "kind": "unit_reward",
+    "note": "2026-11-10 起不在勋章店出售：階級積分（合作累计评价点数）达到 1000 时直接给予（historical_events/unit_rewards.json）；商品号仍登记为活动专属"
    },
    "source": "用户提供资料与本轮明确授权"
   },
@@ -316,8 +316,8 @@
    "name": "PARTY PEOPLE ELITE",
    "medal_price": 90,
    "availability": {
-    "kind": "score",
-    "minimum": 10000
+    "kind": "unit_reward",
+    "note": "2026-11-10 起不在勋章店出售：階級積分（合作累计评价点数）达到 1000 时直接给予（historical_events/unit_rewards.json）；商品号仍登记为活动专属"
    },
    "source": "用户提供资料与本轮明确授权"
   },

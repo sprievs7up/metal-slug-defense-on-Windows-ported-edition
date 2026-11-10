@@ -1,89 +1,38 @@
 {
   "schema": 1,
-  "stage_id": 2011,
+  "stage_id": 13065,
   "enemy_deck": [
     [
-      1103,
+      1077,
       40
     ],
-    [
-      1104,
-      40
-    ],
-    [
-      1105,
-      40
-    ],
-    [
-      1106,
-      40
-    ],
-    [
-      82,
-      40
-    ],
-    [
-      83,
-      40
-    ],
-    [
-      234,
-      40
-    ],
-    [
-      262,
-      40
-    ],
-    [
-      266,
-      40
-    ],
-    [
-      285,
-      40
-    ]
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
   ],
   "player_deck": [
     [
-      1103,
+      84,
       40
     ],
     [
-      1104,
+      5,
       40
     ],
-    [
-      1105,
-      40
-    ],
-    [
-      1106,
-      40
-    ],
-    [
-      82,
-      40
-    ],
-    [
-      83,
-      40
-    ],
-    [
-      234,
-      40
-    ],
-    [
-      262,
-      40
-    ],
-    [
-      266,
-      40
-    ],
-    [
-      285,
-      40
-    ]
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
   ],
   "player_base_level": 0,
   "enemy_base_level": 0,
@@ -95,8 +44,8 @@
   "enemy_unlimited_ap": true,
   "player_no_cooldown": true,
   "enemy_no_cooldown": true,
-  "player_unlimited_support": false,
-  "enemy_unlimited_support": false,
+  "player_unlimited_support": 0,
+  "enemy_unlimited_support": 0,
   "player_unlimited_special": false,
   "enemy_unlimited_special": false,
   "player_stop": false,

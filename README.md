@@ -10,11 +10,10 @@ This edition adds keyboard controls and a **16:9 layout**. Expanded backgrounds 
 
 **Stamina regenerates at 1 point per second.** The original Android version regenerates 1 point per minute.
 
-**Update 26.11.12**
+**Update 26.11.13**
 
-- Improved the in-game UI options and the EVENT menu.
-- Added monthly card rewards that are “better suited to how you play”.
-- Adjusted the attack hit detection and AP cost of some units.
+- Changed how SUPER DEVIL ×4, KRAKEN and PARTY PEOPLE ×3 are obtained in the EVENT: they are now granted at 1000 Class points.
+- Lowered the task score required for the other EVENT units (2000 → 400).
 
 Earlier updates are listed in [Update history](#update-history).
 
@@ -93,6 +92,12 @@ Mods go in `mods/`, one folder per mod; the format is described in [mods/README.
 **Yossho** helped enormously in finding sprite material for this project. The added frames of Native (Bird) come from the sheet “Native Bird (Expanded)”, edited by Yossho from original sprites by SNK.
 
 ### Update history
+
+**Update 26.11.12**
+
+- Improved the in-game UI options and the EVENT menu.
+- Added monthly card rewards that are “better suited to how you play”.
+- Adjusted the attack hit detection and AP cost of some units.
 
 **Update 26.11.11**
 
@@ -215,11 +220,10 @@ Esta edición añade controles de teclado y un **formato 16:9**. Los fondos ampl
 
 **La energía (stamina) se recupera a 1 punto por segundo.** La versión original de Android recupera 1 punto por minuto.
 
-**Actualización 26.11.12**
+**Actualización 26.11.13**
 
-- Se mejoraron las opciones de la interfaz del juego y el menú EVENT.
-- Se añadieron recompensas de tarjeta mensual «más acordes con la forma de jugar».
-- Se ajustaron la detección de impacto de los ataques y el coste de AP de algunas unidades.
+- Se cambió la forma de obtener SUPER DIABLO ×4, KRAKEN, GRUPO DE GENTE, GRUPO FIESTERO y ÉLITE FIESTERO en EVENT: ahora se entregan al alcanzar 1000 puntos de clase.
+- Se redujo la puntuación de tarea necesaria para las demás unidades de EVENT (2000 → 400).
 
 Las actualizaciones anteriores se encuentran en [Historial de actualizaciones](#historial-de-actualizaciones).
 
@@ -298,6 +302,12 @@ Los mods se colocan en `mods/`, una carpeta por mod; el formato se describe en [
 **Yossho** ha ayudado enormemente a encontrar material de sprites para este proyecto. Los fotogramas añadidos de Native (Bird) proceden de la hoja “Native Bird (Expanded)”, editada por Yossho a partir de los sprites originales de SNK.
 
 ### Historial de actualizaciones
+
+**Actualización 26.11.12**
+
+- Se mejoraron las opciones de la interfaz del juego y el menú EVENT.
+- Se añadieron recompensas de tarjeta mensual «más acordes con la forma de jugar».
+- Se ajustaron la detección de impacto de los ataques y el coste de AP de algunas unidades.
 
 **Actualización 26.11.11**
 
@@ -420,11 +430,10 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 
 **体力每秒恢复 1 点。** 安卓原版的恢复速率为每分钟 1 点。
 
-**26.11.12 更新**
+**26.11.13 更新**
 
-- 优化了游戏内 UI 选项以及 EVENT 选单
-- 新增了“更符合游玩习惯”的游戏月卡奖励
-- 调整了部分 UNIT 的攻击判定以及 AP 价格
+- 修改了大魔王 ×4、巨型章魚、Party People ×3 在 EVENT 中的获取方式（使用 1000 阶级积分获取）
+- 修改了其他单位的任务积分（2000 → 400）
 
 此前的更新见[更新记录](#更新记录)。
 
@@ -503,6 +512,12 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 感谢 **Yossho** 在寻找 sprite 素材方面给予本项目的巨大帮助。鸟原住民（Native (Bird)）增加的帧取自 Yossho 编辑的素材表“Native Bird (Expanded)”，原画为 SNK。
 
 ### 更新记录
+
+**26.11.12 更新**
+
+- 优化了游戏内 UI 选项以及 EVENT 选单
+- 新增了“更符合游玩习惯”的游戏月卡奖励
+- 调整了部分 UNIT 的攻击判定以及 AP 价格
 
 **26.11.11 更新**
 

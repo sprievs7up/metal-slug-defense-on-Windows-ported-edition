@@ -95,6 +95,16 @@ class EventTrial:
         medal=json.loads((self.root/'historical_events/medal_shop.json').read_text(encoding='utf-8'))
         self.medal_catalog=[r for r in medal['rows'] if r['event_key'] in self.data]+self.custom_medal_rows
         self.medal_table=None;self.shop_kind='token';self.medal_owned=set()
+        # 活动单位的直接给予与原版商店开放条件（historical_events/unit_rewards.json，2026-11-10 第 367 节）。
+        rewards=json.loads((self.root/'historical_events/unit_rewards.json').read_text(encoding='utf-8'))
+        if rewards.get('schema')!=1:raise ValueError('Unsupported Event unit reward schema')
+        self.unit_rewards=[r for r in rewards['rows'] if r['event_key'] in self.data]
+        # 合作区域任务的满额计分门槛（原生 2000，每级为四分之一）：核心 r160 的 job_score 钩子按 0x1ffef340 'JOBS' 换算。
+        target=rewards.get('area_task_score')
+        if target and hasattr(p.uc.lib,'msd_event_job_score_version'):
+            if type(target) is not int or not 4<=target<=99999 or target%4:raise ValueError('area_task_score is a multiple of 4')
+            p.write(0x1ffef340,struct.pack('<II',0x53424f4a,target))
+        self.reward_check=False;self.reward_stable=0;self.reward_popups=[]
         # 活动勋章单位的商品号登记为活动专属（src/event_trial_hooks.cpp event_exclusive_sku）。
         skus=sorted({r['menu_shop_id'] for r in self.medal_catalog})[:64]
         p.write(0x1ffef200,struct.pack('<II',0x4b535645,len(skus))+struct.pack('<'+'I'*len(skus),*skus))
@@ -152,7 +162,8 @@ class EventTrial:
     def medal_rows(self):
         if not self.selected:return []
         phase=self.selected_phase
-        return [r for r in self.medal_catalog if r['event_key']==self.selected
+        # unit_reward：不在勋章店出售、达标直接给予的单位（unit_rewards.json），商品号仍登记为活动专属。
+        return [r for r in self.medal_catalog if r['event_key']==self.selected and r['availability']['kind']!='unit_reward'
                 and (not r.get('phases') or phase is None or phase in r['phases'])]
     def has_medal_shop(self):
         return bool(self.medal_rows())
@@ -245,6 +256,8 @@ class EventTrial:
         if enter:
             p.call('_ZN7AppMain12SceneEndFuncEi',self.app,p.word(self.app+0x22bc))
             p.call('_ZN7AppMain23SC_WiFiMenuInit_TagTeamEv',self.app)
+        # 进入活动时核对一次单位奖励条件（已达成的旧存档补发）。
+        self.reward_check=True;self.reward_stable=0;self.reward_popups=[]
         p.log('HISTORICAL_EVENT_SELECTED',key,t['count'],phase_id)
     def start_battle(self,index):
         if index not in self.native_map.active_table()['by_index']:raise ValueError('Stage is outside the selected Event phase')
@@ -319,8 +332,12 @@ class EventTrial:
             point=self.p.call('_ZN7AppMain24GetSurvivalPointSaveDataEv',self.app)
             if point!=self.state()['currency']:
                 state=self.state();state['currency']=point;state['score_peak']=max(state.get('score_peak',0),point)
-                self.dirty=True;self.flush()
+                self.dirty=True;self.flush();self.reward_check=True
             self.track_native_coop()
+        # 单位奖励（unit_rewards.json）：条件可能变化后，于活动基地或地图静止时核对并给予，弹窗逐条显示。
+        if self.selected and (self.reward_check or self.reward_popups) and self.reward_ready():
+            if self.reward_check:self.reward_check=False;self.apply_event_unit_rewards()
+            if self.reward_popups:self.show_unit_reward_popup(self.reward_popups.pop(0));self.reward_stable=0
         if self.overlay:self.draw()
     def track_native_coop(self):
         """合作活动（模式 6）的战斗经原生合作编队开战，不经 BattleInit_StageClearMode / SurvivalMode 的登记钩子，
@@ -346,7 +363,7 @@ class EventTrial:
             if won:saved['captures']=saved.get('captures',0)+p.call('_ZN10BattleMain14getGetPrisonerEv',battle)
             rank=self.native_map.save_result(record,won,time)
             if won:self.apply_prisoner_rewards();self.apply_unit_rewards(record['stage'],saved)
-            self.dirty=True;self.flush()
+            self.dirty=True;self.flush();self.reward_check=True
             p.log('HISTORICAL_BATTLE_RESULT',record['key'],{'won':won,'stage_id':record['stage']['id'],'rank':rank,'time':time,'native_coop':True})
     def flush(self):
         if not self.dirty:return
@@ -387,7 +404,7 @@ class EventTrial:
         if d['currency']:state['currency']=min(99999999,state['currency']+earned)
         else:p.call('_ZN7AppMain18AddMSPointSaveDataEi',app,earned)
         self.result={'won':won,'earned':earned,'stage_id':record['stage']['id']}
-        self.dirty=True;self.flush()
+        self.dirty=True;self.flush();self.reward_check=True
         p.put(HEADER,0);p.put(HEADER+4,0)
         # Preserve native teardown while using sidecar Event progression.
         # Mode 7 excludes the old fixed-area completion/reward arrays.
@@ -424,6 +441,7 @@ class EventTrial:
             p.call('_ZN7AppMain24SetSurvivalPointSaveDataEi',self.app,self.original_currency)
         self.selected=None;self.selected_phase=None;self.overlay=None;self.native_shop_active=False;self.active_battle=None
         self.hitboxes=[];self.result=None;self.page=0;self.revision+=1
+        self.reward_check=False;self.reward_stable=0;self.reward_popups=[]
         for offset in (0xb1ec,0xb1f0,0xb1f4,0xc030,0xc034,0xc63c,0xc06c,0xc8c8):p.put(self.app+offset,0)
     def leave(self,immediate=False):
         if self.active_battle:return
@@ -449,6 +467,73 @@ class EventTrial:
                 p.call('_ZN7AppMain24SetUnitLevelOpenSaveDataE6UnitIDi',self.app,uid,20)
         saved['unit_rewards_claimed']=True
         p.log('CUSTOM_EVENT_UNIT_REWARD',self.selected,stage['local_stage_key'],stage['reward_units'])
+    # ---------- 活动单位的直接给予与原版商店开放条件（2026-11-10 第 367 节，historical_events/unit_rewards.json） ----------
+    # 弹窗标题取原生合作文字 GetStringCoop：10「階級積分 / Class point」（累计评价点数），9「評價點 / Evaluation points」（积分）。
+    REWARD_TITLES={'rank_point':10,'score_peak':9}
+    def reward_met(self,rule):
+        kind=rule['kind'];state=self.state()
+        if kind=='rank_point':return self.p.call('_ZN7AppMain27GetTagTeamRankPointSaveDataEv',self.app)>=rule['minimum']
+        if kind=='score_peak':return max(state.get('score_peak',0),state['currency'])>=rule['minimum']
+        if kind=='stage_win':return state['stages'].get(rule['local_stage_key'],{}).get('wins',0)>0
+        return False
+    REWARD_BUSY=('_ZN7AppMain20GT_TagTeamTextWindowEP17GENERAL_TASK_BASE','_ZN7AppMain25GT_TagTeamTextWindowCloseEP17GENERAL_TASK_BASE')
+    def reward_window_open(self):
+        """女教官基地的说明文字窗口（原生 OpenTagTeamTextWindow，首次进入时的开场说明）是否在显示：扫描 app+0x3000 起的任务槽。"""
+        p=self.p;busy={p.symbols[n]&~1 for n in self.REWARD_BUSY}
+        for w in struct.unpack('<512I',p.read(self.app+0x3000,0x800)):
+            if 0x10000000<=w<0x1ffffdc0 and p.word(w)&~1 in busy:return True
+        return False
+    def reward_ready(self):
+        """活动基地（场景 67 状态 1）或活动地图（场景 160 状态 9/13）连续静止 30 帧：无闸门动作、战斗、商店、原生弹窗
+        与基地说明文字窗口。"""
+        scene=self.p.word(self.app+0x22bc);state=self.p.word(self.app+0x22dc)
+        still=(self.transition_action is None and self.active_battle is None and not self.native_shop_active
+               and ((scene==67 and state==1 and not self.reward_window_open()) or (scene==160 and state in (9,13))))
+        self.reward_stable=self.reward_stable+1 if still else 0
+        return self.reward_stable>=30
+    def apply_event_unit_rewards(self):
+        """条件达成时：grant unit 以原生 SetUnitBuySaveData 给予未拥有的单位（同原生区域任务奖励），grant shop_open 以
+        SetMenuShopEnableNewSaveData 开放购买位（同原生 BattleEndGetResult 类型 5）；随后写入原生存档，单位按条件种类排入弹窗。"""
+        p=self.p;app=self.app;granted={};opened=[];silent=[]
+        enabled=lambda sid:p.call('_ZN7AppMain24IsMenuShopEnableSaveDataE10MenuShopID',app,sid)
+        for r in self.unit_rewards:
+            if r['event_key']!=self.selected or not self.reward_met(r['condition']):continue
+            if r['grant']=='unit':
+                if p.call('_ZN7AppMain20GetUnitLevelSaveDataE6UnitID',app,r['unit_id'])==0xffffffff:
+                    p.call('_ZN7AppMain18SetUnitBuySaveDataE6UnitID',app,r['unit_id'])
+                    granted.setdefault(r['condition']['kind'],[]).append(r)
+                # 该单位原有的兑换店商品：静默写入开放位（单位已拥有，目录不列出），原生日后达到其开放条件时
+                # （BattleEndGetResult 类型 5 先查开放位）不再显示“追加商品”。
+                if r.get('menu_shop_id') is not None and not enabled(r['menu_shop_id']):
+                    p.call('_ZN7AppMain25SetMenuShopEnableSaveDataE10MenuShopID',app,r['menu_shop_id']);silent.append(r['menu_shop_id'])
+            elif r['grant']=='shop_open':
+                if not enabled(r['menu_shop_id']):
+                    p.call('_ZN7AppMain28SetMenuShopEnableNewSaveDataE10MenuShopID',app,r['menu_shop_id'])
+                    opened.append(r['menu_shop_id'])
+        if not granted and not opened and not silent:return
+        p.call('_ZN7AppMain17WriteMainSaveDataEv',app)
+        for kind,rows in granted.items():
+            lines=self.unit_reward_lines(rows)
+            self.reward_popups.extend((kind,lines[i:i+2]) for i in range(0,len(lines),2))
+        p.log('HISTORICAL_UNIT_REWARD',self.selected,[r['unit_id'] for rows in granted.values() for r in rows],opened,silent)
+    def unit_reward_lines(self,rows):
+        """原生 PopupResultJobAreaJobRewordEventMSD 的写法：GetStringLoginBonus 3「獲得了「%s」。」（同名多个时 1「獲得了%d個「%s」。」），
+        单位名取 GetMenuUnitName（游戏语言 app+0x3d64）。日、韩文的 1 号格式 %s 在 %d 之前，按占位符种类替换。"""
+        p=self.p;lang=p.word(self.app+0x3d64);names={}
+        for r in rows:
+            name=p.string(p.call('_Z15GetMenuUnitName6UnitIDi',r['unit_id'],lang))
+            names[name]=names.get(name,0)+1
+        lines=[]
+        for name,count in names.items():
+            text=p.string(p.call('_Z19GetStringLoginBonusii',3 if count==1 else 1,0xffffffff))
+            lines.append(text.replace('%d',str(count)).replace('%s',name))
+        return lines
+    def show_unit_reward_popup(self,popup):
+        """原生 SetPopupOK；每个弹窗至多 2 行（3 行时标题与首行相接），标题取合作文字（REWARD_TITLES）。"""
+        p=self.p;kind,lines=popup
+        title=p.call('_Z13GetStringCoopii',self.REWARD_TITLES.get(kind,9),0xffffffff)
+        p.call('_ZN7AppMain10SetPopupOKEPcS0_PFvvEiiii',self.app,p.cstr('\n'.join(lines)),title,0,0x122,0x32,0xffffff00,0)
+        p.log('HISTORICAL_UNIT_REWARD_POPUP',self.selected,kind,len(lines))
     def apply_prisoner_rewards(self):
         p=self.p;state=self.state();claims=state.setdefault('reward_claims',{})
         event=self.native_map.active_manifest();parts=self.data[self.selected]['controller']=='parts'
