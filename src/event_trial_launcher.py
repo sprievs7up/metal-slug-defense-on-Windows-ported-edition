@@ -46,7 +46,12 @@ class TrialProbe(OriginalProbe):
                                             hashlib.sha256(self.uc.library_path.read_bytes()).hexdigest()))
         from audio_options import AudioOptions
         self.audio_options=AudioOptions(self)
+        from keyboard_modes import KeyboardModes
+        self.keyboard=KeyboardModes(self,ROOT)
+        from keyboard_options import KeyboardOptions
+        self.keyboard_options=KeyboardOptions(self,self.keyboard)
     def step_frame(self):
+        self.keyboard_options.prepare_frame()
         super().step_frame()
         self.world_level_rules.update()
         self.medal_rules.update()
@@ -54,9 +59,12 @@ class TrialProbe(OriginalProbe):
         self.campaign.update()
         self.ura_world.update()
         self.audio_options.update()
+        self.keyboard_options.update()
+        self.keyboard.update()
     def back(self):
         trial=self.event_trial;app=self.app_instance();scene=self.word(app+0x22bc)
         if trial.transition_action is not None:return False
+        if self.keyboard_options.back():return True
         campaign=self.campaign
         if campaign.opened:
             if campaign.area is not None:campaign.area=None
@@ -93,6 +101,7 @@ class TrialProbe(OriginalProbe):
         finally:
             for item,text in restore:self.objects[item]=text
     def touch_event(self,action,x,y):
+        if self.keyboard_options.touch(action,x,y):return
         if self.campaign.touch(action,x,y):return
         if self.event_trial.touch(action,x,y):return
         super().touch_event(action,x,y)

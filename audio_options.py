@@ -88,6 +88,10 @@ class AudioOptions:
             from probe import u32f
             for offset,y in zip(range(0x3364,0x3378,4),(176.0,244.0,312.0,380.0,448.0)):
                 p.put(p.word(app+offset)+0x88,u32f(y))
+        keyboard=getattr(p,'keyboard_options',None)
+        if mode=='menu' and keyboard is not None and keyboard.owns_rows():
+            # 键盘模式页（keyboard_options.py）借用音乐、音效两行：其间不改写两行的显示、图标与文字，归还后按当前值重建。
+            self.label_key=None;self.mode=mode;self.tasks=(language,music,effects);return
         for task,value in zip((music,effects),values):
             p.put(task+0x7c,p.word(task+0x7c)&~(0xa0 if mode=='menu' else 0x80))
             if mode in ('title','pause'):p.put(task+0x80,(p.word(task+0x80)&~0x18)|(0x08 if value else 0x10))

@@ -66,6 +66,8 @@ The PVZ EVENT background music (`community_content/bgm_pvz_watery_graves.msdf`) 
 
 The PVZ EVENT background music for the fifth area (`community_content/bgm_pvz_zombotany.msdf`) is a Metal Slug style remix of the unused Plants vs. Zombies track "Zombotany", published on Bilibili as "【NEOGEO×PVZ】废弃音乐《Zombotany》（合金弹头风格Remix）". The composition and the remix retain their existing ownership.
 
+The selection frame of the CLASSIC keyboard layout (`custom_content/unit_icon_select.obm`) is the file `unit_icon_select.obm` of the Windows (Steam) release of Metal Slug Defense (SNK), unchanged; the layout's default keys, the blinking of the frame and its place in the drawing order follow that release. This material retains its existing ownership.
+
 ## 中文
 
 本项目为《合金弹头塔防》的非官方移植。原游戏、标识、美术及其他游戏内容保留原有归属和权利说明。运行依赖继续适用各自的许可，相关说明随 Windows 运行包保存在 `windows_runtime/licenses/` 中。生成的原生游戏代码源于安卓原游戏库。本仓库未为上述内容统一指定新的许可。
@@ -131,3 +133,5 @@ UNION 单位（`community_content/union_0.obm` 至 `union_2.obm`，描述符 `co
 PVZ EVENT 配乐（`community_content/bgm_pvz_watery_graves.msdf`）为《植物大战僵尸》“Watery Graves”的合金弹头风格混音，取自 Bilibili 发布的“【NEOGEO×PVZ】后庭泳池-白天主题曲——《Watery Graves》（合金弹头风格Remix）”。原曲与混音保留原有归属。
 
 PVZ EVENT 第五大关配乐（`community_content/bgm_pvz_zombotany.msdf`）为《植物大战僵尸》未使用曲目“Zombotany”的合金弹头风格混音，取自 Bilibili 发布的“【NEOGEO×PVZ】废弃音乐《Zombotany》（合金弹头风格Remix）”。原曲与混音保留原有归属。
+
+經典键盘操作模式的出兵选择框（`custom_content/unit_icon_select.obm`）为《合金弹头塔防》Windows（Steam）版（SNK）的文件 `unit_icon_select.obm`，未作改动；该模式的默认键位、选择框的闪烁与绘制次序同样取自该版本。该素材保留原有归属。

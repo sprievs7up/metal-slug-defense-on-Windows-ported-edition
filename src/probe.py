@@ -602,8 +602,8 @@ class Probe:
             self.app_instance_slot = self.word(BASE + 0x161f4a + self.word(BASE + 0x161f50))
         return self.word(self.app_instance_slot)
 
-    def activate_unit_slot(self, slot):
-        result={'slot':slot+1,'key':'1234567890'[slot] if 0<=slot<10 else '?'}
+    def activate_unit_slot(self, slot, key=None):
+        result={'slot':slot+1,'key':key or ('1234567890'[slot] if 0<=slot<10 else '?')}
         def report(reason, **values):
             result.update(reason=reason,**values)
             self.last_unit_result=result
@@ -646,9 +646,9 @@ class Probe:
         return report('created' if created else 'native_blocked',
                       ap_after=self.call('_ZN26BattleControllerPlayerBase5getAPEv',controller))
 
-    def battle_key_action(self, action):
+    def battle_key_action(self, action, key=None):
         from battle_controls import perform
-        return perform(self,action)
+        return perform(self,action,key)
 
     def draw_text(self,a,idx):
         from PIL import Image, ImageDraw, ImageFont

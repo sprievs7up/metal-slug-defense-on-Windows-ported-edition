@@ -19,7 +19,7 @@ except BaseException:
 
 PROFILE = 'lab_test_save'
 # 含 LAB 钩子的核心由正式版配置统一加载；独立入口和验证保留显式指定核心接口。
-LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r158_20261110.dll'
+LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r159_20261110.dll'
 KEYS = {glfw.KEY_F7: ('prep',), glfw.KEY_F5: ('exit',), glfw.KEY_F8: ('toggle_full',),
         glfw.KEY_F4: ('toggle_enemy_ai',), glfw.KEY_F3: ('toggle_player_ai',),
         glfw.KEY_LEFT_BRACKET: ('enemy_ap',), glfw.KEY_RIGHT_BRACKET: ('enemy_slug',),
@@ -294,8 +294,8 @@ def install():
                 lobby.shutdown()
             return super().close()
 
-        def activate_unit_slot(self, slot):
-            result = super().activate_unit_slot(slot)
+        def activate_unit_slot(self, slot, key=None):
+            result = super().activate_unit_slot(slot, key)
             lab = getattr(self, 'lab', None)
             if lab is not None:
                 lab.reveal_slot(False, slot)
@@ -395,6 +395,8 @@ def install():
                 lobby.commands.append(('text', chr(codepoint)))
 
         def key(self, window, key, scan, action, mods):
+            if action == glfw.RELEASE:
+                return super().key(window, key, scan, action, mods)     # 经典键盘模式：松开一律登记（player.Player.key）
             browser = getattr(self.probe, 'unit_browser', None) if self.probe else None
             if browser is not None and self.ready and browser.wants_keys() and key != glfw.KEY_ESCAPE:
                 # 单位浏览（U1）：←/→ 翻页（可按住连发）、Enter 确定、Backspace 删除搜索字；Esc 经原有返回流程。
@@ -426,6 +428,10 @@ def install():
                 return
             if lab is not None and self.ready and lab.active and hasattr(netplay, 'queue_touch') and key not in VS_PASS_KEYS:
                 # 常规联机（N6a）：与普通关卡相同的战斗快捷键转为联机输入（1–0 出兵、空格全体绝招、` 据点升级、- 弹头车）。
+                # 经典键盘模式的按键由 keyboard_modes.KeyboardModes 在游戏线程转为联机输入。
+                if self.keyboard_mode() == 'classic':
+                    self.classic_key(key, scan, action, mods)
+                    return
                 if action == glfw.PRESS and not mods & BLOCKED_MODS:
                     command = NETPLAY_KEYS.get(key)
                     if command:
@@ -461,6 +467,8 @@ def install():
                     if key not in (glfw.KEY_F11, glfw.KEY_F12, glfw.KEY_F9):
                         return
             command = KEYS.get(key)
+            if command and command[0] == 'enemy_unit' and self.keyboard_mode() == 'classic' and self.classic_action(key):
+                command = None          # 经典键盘模式占用 W、E、R：LAB 的敌方第 2–4 格直接出兵键让出
             if command and action == glfw.PRESS and not mods & BLOCKED_MODS:
                 lab = getattr(self.probe, 'lab', None) if self.probe else None
                 if lab is not None and self.ready:

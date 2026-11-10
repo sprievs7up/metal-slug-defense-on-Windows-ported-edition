@@ -1589,6 +1589,8 @@ template<Block* OLD> void iine_failed_tail(Context& c){
 // 头部 +0xa00：+0 启用，+4/+8 P1/P2 光标槽，+0x10 起每侧 4 个 Image*（0 框、1 费用牌），
 // +0x30 起每侧 4 个转换项（16 字节，至 +0xaf），+0xc0 BattlePlayerOperator 指针，+0xd0/+0xd4 命中计数（框、费用牌）。
 constexpr uint32_t FLAG_VS_CURSOR=512u,VS_CUR=H+0xa00u,VS_CUR_HITS=H+0xad0u,G_DRAW_CONV=0x10136985u;
+constexpr uint32_t VS_CUR_CLASSIC=0x53414c43u;   // 'CLAS'：经典键盘模式的选择框（第 31 版，宿主 keyboard_modes.py）
+constexpr uint32_t G_SET_RENDER_MODE=0x10137711u; // GraphicsOpt::setRenderMode(int 模式, int 透明度)；Graphics +0x2c 模式、+0x30 透明度
 constexpr uint32_t SLOT_LOOP_BEGIN=0x101d8700u,SLOT_LOOP_END=0x101d8a80u;
 // 诊断：头部 +0xb00 为 'DLOG' 时，把 drawConv 调用记入宿主分配的缓冲区（+0xb08 地址、+0xb0c 容量条数），
 // 计数在 +0xb04；同一转换项指针只记一次。每条 32 字节：返回地址、Image*、x、y 位、转换项 16 字节。不改变绘制。
@@ -1636,8 +1638,32 @@ void draw_conv(Context& c){
     }
     // 分栏出兵格遍的右侧滚动箭头：6 帧动画各帧同样平移（原按图块 u 只识别前 2 帧，其余 4 帧留在原位被裁掉）。
     if(pass.active && pass.cells && lr==ARROW_RIGHT_RET)c.r[2]=fbits(bitsf(c.r[2])+ARROW_SHIFT);
-    if(!in_vs_cursor && lr>=SLOT_LOOP_BEGIN && lr<SLOT_LOOP_END && pass.active && pass.cells &&
-       enabled(c,FLAG_VS_CURSOR) && rd<uint32_t>(c,VS_CUR)){
+    // 第 31 版（核心 r159）：经典键盘模式的选择框，做法取自原 Windows 版（msdf-steam.exe 的出兵格循环，各分支在头像之后以
+    // 同一坐标 (x, 520)、2 倍缩放调用 0x50b570：渲染模式 1、透明度取闪烁表当前值，画 unit_icon_select 后恢复渲染模式）。
+    // 头部 +0xa00 写 'CLAS' 时与 LAB 共享头及功能位无关（普通关卡同样生效）：+4 选中槽，+8 透明度（0–255），+0x10 选择框 Image*，
+    // +0x30 其转换项，+0xc0 BattlePlayerOperator。画完选中槽的头像（转换表项 56+槽 / 66+槽，与底板同一坐标）后，以相同位置与
+    // 缩放画选择框；分栏底栏中只在本方出兵格遍绘制。
+    uint32_t cursor_mode=(!in_vs_cursor && lr>=SLOT_LOOP_BEGIN && lr<SLOT_LOOP_END)?rd<uint32_t>(c,VS_CUR):0u;
+    if(cursor_mode==VS_CUR_CLASSIC && (!pass.active || (pass.cells && !enemy_pass)) && c.r[6]==rd<uint32_t>(c,VS_CUR+4u)){
+        uint32_t conv=rd<uint32_t>(c,c.r[13]),op=rd<uint32_t>(c,VS_CUR+0xc0u);
+        uint32_t base=op?rd<uint32_t>(c,op+200u):0u,image=rd<uint32_t>(c,VS_CUR+0x10u);
+        if(image && base && conv>=base && (conv-base)%16u==0u && (conv-base)/16u>=56u && (conv-base)/16u<=75u){
+            uint32_t stack[5];
+            for(uint32_t i=0;i<5u;++i)stack[i]=rd<uint32_t>(c,c.r[13]+i*4u);
+            uint32_t r0=c.r[0],r1=c.r[1],r2=c.r[2],r3=c.r[3];
+            in_vs_cursor=true;
+            guest_call(c,G_DRAW_CONV,r0,r1,r2,r3,stack,5u);              // 原生头像
+            uint32_t graphics=rd<uint32_t>(c,r0),mode=rd<uint32_t>(c,graphics+0x2cu),alpha=rd<uint32_t>(c,graphics+0x30u);
+            guest_call(c,G_SET_RENDER_MODE,r0,1u,rd<uint32_t>(c,VS_CUR+8u)&0xffu);
+            stack[0]=VS_CUR+0x30u;
+            guest_call(c,G_DRAW_CONV,r0,image,r2,r3,stack,5u);           // 选择框（同位置、同缩放）
+            guest_call(c,G_SET_RENDER_MODE,r0,mode,alpha);
+            wr<uint32_t>(c,VS_CUR_HITS,rd<uint32_t>(c,VS_CUR_HITS)+1u);
+            in_vs_cursor=false;
+            c.pc=c.r[14];return;
+        }
+    }
+    if(cursor_mode && cursor_mode!=VS_CUR_CLASSIC && pass.active && pass.cells && enabled(c,FLAG_VS_CURSOR)){
         uint32_t conv=rd<uint32_t>(c,c.r[13]);
         int part=-1;
         uint32_t op=rd<uint32_t>(c,VS_CUR+0xc0u);
@@ -2024,7 +2050,8 @@ extern "C" __declspec(dllexport) uint32_t msd_netplay_take_actions(uint32_t* out
     return n;
 }
 // 第 29 版（核心 r151）：分栏底栏的右侧滚动箭头按 drawConv 调用处平移，6 帧动画完整显示；左侧箭头保持原位。
-extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 30u;}
+// 第 31 版（核心 r159）：经典键盘模式的出兵选择框（头部 +0xa00 写 'CLAS'，原 Windows 版的画法，见 draw_conv）。
+extern "C" __declspec(dllexport) uint32_t msd_lab_hooks_version(){return 31u;}
 // 2026-11-02（核心 r136，docs/UNIT_CAP_2026-11-02.md 第 13 节）：LAB 每帧的单位修正（lab.py Lab.fix_units、vs_cpu.py VsCpu.fix_units）的核心实现，
 // 逐单位读写与宿主原代码相同，只省去每个单位数次跨 FFI 的读取。单位按 Lab.team_list 遍历：getTeamUnitList（管理器 + (队伍 + 6) × 4）起沿 +0x120，
 // 回到起点、地址无效（不在 0x10000000–0x1fffefff）或满 4096 个为止。mode 0 为 Lab.fix_units（team = 敌方队伍，red_team 为 0xffffffff 表示无），

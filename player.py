@@ -1,6 +1,6 @@
 """Interactive Windows host for the statically recompiled MSD x64 core."""
 from pathlib import Path
-import sys, os, time, threading, queue, json, ctypes, traceback, hashlib
+import sys, os, time, threading, queue, json, ctypes, traceback, hashlib, collections
 
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT))
@@ -145,6 +145,10 @@ class Player:
         self.last_key_event=None
         self.last_unit_result=None
         self.key_sequence=0
+        # 经典键盘模式（keyboard_modes.py）：窗口线程记录按住的动作与新按下的动作，游戏线程每个显示帧取用。
+        self.classic_held=set()
+        self.classic_pressed=collections.deque()
+        self.classic_codes=None
 
     def acquire_instance(self):
         kernel=ctypes.WinDLL('kernel32',use_last_error=True)
@@ -198,7 +202,37 @@ class Player:
         point=Point();ctypes.windll.user32.GetCursorPos(ctypes.byref(point))
         return point.x,point.y
 
+    def keyboard_mode(self):
+        keyboard=getattr(self.probe,'keyboard',None) if self.probe else None
+        return keyboard.mode if keyboard is not None else 's1xlv'
+
+    def classic_press(self,action,key,scan,mods):
+        '''经典模式：登记一次新按下的动作（修饰键按下、窗口未就绪或画面停滞时不受理，同数字键出兵）。'''
+        self.key_sequence+=1
+        blocked_mods=mods&(glfw.MOD_SHIFT|glfw.MOD_CONTROL|glfw.MOD_ALT|glfw.MOD_SUPER)
+        queued=self.ready and time.perf_counter()-self.last_present<1.5 and not blocked_mods
+        self.last_key_event={'sequence':self.key_sequence,'key':key,'scan':scan,'mods':mods,
+                             'action':action,'queued':bool(queued),'mode':'classic'}
+        if queued:
+            self.classic_held.add(action);self.classic_pressed.append(action)
+
+    def classic_action(self,key):
+        '''GLFW 键码对应的经典模式动作名；不属于经典键位时为 None。'''
+        if self.classic_codes is None:
+            from keyboard_modes import classic_key_codes
+            self.classic_codes=classic_key_codes(glfw)
+        return self.classic_codes.get(key)
+
+    def classic_key(self,key,scan,action,mods):
+        '''经典模式的战斗按键（Z C V W E R A D Backspace）；返回该键是否属于经典键位。按住连发由游戏线程按帧计数，系统连发不用。'''
+        name=self.classic_action(key)
+        if name is None:return False
+        if action==glfw.PRESS:self.classic_press(name,key,scan,mods)
+        return True
+
     def mouse_button(self,window,button,action,mods):
+        if button==glfw.MOUSE_BUTTON_RIGHT and action==glfw.PRESS and self.keyboard_mode()=='classic':
+            self.classic_press('slug',-1,0,mods);self.classic_held.discard('slug');return
         if button!=glfw.MOUSE_BUTTON_LEFT:return
         if action==glfw.PRESS and mods&glfw.MOD_ALT and not self.fullscreen:
             self.window_drag=(*self.screen_cursor(),*glfw.get_window_pos(window));return
@@ -227,16 +261,20 @@ class Player:
         '''窗口线程每轮事件循环调用一次（手柄等需在主线程轮询的输入）；默认无操作。'''
 
     def focus(self,window,focused):
-        if not focused:self.window_drag=None
+        if not focused:self.window_drag=None;self.classic_held.clear()
         if not focused and self.pressed:
             self.pressed=False;self.last_motion=None;self.events.put((3,*self.last_mouse))
 
     def key(self,window,key,scan,action,mods):
+        if action==glfw.RELEASE:
+            self.classic_held.discard(self.classic_action(key));return
         if action!=glfw.PRESS:return
         if key==glfw.KEY_F11 or (key==glfw.KEY_ENTER and mods&glfw.MOD_ALT):
             self.toggle_fullscreen();return
-        slot=9 if key==glfw.KEY_0 else key-glfw.KEY_1 if glfw.KEY_1<=key<=glfw.KEY_9 else None
-        if slot is None:slot=9 if key==glfw.KEY_KP_0 else key-glfw.KEY_KP_1 if glfw.KEY_KP_1<=key<=glfw.KEY_KP_9 else None
+        classic=self.keyboard_mode()=='classic'
+        if classic:self.classic_key(key,scan,action,mods)
+        slot=None if classic else 9 if key==glfw.KEY_0 else key-glfw.KEY_1 if glfw.KEY_1<=key<=glfw.KEY_9 else None
+        if slot is None and not classic:slot=9 if key==glfw.KEY_KP_0 else key-glfw.KEY_KP_1 if glfw.KEY_KP_1<=key<=glfw.KEY_KP_9 else None
         if slot is not None:
             self.key_sequence+=1
             blocked_mods=mods&(glfw.MOD_SHIFT|glfw.MOD_CONTROL|glfw.MOD_ALT|glfw.MOD_SUPER)
@@ -244,7 +282,7 @@ class Player:
             self.last_key_event={'sequence':self.key_sequence,'key':key,'scan':scan,'mods':mods,
                                  'slot':slot+1,'queued':bool(queued)}
             if queued:self.events.put(('unit',slot))
-        battle_action={glfw.KEY_SPACE:'special_all',glfw.KEY_GRAVE_ACCENT:'upgrade_ap',
+        battle_action=None if classic else {glfw.KEY_SPACE:'special_all',glfw.KEY_GRAVE_ACCENT:'upgrade_ap',
                        glfw.KEY_MINUS:'slug_attack',glfw.KEY_EQUAL:'deploy_all'}.get(key)
         if battle_action:
             self.key_sequence+=1
@@ -306,6 +344,10 @@ class Player:
                     elif self.pressed and self.last_motion is not None:
                         motion=self.last_motion;self.last_motion=None
                         p.touch_event(5,*motion)
+                    keyboard=getattr(p,'keyboard',None)
+                    if keyboard is not None:
+                        pressed=[self.classic_pressed.popleft() for _ in range(len(self.classic_pressed))]
+                        keyboard.frame(set(self.classic_held),pressed)
                 p.step_frame()
                 self.frames=p.frame
                 if p.frame%30==1:

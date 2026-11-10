@@ -45,6 +45,21 @@ To update an existing installation, close the game, back up all existing `play_s
 
 Mouse controls remain available. Deployment and special attacks follow the game's AP, cooldown, readiness, unit-limit, and pause conditions.
 
+The table above is the **S1XLV** keyboard layout (default). **OPTION → KEYBOARD** in the main menu switches to the **CLASSIC** layout, which follows the default keys of the original Windows release; the choice takes effect immediately and is shared by all save profiles.
+
+| Key (CLASSIC) | Action |
+| --- | --- |
+| `Z` / `C` | Move the selection frame on the deployment bar left / right (hold to repeat). |
+| `V` | Deploy the selected unit. |
+| `W` | Upgrade AP production. |
+| Right mouse button | Launch the Metal Slug attack when charged. |
+| `A` / `D` | Scroll the battlefield left / right while held. |
+| `E` | Pause or resume a battle. |
+| `R` | Toggle double speed. |
+| `Backspace` | Back. |
+
+In the CLASSIC layout the number keys, `Space`, <kbd>&#96;</kbd>, `-` and `=` are not used; special attacks are triggered by clicking units, as in the original. `F9`, `F11`, `F12`, `Alt+Enter` and `Esc` work in both layouts.
+
 ### Optional all-units Lv1 save
 
 Run **Start_MSD_All_Units_Level1.exe** from the extracted game folder; the corresponding VBS entry remains available. This entry uses the same formal game core and creates an independent save in `play_save_all_units_level1/` on first launch. The normal EXE continues to use `play_save/`; an existing local maximum-level launcher retains its separate save.
@@ -235,6 +250,21 @@ Para actualizar una instalación existente, cierra el juego, haz una copia de se
 
 El mouse sigue disponible. El despliegue y los ataques especiales respetan las condiciones de AP, recarga, disponibilidad, límite de unidades y pausa del juego.
 
+La tabla anterior es la distribución de teclado **S1XLV** (predeterminada). **OPTION → TECLADO** en el menú principal cambia a la distribución **CLÁSICO**, que sigue las teclas predeterminadas de la versión original de Windows; el cambio se aplica de inmediato y es común a todas las partidas guardadas.
+
+| Tecla (CLÁSICO) | Acción |
+| --- | --- |
+| `Z` / `C` | Mueve el marco de selección de la barra de despliegue a la izquierda / derecha (mantén pulsado para repetir). |
+| `V` | Despliega la unidad seleccionada. |
+| `W` | Mejora la producción de AP. |
+| Botón derecho del mouse | Lanza el ataque del Metal Slug cuando está cargado. |
+| `A` / `D` | Desplaza el campo de batalla a la izquierda / derecha mientras se mantiene pulsada. |
+| `E` | Pausa o reanuda una batalla. |
+| `R` | Activa o desactiva la velocidad doble. |
+| `Retroceso` | Volver. |
+
+En la distribución CLÁSICO no se usan las teclas numéricas, `Espacio`, <kbd>&#96;</kbd>, `-` ni `=`; los ataques especiales se activan haciendo clic en las unidades, como en el original. `F9`, `F11`, `F12`, `Alt+Enter` y `Esc` funcionan en ambas distribuciones.
+
 ### Partida opcional con todas las unidades en Lv1
 
 Ejecuta **Start_MSD_All_Units_Level1.exe** desde la carpeta extraída del juego; la entrada VBS correspondiente sigue disponible. Esta entrada usa el mismo núcleo oficial del juego y crea una partida independiente en `play_save_all_units_level1/` en el primer inicio. El EXE normal sigue usando `play_save/`; un lanzador local de nivel máximo ya existente conserva su partida aparte.
@@ -424,6 +454,21 @@ Detalles del desbloqueo de niveles: [verificación del desbloqueo de niveles](do
 | `Alt+F4` | 关闭游戏。 |
 
 保留鼠标操作。出击与绝招均遵守游戏的 AP、冷却、就绪状态、单位数量上限及暂停条件。
+
+上表为 **S1XLV** 键盘操作模式（默认）。在主菜单 **OPTION → 鍵盤設定** 中可切换为 **經典** 模式，其键位与原 Windows 版的默认键位相同；切换后立即生效，各存档入口共用。
+
+| 按键（經典） | 功能 |
+| --- | --- |
+| `Z` / `C` | 出兵栏的选择框向左 / 向右移动（按住连续移动）。 |
+| `V` | 出击所选单位。 |
+| `W` | 升级 AP 生产。 |
+| 鼠标右键 | 在充能完成后发动弹头车攻击。 |
+| `A` / `D` | 按住时战场画面向左 / 向右卷动。 |
+| `E` | 在战斗中暂停或恢复。 |
+| `R` | 切换倍速。 |
+| `Backspace` | 返回。 |
+
+經典模式不使用数字键、`空格`、<kbd>&#96;</kbd>、`-` 与 `=`；绝招与原版相同，以鼠标点击单位发动。`F9`、`F11`、`F12`、`Alt+Enter` 与 `Esc` 在两种模式下均可使用。
 
 ### 全兵种 Lv1 可替代存档
 

@@ -66,10 +66,10 @@ def team_units(p,controller):
     return units
 
 
-def perform(p,action):
+def perform(p,action,key=None):
     if action not in KEYS:raise ValueError(action)
     controller,blocked,scene=context(p)
-    result={'action':action,'key':KEYS[action],'scene':scene,'reason':blocked,'success':False}
+    result={'action':action,'key':key or KEYS[action],'scene':scene,'reason':blocked,'success':False}
     messages={'not_battle':'当前界面无法操作','not_playing':'战斗尚未开始或已经结束',
               'paused':'战斗已暂停','controller':'当前战斗控制器不支持此操作'}
     text=messages.get(blocked,'')
