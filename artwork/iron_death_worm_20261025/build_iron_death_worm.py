@@ -55,7 +55,8 @@ docs/ms7/MS7_AA_TURRETS_IRON_DEATH_WORM_CHECK_2026-10-24.md 与 verification/iro
   BURST（MSA 小爆炸 103，攻击框按其图像范围开 BURST_ATTACK tick，伤害同碎块，碰到的目标不重复结算）。
 - 音效：钻入与钻出同 MSA 都用原版 425（bull_drill_1，“钻出”声）与 2716（s1xlv.irondw_move，石块声）。R4 曾把 2716 换为 MSXX 的
   DRILL_STOP / DRILL_STAR（换错了音效，用户要求回退）；R6（用户 2026-10-25：钻出为“钻出、石块声”，缩回为“钻入、石块声”）把缩回地面的
-  钻入 7（2 倍速副本 120 随之）与钻击 33 中的 425 换为 MSXX 的 DRILL_STOP，石块声保持，钻出不变。
+  钻入 7（2 倍速副本 120 随之）与钻击 33 中的 425 换为 MSXX 的 DRILL_STOP，石块声保持，钻出不变。R8（用户 2026-11-10：换用音质更清晰的
+  MS7 素材）：该音效改由 NDS《合金弹头7》的音效序列 Drill_Stop（区段 008d-009f，同名同声，ds_sseq 渲染为 16 kHz 立体声）编码，音效键与用到的动作不变。
 - 钻入 / 钻出速度（R5 用户 2026-10-25：速度为 200%，动画一并加快；不影响大招的速度）：钻入 7 与钻出 12（连同其子层）按 FAST_FACTOR
   倍速重采样为 FAST 中的副本（新第 k tick 显示原第 2k tick 的帧、旋转、偏移与缩放，挂载与音效在原 tick 的一半处），用于移动的钻入与
   出场、移动结束、为近距攻击的钻出；绝招中的钻出（绝招开始时在地下先钻出、钻击后回原处钻出）仍用原速的 12（参数
@@ -114,8 +115,10 @@ SOUNDS = {   # MSA SoundID → (本体音效键, MSA 文件, 音量 m_sound_data
     2716: ('s1xlv.irondw_move', 'irondw_move.msa', 100),
 }
 NATIVE_SOUNDS = {200, 203, 225, 425, 808}         # MSD 同号同文件
-MSXX_SE = Path(r'F:\egg\MS7\MSXX-audio-wav\SE')    # 《合金弹头 XX》（PSP）音频提取包转出的 WAV（AGENTS 第 268 节）
-DRILL_STOP = ('s1xlv.irondw_drill_stop', 'DRILL_STOP.wav', 100)   # R6：缩回地面的“钻入”声（本体音效键, WAV, 音量）
+DS_SEQ = Path(r'F:\egg\MS7\mslug7_sdat_extract\sequence\008d-009f')   # NDS《合金弹头7》音效序列（区段 008d-009f，含 St1_ / Boss1_ 音效，BANK_002.sf2；用户提供的提取包）
+DS_RENDER = REPO / 'artwork' / 'fall_climber_20261101'                  # ds_sseq（序列与音色库的渲染器）
+VORBIS_QUALITY = 0.8                                                     # 同 Fall Climber、能量弹生成脚本（libsndfile 缺省 0.4）
+DRILL_STOP = ('s1xlv.irondw_drill_stop', 'Drill_Stop', 100)   # 缩回地面的“钻入”声（本体音效键, NDS 序列名, 音量）；R6–R7 为 MSXX DRILL_STOP.wav，R8 换为 NDS 同名序列
 SOUND_425 = {7: DRILL_STOP[0], 33: DRILL_STOP[0]}  # R6：钻入 7 与钻击 33 的 425（“钻出”声）换为 DRILL_STOP；石块声 2716 保持
 ROLL_FIRST, BURST = 113, 116                      # R4：碎块滚动根层 113–115（旋转子层 117–119）、碎块爆炸 116
 ROLL_SPIN = BURST + 1
@@ -873,11 +876,12 @@ def write_icon(raw, cell, rect):
     return bytes(raw)
 
 
-def encode_ogg(wav, target):
-    """WAV 编码为 Ogg Vorbis（同 artwork/iron_sentinel_20261020/build_iron_sentinel.py 的 encode_ogg：libsndfile 分块写入）。"""
+def encode_ogg(data, rate, target):
+    """PCM 编码为 Ogg Vorbis（R8 起同 Fall Climber、能量弹生成脚本：libsndfile 分块写入，写入前设 VBR 质量）。"""
     import soundfile as sf
-    data, rate = sf.read(str(wav), always_2d=True)
     with sf.SoundFile(str(target), 'w', samplerate=rate, channels=data.shape[1], format='OGG', subtype='VORBIS') as f:
+        q = sf._ffi.new('double*', VORBIS_QUALITY)
+        assert sf._snd.sf_command(f._file, 0x1300, q, sf._ffi.sizeof('double')) == 1
         for i in range(0, len(data), 4096):
             f.write(data[i:i + 4096])
 
@@ -926,10 +930,13 @@ def main():
             sounds.append(entry)
         else:
             sounds[at] = entry
-    key, wav, volume = DRILL_STOP                      # R6：WAV 编码为 Ogg Vorbis（.msdf）；libsndfile 每次取随机流序列号，已有文件时不重编
+    key, seq, volume = DRILL_STOP                      # NDS 序列渲染后编码为 Ogg Vorbis（.msdf）；libsndfile 每次取随机流序列号，已有文件时不重编（换来源时先删去旧文件）
     target = key.split('.', 1)[1] + '.msdf'
     if not (CONTENT / target).exists():
-        encode_ogg(MSXX_SE / wav, CONTENT / target)
+        sys.path.insert(0, str(DS_RENDER))             # -I 运行时不含脚本目录以外的路径
+        import ds_sseq
+        data, _ = ds_sseq.render_native(DS_SEQ / (seq + '.mid'), next(DS_SEQ.glob('BANK_*.sf2')))
+        encode_ogg(data, 16000, CONTENT / target)
     entry = {'key': key, 'file': target, 'type': 'se', 'volume': volume}
     at = next((i for i, e in enumerate(sounds) if e['key'] == key), None)
     if at is None:

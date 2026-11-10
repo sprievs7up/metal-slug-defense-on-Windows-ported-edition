@@ -328,7 +328,14 @@
     "attack_attributes": {
       "melee": 0,
       "special": 0
-    }
+    },
+    "attribute_resistance_tiers": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
   },
   "unit_id": 1077,
   "icon_rect": [
