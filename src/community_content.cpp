@@ -5163,6 +5163,14 @@ extern "C" __declspec(dllexport) uint32_t msd_community_reflect_version(){return
 // 记在对象 +0x40（VFO 只用 +0x1c / +0x20 / +0x24 / +0x34，生成时由 clearActionParams 清零）；满 VFO_LEAVE_ATTACKS 次后转入原生的升空分支（块 0x101b3bb0：
 // 动作 6、升到画面上方、禁止攻击、预约状态 21）。绝招（状态 50）走另一分支，不计入。状态 21 升空结束（块 0x101b3c72，原生在此移到本方据点上空）时，计数已满者移除，
 // 不再返回。敌方前线越过本机时的原生返回不变，计数保留。动作演示（z_viewer）中不计数。状态只在客体对象中（回滚安全）。
+// 2026-11-13（核心 r162，用户要求，继续削弱）：绝招（状态 50）的动作播完时（块 0x101b3cca，原生在此进入攻击等待）同样转入原生升空分支，计数不变；
+// 状态 21 升空结束时计数未满，走原生路径移到本方据点上空（状态 22）、降到巡航高度（+0x34 = 1 → 2）后恢复攻击许可并重新前进。做法同未来菖蒲
+// （UnitID 277，BattleAction_FutureRShobu::update 0x10189972）绝招后的状态 51：向上飞离、移到本方据点上空、降下后回到状态 10。绝招冷却由原生另行计时，
+// 升空取代的只是绝招后的攻击等待（startAttackWaitAction 的词 31）。动作演示中保持原生。
+// 返回后的巡航高度：原生在 +0x34 = 1 时每帧下降，到“当前位置的地面 − 260”为止（块 0x101b3a82 的比较）；出场高度为 getHeightSize + 60（初始化块
+// 0x101b3a3c），与地形无关，两者只在地面 y 426 处相同（LAB 战场 1011 地面 338，返回后为 85，比出场的 166 高 81；据点在高处的自制战场会升到画面上沿之外）。
+// 返回成为常规动作后改为降回出场高度：到达当帧把 y 置为该值并清除纵向移动（字段同 clearMoveActionParamsYOnly 0x101ddf9e），再交给原生的到达分支。
+// 敌方前线越过本机时的原生返回同样按此处理。
 static constexpr uint32_t VFO_UID=254u,VFO_LEAVE_ATTACKS=3u,VFO_COUNT=0x40u,VFO_RISE=0x101b3bb1u,VFO_EXIT=0x101b3d2du;
 static uint32_t vfo_hooks=0u;
 static Block old_vfo_attack_done;
@@ -5180,7 +5188,25 @@ static void vfo_risen(Context& c){
  if(rd<uint32_t>(c,o+0x128u)==VFO_UID&&rd<uint32_t>(c,o+VFO_COUNT)>=VFO_LEAVE_ATTACKS){is_call(c,IS_KILL,o);c.pc=VFO_EXIT;return;}
  old_vfo_risen(c);
 }
-extern "C" __declspec(dllexport) uint32_t msd_community_vfo_version(){return vfo_hooks==2u?1u:0u;}
+static Block old_vfo_special_done;
+static void vfo_special_done(Context& c){
+ uint32_t o=c.r[4];
+ if(rd<uint32_t>(c,o+0x128u)==VFO_UID&&!z_viewer(c)){c.pc=VFO_RISE;return;}
+ old_vfo_special_done(c);
+}
+static Block old_vfo_descend;
+static void vfo_descend(Context& c){
+ uint32_t o=c.r[4];
+ if(rd<uint32_t>(c,o+0x128u)==VFO_UID&&!z_viewer(c)){
+  int32_t home=int32_t(is_call(c,IS_HEIGHT,o))+60;
+  if(int32_t(rd<float>(c,o+0x90u))>=home){
+   float y=float(home);wr<float>(c,o+0x90u,y);wr<float>(c,o+0x98u,y);wr<uint32_t>(c,o+0xa0u,0u);wr<uint32_t>(c,o+0xa8u,0u);wr<uint32_t>(c,o+0xb0u,0u);
+  }
+  c.r[0]=uint32_t(home+260);   // 原生随后比较 y >= r0 - 260
+ }
+ old_vfo_descend(c);
+}
+extern "C" __declspec(dllexport) uint32_t msd_community_vfo_version(){return vfo_hooks==4u?2u:0u;}
 // 行为库清单（模组 M2）：behavior_library.json 原文，由构建脚本生成 behavior_manifest.inc 嵌入。
 #include "behavior_manifest.inc"
 extern "C" __declspec(dllexport) const char* msd_behavior_manifest(){return BEHAVIOR_MANIFEST;}

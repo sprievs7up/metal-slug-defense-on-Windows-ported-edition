@@ -23,3 +23,30 @@ src/build/
 .env.*
 *.pem
 *.key
+
+# Mod folders: content made by other people, distributed by its authors. mods/README.md stays tracked.
+/mods/*/
+
+# Work-in-progress material is not uploaded: design drafts, previews, mock-ups and hand-off sheets.
+/artwork/title_screen_20261112/*
+!/artwork/title_screen_20261112/*.py
+
+# Not uploaded: generated previews and reports, superseded art, run records, personal LAB settings, editor files.
+/artwork/*/out/
+/artwork/*/previews/
+/artwork/iron_sentinel_20261020/
+/artwork/title_font_20261008/superseded_r1/
+/artwork/title_font_20261008/*_6x.png
+/artwork/title_font_20261008/segmentation_*.png
+/artwork/title_font_20261008/verify_*.png
+/artwork/title_font_20261008/method_check_8x.png
+/artwork/hunter_20261018/out_preview*.png
+/lab_probe.jsonl
+/lab_config.json
+/lab_cpu_config.json
+/lab_presets/
+/lab_presets_cpu/
+/lab_test_save/
+/*.out
+/*.lnk
+.idea/

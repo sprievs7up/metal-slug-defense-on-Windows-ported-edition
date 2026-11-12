@@ -19,7 +19,7 @@ except BaseException:
 
 PROFILE = 'lab_test_save'
 # 含 LAB 钩子的核心由正式版配置统一加载；独立入口和验证保留显式指定核心接口。
-LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r161_20261111.dll'
+LAB_CORE = ROOT / 'src' / 'build' / 'MSD_Core_LAB_r162_20261113.dll'
 KEYS = {glfw.KEY_F7: ('prep',), glfw.KEY_F5: ('exit',), glfw.KEY_F8: ('toggle_full',),
         glfw.KEY_F4: ('toggle_enemy_ai',), glfw.KEY_F3: ('toggle_player_ai',),
         glfw.KEY_LEFT_BRACKET: ('enemy_ap',), glfw.KEY_RIGHT_BRACKET: ('enemy_slug',),
@@ -338,6 +338,9 @@ def install():
             if lobby is not None:
                 lobby.prepare_frame()
             super().step_frame()
+            visuals = getattr(self, 'title_visuals', None)
+            if visuals is not None:
+                visuals.update()
             lab = getattr(self, 'lab', None)
             if lab is None:
                 return

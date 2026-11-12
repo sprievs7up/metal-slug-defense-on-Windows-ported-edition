@@ -141,6 +141,16 @@ class NativeEventMap:
         self.art.update()
         # 活动地图 BGM（event_content 的 map_music）由核心钩子 custom_map_bgm 在原生请求时替换（H+228，event_trial.select 写入）。
         if self.active and not t.active_battle:
+            # 活动地图 BACK 的目的场景（app+0xb16c，基地“出擊”写入 72 = 回到女教官基地）在按下 POW 时被原生清零，
+            # 从俘虏页回到活动地图后 BACK 因此直接进入主菜单。进入活动地图时记下该值，重新进入（场景 158 / 159、
+            # 场景 160 的入场状态 4 / 7）时若为 0 则写回（2026-11-12）。
+            scene=p.word(app+0x22bc)
+            if p.word(HEADER+84) and scene in (158,159,160):
+                target=p.word(app+0xb16c)
+                if target:self.return_scene=target
+                elif getattr(self,'return_scene',0) and (scene!=160 or p.word(app+0x22dc) in (4,7)):
+                    p.put(app+0xb16c,self.return_scene)
+            elif scene==67:self.return_scene=0
             p.put(HEADER+176,int(self.has_prisoners(p.word(app+0xc624)-self.routes[t.selected]['world_shift'] if p.word(HEADER+84) else p.word(app+0xb1ec))))
             if p.word(HEADER+180):
                 p.put(HEADER+180,0);p.call('_ZN7AppMain12SceneEndFuncEi',app,p.word(app+0x22bc))

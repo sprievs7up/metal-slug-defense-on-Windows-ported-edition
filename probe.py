@@ -796,7 +796,7 @@ class Probe:
                     self.put(self.errno,2);return 0
             path=self.path(requested); self.log('FILE_OPEN',str(path),mode)
             if any(k in mode for k in 'wa+') and not path.is_relative_to(self.guest_root): raise RuntimeError('Original asset write blocked')
-            if path.name=='title01.obm' and mode.startswith('r'):
+            if path.name in ('title01.obm','title02.obm') and mode.startswith('r'):
                 from title_visuals import TitleVisuals
                 if not hasattr(self,'title_visuals'):
                     self.title_visuals=TitleVisuals(self,getattr(self,'custom_content_root',ROOT/'custom_content'))

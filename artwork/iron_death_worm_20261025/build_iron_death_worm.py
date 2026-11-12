@@ -65,6 +65,17 @@ docs/ms7/MS7_AA_TURRETS_IRON_DEATH_WORM_CHECK_2026-10-24.md 与 verification/iro
   钻离与钻击中只有脚本第 KNOCK_TICK tick（最后一段）起的命中扣击退计量（行为 v5 的 special_knockback_tick，核心 r109）。
 - 地下行进（用户 2026-10-25 要求；MSA 为钻入后瞬移）：动作 UNDER 为根层挂与待机相同的土环 100 × 5 与每 TRAIL_EVERY tick 放一团
   尘土 21 的发射层 EMITTER，不设受击框（R3；R2 为钻孔矩形）；移速同蜈蚣长老（192 的 3 × 5/3）。
+- R9（用户 2026-11-11：钻出地面处的尘土帧率与细腻程度远粗于蜈蚣长老，改用蜈蚣长老的贴图与帧率，并因两者粗细不同以其尘土素材拼接）：
+  MSA 的土环（脚本 100 / 11 / 16 / 32 / 38：同一团尘土的前 6 帧每帧 3 tick、纵向压到 40%，横排 5 份）不再挂载，脚本保留在描述符中。
+  蜈蚣长老（MSA 1234）的地面尘土为每 10 tick 放一组（脚本 86 / 87 / 88 轮换）：大尘团 91（16 帧逐 tick、纵向 50%、前 3 tick 渐显）× 2、
+  小尘团 89（12 帧）× 1 与 90（16 帧）× 4，各自播完消失。大尘团的 16 帧与本单位图集的 380–410 为同一像素画（只差调色板，逐帧核对
+  不透明形状相同），沿用本单位的灰色帧；小尘团 89 / 90 的 28 帧（长老图集中即为灰色）原样写入本单位第 2 张图集的空白处。
+  每组为一个效果对象（脚本 DUST_FIRST + 3 起），尘团为其子层（位置、先后与缩放同长老的 86–88；长老每团各为一个效果对象，本单位并为一个以
+  少占效果对象池）；拼接：普通动作横排 2 组（中心 DUST_TILES[2]）、绝招钻离 / 钻击 3 组（DUST_TILES[3]），间距 48（大尘团宽的一半），
+  相邻两组取不同的轮换号，并错开半个周期（DUST_STAGGER）放出。各动作以发射层（根层的子层，每 DUST_EVERY tick 以 op12 放一组）取代原土环：循环动作一直发射，
+  钻入 / 钻出 / 钻离 / 钻击在原土环存在的时段内发射，其后各组自行播完。
+- 编队页（R9 用户 2026-11-11：原大小时钻头越出画面上沿，只显示一半）：MENU_SCALE 50（MSD 以 2 倍绘制精灵，50% 即原画 1:1），
+  整个待机姿态在 DECK 标签以下；尘土为单组（同长老的宽度），不缩放。
 运行：E:\\anaconda3\\python.exe -I artwork/iron_death_worm_20261025/build_iron_death_worm.py [--report]
 """
 from pathlib import Path
@@ -102,7 +113,7 @@ BASE = 192
 MSA_SCRIPTS = 107
 MSA_NOOP = set(range(24, 36)) | set(range(47, 59))
 USED = (0, 6, 7, 12, 17, 25, 33, 44, 49)
-MENU_SLOT, MENU_SCALE, MENU_SHIFT = 0, 100, 0     # 编队页原大小（用户 2026-10-26；R0–R6 为 40%；追加脚本 107 起为动作 0 各部件的副本，保留以维持其后的脚本号）
+MENU_SLOT, MENU_SCALE, MENU_SHIFT = 0, 50, 0      # 编队页 50%（R9 用户 2026-11-11：原大小时上半截越出画面；2026-10-26 至 R8 为原大小，R0–R6 为 40%；追加脚本 107 起为动作 0 各部件的副本）
 MENU_DROP = {69}                                  # 编队页不挂的部件：待机末节（y 34 处，几乎全在地面以下）
 UNDER, EMITTER = 111, 112                         # 地下行进（根层，土环随行）与其尘土发射层（每 TRAIL_EVERY tick 放一团尘土 21）
 TRAIL, TRAIL_EVERY = 21, 4
@@ -128,6 +139,22 @@ BURST_ATTACK = 4                                  # 爆炸攻击框开启 tick�
 DEBRIS_FUSE = 15                                  # 落地后 0.5 秒爆炸（用户 2026-10-25）
 FAST, FAST_FACTOR = {7: 120, 12: 121}, 2          # R5：钻入 / 钻出的 2 倍速副本（子层副本自 FAST_CHILD 起）；绝招中的钻出仍用 12
 FAST_CHILD = 122
+# R9：钻孔尘土取蜈蚣长老（MSA 1234）的素材与帧率
+ELDER_UNIT = Path(r'F:\egg\research\metal_slug_attack\decoded\units\1234')
+ELDER_CLOUD, ELDER_PUFFS, ELDER_GROUPS = 91, (89, 90), (86, 87, 88)   # 长老的大尘团、小尘团与三个轮换的尘土组
+ELDER_CLOUD_FRAME, CLOUD_FRAME = 496, 380         # 大尘团 16 帧：长老 496–526 = 本单位 380–410（同一像素画，调色板不同）
+DUST_PASTE = (764, 334, 5, 48, 26)                # 小尘团写入第 2 张图集的空白处：起点、每行格数、格宽、格高
+DUST_FIRST = 130                                  # 130 大尘团、131 / 132 小尘团，其后为尘土组与发射层
+DUST_EVERY = 10                                   # 同长老 createSmoke / 脚本 24：每 10 tick 一组
+DUST_LATE, DUST_PLAY = 4, 18                      # 组内第二批尘团的 tick（同长老 86–88）；尘团 17 tick + 1
+DUST_STAGGER = 5                                  # 拼接的第奇数组晚半个周期放出：单组的尘团只在第 2–7 tick 浓密，错开后钻孔处始终有尘土
+DUST_PITCH = 48                                   # 拼接间距（大尘团宽 96 的一半）
+DUST_MENU_X = 52 * MENU_SCALE // 100              # 编队页单组的中心：编队页不挂末节 69，可见身体的下端为 68 的下端（原大小时 x 约 40–65），按 MENU_SCALE 缩放
+# 各组中心：普通动作身体贴地处为 x −23…79（中心 28），绝招钻离 / 钻击为 −31…122（中心 45）；1 组的只用于编队页。
+# 中心写在组内：效果对象建在单位位置上，由子层以 op12 放出时不计该子层的挂载偏移
+DUST_TILES = {1: (DUST_MENU_X + MENU_SHIFT,), 2: (4, 52), 3: (-3, 45, 93)}
+DUST_RINGS = {100: (2, None), 11: (2, 11), 16: (2, 16), 32: (3, 32), 38: (3, 38)}   # 原土环脚本 → (拼接组数, 取发射时段的脚本；None 为循环)
+DUST_PRIO = 7                                     # 发射层放出尘土组的 op12 第 2 值（同长老脚本 24）
 WORM = {   # 行为 iron_death_worm 的参数（MSA 动作号）
     'neutral_animation': 6, 'burrow_animation': FAST[7], 'emerge_animation': FAST[12], 'near_attack_animation': 17,
     'dive_animation': 25, 'drill_animation': 33, 'death_move_animation': 44, 'death_burst_animation': 49,
@@ -359,10 +386,153 @@ def convert(record):
         animations[copy] = resample(animations[root], FAST_FACTOR, remap)
     stats['fast'] = {'factor': FAST_FACTOR, 'roots': {str(k): v for k, v in FAST.items()}, 'children': {str(k): v for k, v in remap.items()},
                      'ticks': {str(k): [duration(animations, k), duration(animations, v)] for k, v in FAST.items()}}
+    assert nxt == DUST_FIRST, nxt
+    stats['dust'] = dust_pass(animations, record, {v: k for k, v in copies.items()}, {v: k for k, v in remap.items()})
     for cmds in animations.values():
         for c in cmds:
             c.pop('op45', None)
     return animations, stats
+
+
+# ---------- R9：钻孔尘土（蜈蚣长老的素材与帧率） ----------
+def add_dust_frames(record):
+    """长老小尘团 89 / 90 的帧登记为本单位第 2 张图集的新矩形与新帧（只登记，像素由 paste_dust 写入）；返回长老帧号 → 本单位帧号。"""
+    if '_dust' in record:
+        return record['_dust']
+    elder = json.loads((ELDER_UNIT / 'record.json').read_text(encoding='utf-8'))
+    x0, y0, cols, cw, ch = DUST_PASTE
+    frames, cells = {ELDER_CLOUD_FRAME + 2 * i: CLOUD_FRAME + 2 * i for i in range(16)}, []
+    for script in ELDER_PUFFS:
+        for c in elder['scripts'][script]:
+            if c[0] == 0 and c[1] >= 0 and c[1] not in frames:
+                assert elder['frames'][c[1]] == 1, c
+                x, y, w, h, ax, ay, flags, page = elder['rects'][elder['frames'][c[1] + 1]]
+                assert w <= cw and h <= ch and flags == 0 and page == 1, (c, w, h, flags, page)
+                n = len(cells)
+                dx, dy = x0 + (n % cols) * cw, y0 + (n // cols) * ch
+                cells.append(((x, y, w, h), (dx, dy)))
+                frames[c[1]] = len(record['frames'])
+                record['frames'] += [1, len(record['rects'])]
+                record['rects'].append([dx, dy, w, h, ax, ay, 0, 1])
+    record['_dust'], record['_dust_cells'], record['_elder'] = frames, cells, elder
+    return frames
+
+
+def paste_dust(record, atlases):
+    """把长老小尘团的像素写入本单位第 2 张图集（目标处须为空白），并核对大尘团 16 帧两个单位的不透明形状逐帧相同。"""
+    add_dust_frames(record)
+    elder = record['_elder']
+    src = [Image.open(ELDER_UNIT / (n + '.png')).convert('RGBA') for n in elder['names']]
+    for (x, y, w, h), (dx, dy) in record['_dust_cells']:
+        assert atlases[1].crop((dx, dy, dx + w, dy + h)).getbbox() is None, (dx, dy)
+        atlases[1].paste(src[1].crop((x, y, x + w, y + h)), (dx, dy))
+    for i in range(16):
+        a = elder['rects'][elder['frames'][ELDER_CLOUD_FRAME + 2 * i + 1]]
+        b = record['rects'][record['frames'][CLOUD_FRAME + 2 * i + 1]]
+        assert a[2:7] == b[2:7], (i, a, b)
+        pa = src[a[7]].crop((a[0], a[1], a[0] + a[2], a[1] + a[3])).getchannel('A')
+        pb = atlases[b[7]].crop((b[0], b[1], b[0] + b[2], b[1] + b[3])).getchannel('A')
+        assert pa.tobytes() == pb.tobytes(), i
+
+
+def dust_pass(animations, record, menu_of, fast_of):
+    """尘团、尘土组与发射层的脚本；各根层脚本中原土环的 5 个挂载换为一个发射层。menu_of / fast_of：编队页副本、2 倍速副本 → 原脚本。"""
+    frames = add_dust_frames(record)
+    elder = record['_elder']['scripts']
+    cloud, puff = DUST_FIRST, {s: DUST_FIRST + 1 + i for i, s in enumerate(ELDER_PUFFS)}
+    child = {ELDER_CLOUD: cloud, **puff}
+    for src, dst in child.items():                 # 尘团：长老脚本原样（缩放、渐显、逐 tick 换帧），只换帧号
+        assert {c[0] for c in elder[src]} <= {0, 1, 18, 19, 21} and elder[src][-3:] == [[0, -1], [1, 1], [21]], src
+        animations[dst] = [{'opcode': c[0], 'values': [frames[c[1]]] if c[0] == 0 and c[1] >= 0 else list(c[1:])} for c in elder[src]]
+    assert duration(animations, cloud) == 17 and all(duration(animations, p) <= 17 for p in puff.values())
+    parts = {}                                     # 长老的三个组：[(tick, 脚本, 优先级, x, y)]
+    for g in ELDER_GROUPS:
+        t, rows = 0, []
+        for c in elder[g]:
+            assert c[0] in (0, 1, 12, 21), (g, c)
+            if c[0] == 1:
+                t += c[1]
+            elif c[0] == 12:
+                assert t in (0, DUST_LATE) and 7 <= c[2] <= 13, (g, c)
+                rows.append((t, child[c[1]], c[2], c[3], c[4]))
+        assert len(rows) == 7, g
+        parts[g] = rows
+    nxt, groups = DUST_FIRST + 1 + len(puff), {}
+    for tiles, centers in DUST_TILES.items():      # 尘土组：一个效果对象，尘团为子层；第 i 组取轮换号 (v + i) % 3，优先级各组错开 7
+        groups[tiles] = []
+        for v in range(len(ELDER_GROUPS)):
+            rows = [(t + (i % 2) * DUST_STAGGER, s, p - 6 + 7 * i, cx + x, y) for i, cx in enumerate(centers)
+                    for t, s, p, x, y in parts[ELDER_GROUPS[(v + i) % len(ELDER_GROUPS)]]]
+            assert len({r[2] for r in rows}) == len(rows)
+            body, now = [], 0
+            for at in sorted({r[0] for r in rows}):
+                if at > now:
+                    body += [{'opcode': 0, 'values': [-1]}, {'opcode': 1, 'values': [at - now]}]
+                    now = at
+                body += [{'opcode': 11, 'values': list(r[1:])} for r in rows if r[0] == at]
+            body += [{'opcode': 0, 'values': [-1]}, {'opcode': 1, 'values': [DUST_PLAY]}, {'opcode': 21, 'values': []}]
+            animations[nxt] = body
+            groups[tiles].append(nxt)
+            nxt += 1
+    emitters = {}
+
+    def emitter(tiles, ticks):
+        """发射层：ticks 为 None 时每 DUST_EVERY tick 一组并循环；否则在所列 tick 各放一组后结束（帧 −1）。MSD 子层以 op5 回到开头时，
+        首个等待之前的 op12 不再执行（实测：原写法每轮少放第一组；地下行进原有的 EMITTER 同样只放出过一次），循环的发射层先等 1 tick。"""
+        nonlocal nxt
+        key = (tiles, None if ticks is None else tuple(ticks))
+        if key not in emitters:
+            g = groups[tiles]
+            if ticks is None:
+                body = [{'opcode': 0, 'values': [-1]}, {'opcode': 1, 'values': [1]}]
+                for v in g:
+                    body += [{'opcode': 12, 'values': [v, DUST_PRIO, 0, 0]}, {'opcode': 0, 'values': [-1]}, {'opcode': 1, 'values': [DUST_EVERY]}]
+                body[-1] = {'opcode': 1, 'values': [DUST_EVERY - 1]}
+                body.append({'opcode': 5, 'values': []})
+            else:
+                body = [{'opcode': 0, 'values': [-1]}, {'opcode': 1, 'values': [ticks[0]]}] if ticks[0] else []
+                for k, at in enumerate(ticks):
+                    assert at == ticks[0] + k * DUST_EVERY
+                    body += [{'opcode': 12, 'values': [g[k % len(g)], DUST_PRIO, 0, 0]}, {'opcode': 0, 'values': [-1]}, {'opcode': 1, 'values': [DUST_EVERY]}]
+                body.append({'opcode': 21, 'values': []})
+            animations[nxt] = body
+            emitters[key] = nxt
+            nxt += 1
+        return emitters[key]
+
+    def window(script):
+        """原土环脚本的发射时段：第一帧出现的 tick 起，至末尾渐隐（帧 392 以上）开始之前。"""
+        t, shown = 0, []
+        for c in animations[script]:
+            if c['opcode'] == 1:
+                t += c['values'][0]
+            elif c['opcode'] == 0 and c['values'][0] >= 0:
+                shown.append((t, c['values'][0]))
+        start, end = shown[0][0], t
+        tail = max(i for i, (_, f) in enumerate(shown) if f <= CLOUD_FRAME + 10)
+        if tail + 1 < len(shown):
+            end = shown[tail + 1][0]
+        return list(range(start, end, DUST_EVERY))
+
+    used = {}
+    for slot in sorted(k for k in animations if k < DUST_FIRST):
+        cmds = animations[slot]
+        rings = [c for c in cmds if c['opcode'] == 11 and (c['values'][0] in DUST_RINGS or menu_of.get(c['values'][0]) in DUST_RINGS
+                                                           or fast_of.get(c['values'][0]) in DUST_RINGS)]
+        if not rings:
+            continue
+        ring = rings[0]['values'][0]
+        assert len(rings) == 5 and all(c['values'][0] == ring for c in rings), slot
+        src = menu_of.get(ring, fast_of.get(ring, ring))
+        tiles, timed = DUST_RINGS[src]
+        e = emitter(1, None) if ring in menu_of else emitter(tiles, window(ring) if timed is not None else None)
+        at = cmds.index(rings[0])
+        animations[slot] = ([c for c in cmds[:at] if c not in rings] + [{'opcode': 11, 'values': [e, BODY_PRIO, 0, 0]}]
+                            + [c for c in cmds[at:] if c not in rings])
+        used[str(slot)] = {'ring': ring, 'emitter': e}
+    return {'cloud': cloud, 'puffs': {str(k): v for k, v in puff.items()}, 'groups': {str(k): v for k, v in groups.items()},
+            'emitters': {f'{k[0]}:{"loop" if k[1] is None else ",".join(map(str, k[1]))}': v for k, v in emitters.items()},
+            'slots': used, 'frames_added': len(record['_dust_cells']), 'scripts_to': nxt - 1}
 
 
 # ---------- 受击框：按 MSD 语义模拟（单位原点为地面，原画朝右，精灵单位） ----------
@@ -813,6 +983,7 @@ def hit_rects(anims, record, opaque, pts):
 
 def descriptor(record, hit_bounds, attack_bounds, animations):
     assert 0xffffffff not in record['frames']
+    assert '_dust' in record and len(record['rects']) == 266 + len(record['_dust_cells'])
     return {'rects': [list(r) for r in record['rects']], 'frames': list(record['frames']),
             'script_count': max(animations) + 1, 'hit_bounds': hit_bounds, 'attack_bounds': attack_bounds}
 
@@ -893,6 +1064,7 @@ def main():
     assert record['names'] == ['70003IronDeathWarm01_out.obm', '70003IronDeathWarm_EF_out.obm']
     assert record['script_count'] == MSA_SCRIPTS and record['image_value'] == 90
     atlases = [Image.open(MSA_UNIT / (n + '.png')).convert('RGBA') for n in record['names']]
+    paste_dust(record, atlases)                 # R9：长老小尘团写入第 2 张图集（convert 之前，受击框模拟取图集的不透明范围）
     animations, stats = convert(record)
     hit_bounds, attack_bounds, hits = hit_rects(animations, record, opaque_boxes(record, atlases), opaque_points(record, atlases))
     for slot in HOLD_SLOTS:                     # 受击框模拟之后（模拟按 MSA 的首遍挂载语义，循环长度不影响）

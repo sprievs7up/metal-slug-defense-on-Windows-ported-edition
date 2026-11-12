@@ -135,3 +135,5 @@ PVZ EVENT 配乐（`community_content/bgm_pvz_watery_graves.msdf`）为《植物
 PVZ EVENT 第五大关配乐（`community_content/bgm_pvz_zombotany.msdf`）为《植物大战僵尸》未使用曲目“Zombotany”的合金弹头风格混音，取自 Bilibili 发布的“【NEOGEO×PVZ】废弃音乐《Zombotany》（合金弹头风格Remix）”。原曲与混音保留原有归属。
 
 經典键盘操作模式的出兵选择框（`custom_content/unit_icon_select.obm`）为《合金弹头塔防》Windows（Steam）版（SNK）的文件 `unit_icon_select.obm`，未作改动；该模式的默认键位、选择框的闪烁与绘制次序同样取自该版本。该素材保留原有归属。
+
+标题画面的月夜背景（`custom_content/title_night_atlas.png`、`custom_content/title_night.json`）取自 Metal Slug Attack 7.13.0（SNK）的背景 159（Ultimate Stage: Regular Army，图集 `ms7_6_base_1_out.obm`、`ms7_6_base_2_out.obm` 与其动作记录）：星空 9 帧、月亮与雪地按标题画面取景重新排布，上方补的一排星空由同一组图块的中段翻转而成，月亮光晕的下半圈取上半圈的镜像；画面最下方的版权横条为原游戏标题图集的原像素。上述素材的权利归原权利人所有。
